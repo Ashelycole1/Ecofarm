@@ -1,6 +1,6 @@
 'use client'
 
-import { Droplets, Sun, Leaf, Bell, Home, MessageCircle } from 'lucide-react'
+import { Droplets, Sun, Leaf, Bell, Home, MessageCircle, TrendingUp } from 'lucide-react'
 
 interface BottomNavProps {
   activeTab: string
@@ -9,7 +9,7 @@ interface BottomNavProps {
 
 const tabs = [
   { id: 'home',     label: 'Home',     Icon: Home },
-  { id: 'weather',  label: 'Weather',  Icon: Droplets },
+  { id: 'market',   label: 'Market',   Icon: TrendingUp },
   { id: 'calendar', label: 'Planting', Icon: Leaf },
   { id: 'chat',     label: 'Chat',     Icon: MessageCircle },
   { id: 'alerts',   label: 'Alerts',   Icon: Bell },

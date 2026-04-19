@@ -13,13 +13,15 @@ import AuthModal from '@/components/auth/AuthModal'
 import { useFirebase } from '@/context/FirebaseContext'
 import { Wifi, WifiOff, Sparkles, LogOut, User as UserIcon, Lock } from 'lucide-react'
 
+import MarketDashboard from '@/components/dashboard/MarketDashboard'
+
 // ─── Top app bar ──────────────────────────────────────────────────────────────
 function AppBar({ activeTab }: { activeTab: string }) {
   const { isConnected, farmStatus, user, logout } = useFirebase()
 
   const titles: Record<string, string> = {
     home:     '🌿 EcoFarm',
-    weather:  '🌦 Weather',
+    market:   '📈 Market',
     calendar: '📅 Planting',
     chat:     '👵 Village Elder',
     alerts:   '🚨 Pest Alerts',
@@ -108,38 +110,11 @@ function CommunityStat({ value, label, emoji }: { value: string; label: string; 
   )
 }
 
-// ─── Weather tab ──────────────────────────────────────────────────────────────
-function WeatherTab() {
-  const { weather } = useFirebase()
+// ─── Market tab ──────────────────────────────────────────────────────────────
+function MarketTab() {
   return (
     <div className="space-y-4 animate-fade-in">
-      <WeatherWidget />
-
-      {weather && (
-        <div className="nature-card p-4 space-y-3">
-          <p className="text-xs text-white/40 uppercase tracking-wider">5-Day Forecast</p>
-          {weather.forecast.map((day, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="text-xs text-white/50 w-12 shrink-0">{day.day}</span>
-              <span className="text-xl">
-                {day.status === 'sunny' ? '☀️' : day.status === 'rainy' ? '🌧️' : day.status === 'stormy' ? '⛈️' : '⛅'}
-              </span>
-              <div className="flex-1">
-                <div className="flex justify-between text-xs text-white/60">
-                  <span className="text-white font-semibold">{day.high}°</span>
-                  <span>{day.low}°</span>
-                </div>
-                <div className="mt-1 h-1 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-forest rounded-full opacity-60"
-                    style={{ width: `${Math.min(day.rainfall * 3, 100)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <MarketDashboard />
     </div>
   )
 }
@@ -148,9 +123,9 @@ function WeatherTab() {
 function TabContent({ tab }: { tab: string }) {
   const { user } = useFirebase()
   
-  // Home and Weather remain open for guest viewing
+  // Home and Market remain open for guest viewing
   if (tab === 'home') return <HomeTab />
-  if (tab === 'weather') return <WeatherTab />
+  if (tab === 'market') return <MarketTab />
   
   // Calendar, Chat, and Alerts require Auth
   if (!user) return <AuthGate tabName={tab} />
