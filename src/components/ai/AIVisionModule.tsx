@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Camera, RefreshCw, CheckCircle2, AlertCircle, Upload } from 'lucide-react'
+import { Camera, RefreshCw, CheckCircle2, AlertCircle, Upload, Leaf } from 'lucide-react'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export default function AIVisionModule() {
