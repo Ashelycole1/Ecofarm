@@ -12,12 +12,14 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import type {
   WeatherData,
   Crop,
   PestAlert,
   FarmStatus,
   ChatMessage,
 } from '@/lib/mockData'
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -106,7 +108,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   
       // 2. Open-Meteo Weather Fetching & Dynamic Crops
       setFarmStatus({
-        status: "Good",
+        overall: 'green',
+        message: 'Initializing farm status...',
+        treeHealth: 100,
+        waterLevel: 50,
+        soilHealth: 80,
         alerts: 0,
         aiAdvice: "Loading AI insights...",
       } as FarmStatus)

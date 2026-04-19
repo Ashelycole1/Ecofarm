@@ -54,7 +54,7 @@ export default function MarketDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-3">
-        loading ? (
+        {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="skeleton h-16 rounded-2xl" />
           ))
