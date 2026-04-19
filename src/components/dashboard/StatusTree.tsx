@@ -12,9 +12,10 @@ export default function StatusTree({ compact = false }: StatusTreeProps) {
 
   if (isLoading || !farmStatus) {
     return (
-      <div className="nature-card p-6 flex flex-col items-center animate-pulse">
-        <div className="w-20 h-20 bg-forest-light/20 rounded-full mb-3" />
-        <div className="h-3 bg-forest-light/20 rounded w-3/4" />
+      <div className="nature-card p-6 flex flex-col items-center space-y-3">
+        <div className="skeleton w-20 h-20 rounded-full" />
+        <div className="skeleton h-3 w-3/4 rounded" />
+        <div className="skeleton h-3 w-1/2 rounded" />
       </div>
     )
   }
@@ -41,9 +42,10 @@ export default function StatusTree({ compact = false }: StatusTreeProps) {
   return (
     <div className="nature-card p-5 flex flex-col items-center text-center animate-slide-up relative overflow-hidden group">
       {/* AI Ribbon */}
-      <div className="absolute top-0 right-0 bg-forest-light/20 px-3 py-1 rounded-bl-leaf-sm border-b border-l border-white/10 flex items-center gap-1.5 backdrop-blur-md">
-        <span className="w-1.5 h-1.5 rounded-full bg-wheat animate-pulse" />
-        <span className="text-[9px] font-bold text-wheat tracking-widest uppercase">AI Insight</span>
+      <div className="absolute top-0 right-0 px-3 py-1.5 rounded-bl-xl border-b border-l border-white/10 flex items-center gap-1.5"
+           style={{ background: 'rgba(45,102,95,0.30)', backdropFilter: 'blur(8px)' }}>
+        <span className="w-1.5 h-1.5 rounded-full bg-wheat animate-ping-slow" />
+        <span className="text-[9px] font-black text-wheat tracking-widest uppercase">AI Insight</span>
       </div>
 
       {!compact && (
@@ -90,14 +92,17 @@ export default function StatusTree({ compact = false }: StatusTreeProps) {
           </p>
           
           {farmStatus.aiAdvice && (
-            <div className="bg-forest-dark/40 border border-white/10 rounded-leaf-sm p-4 mt-4 text-left relative overflow-hidden animate-fade-in shadow-inner">
-              <div className="absolute top-0 left-0 w-1 h-full bg-wheat/30" />
-              <div className="flex items-center gap-2 mb-2">
-                <Leaf size={12} className="text-wheat" />
-                <span className="text-[9px] font-black text-wheat uppercase tracking-tighter">Elder's Wisdom (AI)</span>
+            <div
+              className="mt-4 text-left relative overflow-hidden rounded-xl p-4 animate-fade-in"
+              style={{ background: 'rgba(13,36,34,0.60)', border: '1px solid rgba(61,138,129,0.20)' }}
+            >
+              <div className="absolute top-0 left-0 w-1 h-full rounded-l-xl" style={{ background: 'linear-gradient(180deg, #2D665F, #3D8A81)' }} />
+              <div className="flex items-center gap-2 mb-2 pl-1">
+                <Leaf size={12} className="text-forest-light" />
+                <span className="text-[9px] font-black text-forest-light uppercase tracking-wider">Agricultural AI Insight</span>
               </div>
-              <p className="text-xs text-white/90 italic leading-relaxed font-medium">
-                "{farmStatus.aiAdvice}"
+              <p className="text-xs text-white/85 leading-relaxed pl-1">
+                {farmStatus.aiAdvice}
               </p>
             </div>
           )}

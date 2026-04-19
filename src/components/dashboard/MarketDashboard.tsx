@@ -41,58 +41,61 @@ export default function MarketDashboard() {
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h2 className="font-display font-bold text-xl text-wheat">Market Prices</h2>
-          <p className="text-xs text-white/50">Estimated national averages</p>
+          <h2 className="font-display font-bold text-xl text-white">Market Prices</h2>
+          <p className="text-xs text-white/40">Estimated national averages</p>
         </div>
-        <button 
+        <button
           onClick={fetchMarketData}
-          className="p-2 border border-white/10 rounded-full bg-forest/40 hover:bg-forest transition-colors"
+          className="w-9 h-9 flex items-center justify-center rounded-full border border-white/10 hover:border-forest-light/40 transition-all"
+          style={{ background: 'rgba(45,102,95,0.25)' }}
         >
-          <RefreshCcw className={`text-wheat ${loading ? 'animate-spin' : ''}`} size={16} />
+          <RefreshCcw className={`text-wheat ${loading ? 'animate-spin' : ''}`} size={15} />
         </button>
       </div>
 
       <div className="grid grid-cols-1 gap-3">
-        {loading ? (
+        loading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="nature-card p-4 animate-pulse">
-               <div className="h-5 bg-white/10 rounded w-1/3 mb-4"></div>
-               <div className="h-8 bg-white/10 rounded w-1/2"></div>
-            </div>
+            <div key={i} className="skeleton h-16 rounded-2xl" />
           ))
         ) : (
           data.map(item => (
-            <div key={item.id} className="nature-card p-4 flex items-center justify-between">
-              <div className="space-y-1">
-                <h3 className="font-bold text-white/90 text-md">{item.name}</h3>
-                <div className="flex items-center gap-1 text-xs text-white/50">
-                  <DollarSign size={12} />
+            <div
+              key={item.id}
+              className="flex items-center justify-between p-4 rounded-2xl"
+              style={{
+                background: 'linear-gradient(145deg, rgba(45,102,95,0.18) 0%, rgba(13,36,34,0.55) 100%)',
+                border: '1px solid rgba(61,138,129,0.18)',
+                backdropFilter: 'blur(12px)',
+              }}
+            >
+              <div className="space-y-0.5">
+                <h3 className="font-bold text-white text-sm">{item.name}</h3>
+                <div className="flex items-center gap-1 text-xs text-white/45">
+                  <DollarSign size={11} />
                   <span>{item.price.toLocaleString()} {item.unit}</span>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-3">
-                <div className={`flex flex-col items-end`}>
-                  <div className={`flex items-center gap-1 font-black ${
-                    item.trend === 'up' ? 'text-safe' : 
-                    item.trend === 'down' ? 'text-alert' : 'text-wheat'
-                  }`}>
-                    {item.trend === 'up' && <TrendingUp size={16} strokeWidth={3} />}
-                    {item.trend === 'down' && <TrendingDown size={16} strokeWidth={3} />}
-                    {item.percentage}
-                  </div>
-                  <span className="text-[9px] text-white/30 uppercase tracking-wider">{item.lastUpdated}</span>
+              <div className="flex flex-col items-end gap-0.5">
+                <div className={`flex items-center gap-1 font-black text-sm ${
+                  item.trend === 'up'   ? 'text-safe' :
+                  item.trend === 'down' ? 'text-alert' : 'text-wheat'
+                }`}>
+                  {item.trend === 'up'   && <TrendingUp size={15} strokeWidth={2.5} />}
+                  {item.trend === 'down' && <TrendingDown size={15} strokeWidth={2.5} />}
+                  {item.percentage}
                 </div>
+                <span className="text-[9px] text-white/25 uppercase tracking-wide">{item.lastUpdated}</span>
               </div>
             </div>
           ))
         )}
       </div>
       
-      <div className="p-3 mt-4 bg-black/20 rounded-leaf-sm border border-white/5">
-         <p className="text-[10px] text-white/40 text-center leading-relaxed">
-           Market prices are estimated regional averages provided for analytical purposes. Real-time API sync is disabled for this demonstration.
-         </p>
+      <div className="mt-4 px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <p className="text-[10px] text-white/30 text-center leading-relaxed">
+          Market prices are estimated regional averages for analytical purposes. Real-time API sync coming soon.
+        </p>
       </div>
     </div>
   )
