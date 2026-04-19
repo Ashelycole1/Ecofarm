@@ -28,26 +28,35 @@ function AppBar({ activeTab }: { activeTab: string }) {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass-card border-x-0 border-t-0 border-b border-white/10 px-4 py-3">
+    <header
+      className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.08] px-4 py-3"
+      style={{
+        background: 'rgba(6,20,18,0.85)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+      }}
+    >
       <div className="flex items-center justify-between max-w-md mx-auto">
-        <h1 className="font-display font-black text-xl text-wheat tracking-tight">
+        <h1 className="font-display font-black text-xl tracking-tight" style={{ color: '#FFFFFF' }}>
           {titles[activeTab] || '🌿 EcoFarm'}
         </h1>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {/* Connection status */}
-          <div className={`p-1.5 rounded-full ${isConnected ? 'bg-safe/20' : 'bg-alert/20'} transition-colors`}>
-            {isConnected ? <Wifi className="text-safe" size={14} /> : <WifiOff className="text-alert" size={14} />}
+          <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+            isConnected ? 'bg-safe/15' : 'bg-alert/15'
+          }`}>
+            {isConnected ? <Wifi className="text-safe" size={13} /> : <WifiOff className="text-alert" size={13} />}
           </div>
           
-          {/* User Profile / Logout */}
+          {/* Logout */}
           {user && (
             <button 
               onClick={() => logout()}
-              className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white/60 transition-all active:scale-90"
+              className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/50 transition-all active:scale-90"
               title="Logout"
             >
-              <LogOut size={16} />
+              <LogOut size={14} />
             </button>
           )}
         </div>
@@ -62,18 +71,28 @@ function HomeTab() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Greeting banner */}
-      <div className="relative overflow-hidden rounded-leaf bg-nature-gradient p-5 shadow-nature">
-        <div className="absolute -top-6 -right-6 w-32 h-32 bg-wheat/5 rounded-full" />
-        <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-white/3 rounded-full" />
+      {/* Greeting hero banner */}
+      <div
+        className="relative overflow-hidden rounded-2xl p-5"
+        style={{
+          background: 'linear-gradient(135deg, rgba(45,102,95,0.55) 0%, rgba(13,36,34,0.80) 100%)',
+          border: '1px solid rgba(61,138,129,0.25)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.40), inset 0 0 40px rgba(45,102,95,0.12)',
+        }}
+      >
+        {/* Decorative blobs */}
+        <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full blur-3xl opacity-30 pointer-events-none"
+          style={{ background: 'radial-gradient(circle, #3D8A81, transparent)' }} />
+        <div className="absolute -bottom-10 -left-10 w-44 h-44 rounded-full blur-3xl opacity-15 pointer-events-none"
+          style={{ background: 'radial-gradient(circle, #2D665F, transparent)' }} />
 
         <div className="relative z-10">
-          <p className="text-wheat/80 text-xs uppercase tracking-widest font-medium">Good day</p>
+          <p className="text-[11px] text-forest-light/80 uppercase tracking-widest font-semibold">Good day</p>
           <h2 className="font-display font-bold text-white text-2xl mt-1 high-contrast-text">
             {user ? (user.displayName || 'Farmer') : 'EcoFarmer'} 👋
           </h2>
-          <p className="text-white/60 text-sm mt-1">
-            {weather ? `${weather.location} · ${weather.temperature}°C` : 'Connecting to farm...'}
+          <p className="text-white/50 text-sm mt-1.5">
+            {weather ? `📍 ${weather.location} · ${weather.temperature}°C` : 'Connecting to farm...'}
           </p>
         </div>
       </div>
@@ -88,8 +107,14 @@ function HomeTab() {
       <WeatherWidget />
 
       {/* Community stats */}
-      <div className="nature-card p-4">
-        <p className="text-xs text-white/40 uppercase tracking-wider mb-3">Community This Week</p>
+      <div
+        className="p-4 rounded-2xl"
+        style={{
+          background: 'linear-gradient(145deg, rgba(45,102,95,0.18) 0%, rgba(13,36,34,0.55) 100%)',
+          border: '1px solid rgba(61,138,129,0.15)',
+        }}
+      >
+        <p className="text-[11px] text-white/35 uppercase tracking-widest mb-3 font-semibold">Community This Week</p>
         <div className="grid grid-cols-3 gap-3 text-center">
           <CommunityStat value="247" label="Farmers" emoji="👨‍🌾" />
           <CommunityStat value="93" label="Reports" emoji="📋" />
@@ -135,8 +160,8 @@ function TabContent({ tab }: { tab: string }) {
     case 'chat': return (
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center gap-2 px-1">
-          <Sparkles className="text-wheat" size={16} />
-          <h2 className="font-display font-bold text-white text-lg">Village Elder</h2>
+          <Sparkles className="text-forest-light" size={16} />
+          <h2 className="font-display font-bold text-white text-lg">Agricultural Expert</h2>
         </div>
         <VillageElderChat />
       </div>
@@ -156,9 +181,18 @@ function TabContent({ tab }: { tab: string }) {
 function AuthGate({ tabName }: { tabName: string }) {
   const { setShowAuthModal } = useFirebase()
   return (
-    <div className="nature-card p-8 text-center animate-fade-in mt-10">
-      <div className="w-16 h-16 bg-forest/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-forest/30">
-        <Lock className="text-wheat" size={32} />
+    <div
+      className="p-8 text-center animate-fade-in mt-10 rounded-2xl"
+      style={{
+        background: 'linear-gradient(145deg, rgba(45,102,95,0.18) 0%, rgba(13,36,34,0.60) 100%)',
+        border: '1px solid rgba(61,138,129,0.20)',
+      }}
+    >
+      <div
+        className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+        style={{ background: 'rgba(45,102,95,0.25)', border: '1px solid rgba(61,138,129,0.30)' }}
+      >
+        <Lock className="text-forest-light" size={28} />
       </div>
       <h3 className="font-display font-bold text-white text-xl mb-2">Protected Feature</h3>
       <p className="text-xs text-white/40 mb-6 leading-relaxed max-w-[200px] mx-auto">
@@ -166,9 +200,9 @@ function AuthGate({ tabName }: { tabName: string }) {
       </p>
       <button 
         onClick={() => setShowAuthModal(true)}
-        className="text-[10px] py-2 px-4 bg-forest text-wheat uppercase font-black tracking-widest rounded-leaf-sm shadow-nature active:scale-95 transition-all outline-none"
+        className="btn-primary text-xs py-2.5 px-6"
       >
-        Login Required
+        Sign In to Continue
       </button>
     </div>
   )
@@ -181,14 +215,15 @@ export default function HomePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-forest-dark">
-        <div className="w-12 h-12 border-4 border-wheat/20 border-t-wheat rounded-full animate-spin" />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: '#061412' }}>
+        <div className="w-12 h-12 border-2 border-forest rounded-full border-t-forest-light animate-spin" />
+        <p className="text-white/30 text-sm font-medium tracking-wide">Loading EcoFarm...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen min-h-dvh flex flex-col bg-forest-dark">
+    <div className="min-h-screen min-h-dvh flex flex-col" style={{ background: '#061412' }}>
       <AppBar activeTab={activeTab} />
 
       {/* Page content */}
@@ -196,14 +231,14 @@ export default function HomePage() {
         <div className="max-w-md mx-auto px-4 py-5">
           <TabContent tab={activeTab} />
           
-          {/* Global login trigger for guests */}
+          {/* Global sign-in prompt for guests */}
           {!user && (
             <div className="mt-8 text-center">
               <button 
                 onClick={() => setShowAuthModal(true)}
-                className="text-xs text-wheat/60 hover:text-wheat font-bold uppercase tracking-widest border-b border-wheat/20 pb-1"
+                className="text-xs text-forest-light/70 hover:text-forest-light font-bold uppercase tracking-widest border-b border-forest-light/20 pb-1 transition-colors"
               >
-                Sign In to access all features
+                Sign In to unlock all features
               </button>
             </div>
           )}
