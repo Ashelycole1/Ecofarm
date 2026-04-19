@@ -12,13 +12,6 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import {
-  mockWeather,
-  mockCrops,
-  mockPestAlerts,
-  mockFarmStatus,
-  mockChatHistory,
-  mockAIAdvice,
   WeatherData,
   Crop,
   PestAlert,
@@ -76,11 +69,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [weather, setWeather] = useState<WeatherData | null>(null)
-  const [crops, setCrops] = useState<Crop[]>(mockCrops)
-  const [pestAlerts, setPestAlerts] = useState<PestAlert[]>(mockPestAlerts)
+  const [crops, setCrops] = useState<Crop[]>([])
+  const [pestAlerts, setPestAlerts] = useState<PestAlert[]>([])
   const [farmStatus, setFarmStatus] = useState<FarmStatus | null>(null)
   const [pestReports, setPestReports] = useState<PestReport[]>([])
-  const [messages, setMessages] = useState<ChatMessage[]>(mockChatHistory)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -104,15 +97,19 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         const alerts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PestAlert))
         setPestAlerts(alerts)
       } else {
-        setPestAlerts(mockPestAlerts)
-      }
-    }, (error) => {
-      console.warn("Firestore Alerts Error (likely rules):", error)
-      setPestAlerts(mockPestAlerts)
-    })
-
-    // 2. Open-Meteo Weather Fetching & Dynamic Crops
-    setFarmStatus(mockFarmStatus)
+          setPestAlerts([])
+        }
+      }, (error) => {
+        console.warn("Firestore Alerts Error (likely rules):", error)
+        setPestAlerts([])
+      })
+  
+      // 2. Open-Meteo Weather Fetching & Dynamic Crops
+      setFarmStatus({
+        status: "Good",
+        alerts: 0,
+        aiAdvice: "Loading AI insights...",
+      } as FarmStatus)
 
     const fetchDynamicCrops = async (weatherStatus: string) => {
       try {
@@ -128,9 +125,9 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         const dynamicCrops = JSON.parse(text)
         
         setCrops(dynamicCrops)
-      } catch (err) {
+      } catch (err: any) {
         console.warn("Failed to generate dynamic crops via Gemini", err)
-        setCrops(mockCrops)
+        setCrops([])
       }
     }
 
@@ -178,8 +175,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         setIsLoading(false)
       } catch (err) {
         console.warn("Failed to fetch weather", err)
-        setWeather(mockWeather)
-        setCrops(mockCrops)
+        setWeather(null)
+        setCrops([])
         setIsLoading(false)
       }
     }
@@ -205,7 +202,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const refreshWeather = async () => {
     setIsLoading(true)
     await new Promise(r => setTimeout(r, 600))
-    setWeather({ ...mockWeather, lastUpdated: new Date().toISOString() })
+    // Fetch live weather could be called here instead of mock
     setIsLoading(false)
   }
 
@@ -240,13 +237,12 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
                      Crop: ${cropType}. Use a professional, scientific Agronomist tone. Short and actionable advice only on planting and growth.`
 
       const result = await model.generateContent(prompt)
-      const advice = result.response.text() || mockAIAdvice[0]
+      const advice = result.response.text()
       
       setFarmStatus(prev => prev ? { ...prev, aiAdvice: advice } : prev)
-    } catch (error) {
+    } catch (error: any) {
       console.warn("AI Generation Error:", error)
-      const randomAdvice = mockAIAdvice[Math.floor(Math.random() * mockAIAdvice.length)]
-      setFarmStatus(prev => prev ? { ...prev, aiAdvice: randomAdvice } : prev)
+      setFarmStatus(prev => prev ? { ...prev, aiAdvice: `Error: ${error.message || "Could not fetch advice"}` } : prev)
     } finally {
       setIsGeneratingAI(false)
     }
@@ -279,12 +275,12 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       }
       setMessages(prev => [...prev, elderMsg])
-    } catch (err) {
+    } catch (err: any) {
       console.warn("Chat AI Error:", err)
       setTimeout(() => {
         const elderMsg: ChatMessage = {
           id: `m_${Date.now() + 1}`,
-          text: "I am currently analyzing your farm data. Please hold on or try asking your agricultural question again shortly.",
+          text: `[System Error]: The AI could not respond. Reason: ${err.message || 'Unknown network error'}.`,
           sender: 'elder',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
