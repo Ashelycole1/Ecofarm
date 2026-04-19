@@ -117,7 +117,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     const fetchDynamicCrops = async (weatherStatus: string) => {
       try {
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
         const prompt = `Return a JSON array of exactly 4 optimal farming crops for a Ugandan farmer during ${weatherStatus} weather. 
         Each object must exactly match this TypeScript interface:
         { id: string, name: string, emoji: string, status: "optimal" | "warning", plantingDate: string, tips: string }
@@ -233,11 +233,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     setIsGeneratingAI(true)
     try {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
       const prompt = `Advisory for a Ugandan farmer. 
                      Weather: ${weatherData.status}, Temp: ${weatherData.temperature}°C. 
-                     Crop: ${cropType}. Use a Stoic Agronomist tone. Short and actionable advice only.`
+                     Crop: ${cropType}. Use a professional, scientific Agronomist tone. Short and actionable advice only on planting and growth.`
 
       const result = await model.generateContent(prompt)
       const advice = result.response.text() || mockAIAdvice[0]
@@ -265,8 +265,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     try {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        systemInstruction: "You are the Village Elder, a stoic and wise agronomist in Uganda. Give extremely short, actionable, and patient farming advice. Use metaphors about nature.",
+        model: "gemini-2.5-flash",
+        systemInstruction: "You are a professional agricultural expert and agronomist in Uganda. Provide highly accurate, scientific, and practical advice on planting, soil analysis, and crop growth. Keep responses concise, professional, and directly actionable for farmers.",
       })
       const chat = model.startChat()
       const result = await chat.sendMessage(text)
@@ -284,7 +284,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       setTimeout(() => {
         const elderMsg: ChatMessage = {
           id: `m_${Date.now() + 1}`,
-          text: "The soil remembers when we forget. Patience is a virtue of the wise farmer.",
+          text: "I am currently analyzing your farm data. Please hold on or try asking your agricultural question again shortly.",
           sender: 'elder',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }

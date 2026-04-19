@@ -31,7 +31,7 @@ export default function AIVisionModule() {
         const base64data = (reader.result as string).split(',')[1]
 
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
         const prompt = `You are a specialist agronomist in Uganda. Analyze this crop image. Identify the disease and provide 'Appropriate Technology' solutions (organic, low-cost). Format exact response into JSON format:
         {
