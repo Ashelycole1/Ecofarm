@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -13,8 +13,20 @@ const createPulsingIcon = (color: string) => L.divIcon({
   iconAnchor: [10, 10]
 });
 
+// Google Maps style Blue Dot for User
+const userIcon = L.divIcon({
+  html: `
+    <div class="user-marker-container">
+      <div class="user-marker-pulse"></div>
+      <div class="user-marker-dot"></div>
+    </div>
+  `,
+  className: 'user-marker-wrapper',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
+});
+
 const truckIcon = createPulsingIcon('#FF9800'); // SafeBoda Orange
-const homeIcon = createPulsingIcon('#2D665F');  // EcoFarm Teal
 
 interface MapComponentProps {
   currentPosition: [number, number] | null;
@@ -51,6 +63,7 @@ export default function MapComponent({
   onMapClick 
 }: MapComponentProps) {
   const defaultCenter: [number, number] = [0.3476, 32.5825];
+  const [mapType, setMapType] = useState<'m' | 's' | 'y'>('m'); // m: roadmap, s: satellite, y: hybrid
 
   return (
     <div style={{ height: '100%', width: '100%' }} className="leaflet-container-wrapper relative">
@@ -63,21 +76,63 @@ export default function MapComponent({
           box-shadow: 0 0 10px rgba(0,0,0,0.5);
           animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
         }
+        .user-marker-container {
+          position: relative;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .user-marker-dot {
+          width: 14px;
+          height: 14px;
+          background: #4285F4;
+          border: 2px solid white;
+          border-radius: 50%;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+          z-index: 2;
+        }
+        .user-marker-pulse {
+          position: absolute;
+          width: 40px;
+          height: 40px;
+          background: rgba(66, 133, 244, 0.25);
+          border-radius: 50%;
+          animation: user-pulse 2s ease-out infinite;
+          z-index: 1;
+        }
+        @keyframes user-pulse {
+          0% { transform: scale(0.4); opacity: 1; }
+          100% { transform: scale(2.2); opacity: 0; }
+        }
         @keyframes pulse-ring {
           0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
           70% { transform: scale(1.2); box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
           100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
         }
       `}</style>
+
+      {/* Map Type Toggle */}
+      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+        <button 
+          onClick={() => setMapType(mapType === 'm' ? 's' : 'm')}
+          className="w-10 h-10 rounded-xl bg-black/50 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-[10px] font-bold uppercase shadow-xl transition-all active:scale-95"
+        >
+          {mapType === 'm' ? 'Sat' : 'Map'}
+        </button>
+      </div>
+
       <MapContainer
         center={currentPosition || defaultCenter}
-        zoom={14}
+        zoom={15}
         zoomControl={false}
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          key={mapType}
+          attribution='&copy; Google Maps'
+          url={`https://mt1.google.com/vt/lyrs=${mapType}&x={x}&y={y}&z={z}`}
         />
         
         <MapEvents onMapClick={onMapClick} />
@@ -90,11 +145,11 @@ export default function MapComponent({
         )}
 
         {destination && (
-          <Marker position={destination} icon={homeIcon} />
+          <Marker position={destination} icon={userIcon} />
         )}
 
         {routeCoordinates.length > 0 && (
-          <Polyline positions={routeCoordinates} color="rgba(255, 152, 0, 0.4)" weight={3} dashArray="5, 10" />
+          <Polyline positions={routeCoordinates} color="rgba(255, 152, 0, 0.6)" weight={4} />
         )}
 
         {currentPosition && destination && (

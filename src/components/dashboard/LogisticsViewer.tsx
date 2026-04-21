@@ -29,6 +29,11 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
   const [isSelectingDest, setIsSelectingDest] = useState(false);
 
   useEffect(() => {
+    // Auto-locate on mount
+    if (!destination) {
+      handleUseMySyncLocation();
+    }
+    
     const supabase = getSupabase();
     if (!tripId) return;
 
