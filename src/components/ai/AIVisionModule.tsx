@@ -31,7 +31,7 @@ export default function AIVisionModule() {
         const base64data = (reader.result as string).split(',')[1]
 
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
         const prompt = `You are a specialist agronomist based in East Africa, experienced in Ugandan smallholder farming systems. Analyze this crop image.
         Identify the disease, pest, or deficiency — and provide ONLY organic, low-cost 'Appropriate Technology' solutions that are available in rural Uganda (e.g., neem leaves, wood ash, cow dung, crop rotation, intercropping).
