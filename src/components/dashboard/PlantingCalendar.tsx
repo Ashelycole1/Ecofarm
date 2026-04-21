@@ -154,7 +154,7 @@ export default function PlantingCalendar() {
       </div>
 
       {/* AI Selectors */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
          <select 
            value={selectedRegion} 
            onChange={(e) => setSelectedRegion(e.target.value)}
@@ -177,11 +177,19 @@ export default function PlantingCalendar() {
            <option>Matooke</option>
            <option>Coffee</option>
          </select>
+
+         <button 
+           onClick={generateSchedule}
+           disabled={isGenerating}
+           className="sm:col-span-1 col-span-2 py-2.5 rounded-leaf bg-forest/40 border border-white/10 text-wheat font-bold text-xs uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-forest transition-colors"
+         >
+           {isGenerating ? <><Clock className="animate-spin" size={14} /> Generating...</> : 'Generate AI Schedule'}
+         </button>
       </div>
       <button 
         onClick={generateSchedule}
         disabled={isGenerating}
-        className="w-full py-2.5 rounded-leaf bg-forest/40 border border-white/10 text-wheat font-bold text-xs uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-forest transition-colors"
+        className="sm:hidden w-full py-2.5 rounded-leaf bg-forest/40 border border-white/10 text-wheat font-bold text-xs uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-forest transition-colors"
       >
         {isGenerating ? <><Clock className="animate-spin" size={14} /> Generating...</> : "Generate AI Schedule"}
       </button>
@@ -211,12 +219,12 @@ export default function PlantingCalendar() {
       </div>
 
       {/* Crop list */}
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
         {filtered.map((crop, index) => (
           <CropCard key={crop.id || index} crop={crop} />
         ))}
         {filtered.length === 0 && (
-          <div className="text-center text-white/30 py-8 text-sm">No crops in this category</div>
+          <div className="col-span-full text-center text-white/30 py-8 text-sm">No crops in this category</div>
         )}
       </div>
     </div>

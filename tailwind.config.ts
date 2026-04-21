@@ -116,6 +116,10 @@ const config: Config = {
           '100%': { backgroundPosition: '200% 0' },
         },
       },
+      spacing: {
+        'sidebar':    '14rem',   // 224px — md sidebar width
+        'sidebar-lg': '16rem',   // 256px — lg sidebar width
+      },
     },
   },
   plugins: [],

@@ -11,47 +11,65 @@ import VillageElderChat from '@/components/ai/VillageElderChat'
 import AIVisionModule from '@/components/ai/AIVisionModule'
 import AuthModal from '@/components/auth/AuthModal'
 import { useFirebase } from '@/context/FirebaseContext'
-import { Wifi, WifiOff, Sparkles, LogOut, User as UserIcon, Lock } from 'lucide-react'
-
+import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation } from 'lucide-react'
 import MarketDashboard from '@/components/dashboard/MarketDashboard'
+import EcoTrack from '@/components/dashboard/EcoTrack'
+
+// ─── Sidebar nav items ────────────────────────────────────────────────────────
+const navTabs = [
+  { id: 'home',     label: 'Home',     Icon: Home },
+  { id: 'market',   label: 'Market',   Icon: TrendingUp },
+  { id: 'calendar', label: 'Planting', Icon: Leaf },
+  { id: 'chat',     label: 'Chat',     Icon: MessageCircle },
+  { id: 'alerts',   label: 'Alerts',   Icon: Bell },
+  { id: 'track',    label: 'Track',    Icon: Navigation },
+]
+
+const tabTitles: Record<string, string> = {
+  home:     '🌿 EcoFarm',
+  market:   '📈 Market',
+  calendar: '📅 Planting',
+  chat:     '👵 Village Elder',
+  alerts:   '🚨 Pest Alerts',
+  track:    '🚚 Eco-Track',
+}
 
 // ─── Top app bar ──────────────────────────────────────────────────────────────
 function AppBar({ activeTab }: { activeTab: string }) {
-  const { isConnected, farmStatus, user, logout } = useFirebase()
-
-  const titles: Record<string, string> = {
-    home:     '🌿 EcoFarm',
-    market:   '📈 Market',
-    calendar: '📅 Planting',
-    chat:     '👵 Village Elder',
-    alerts:   '🚨 Pest Alerts',
-  }
+  const { isConnected, user, logout } = useFirebase()
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.08] px-4 py-3"
+      className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.08]"
       style={{
         background: 'rgba(6,20,18,0.85)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
       }}
     >
-      <div className="flex items-center justify-between max-w-md mx-auto">
-        <h1 className="font-display font-black text-xl tracking-tight" style={{ color: '#FFFFFF' }}>
-          {titles[activeTab] || '🌿 EcoFarm'}
-        </h1>
-        
+      <div className="flex items-center justify-between w-full px-4 py-3 md:px-6 lg:px-8">
+        {/* Brand logo — always visible */}
+        <span className="font-display font-black text-xl tracking-tight text-white">
+          🌿 EcoFarm
+        </span>
+
+        {/* Active tab title — mobile only */}
+        <span className="md:hidden font-display font-semibold text-sm text-white/70 tracking-wide">
+          {tabTitles[activeTab] || '🌿 EcoFarm'}
+        </span>
+
+        {/* Right side controls */}
         <div className="flex items-center gap-2.5">
-          {/* Connection status */}
           <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
             isConnected ? 'bg-safe/15' : 'bg-alert/15'
           }`}>
-            {isConnected ? <Wifi className="text-safe" size={13} /> : <WifiOff className="text-alert" size={13} />}
+            {isConnected
+              ? <Wifi className="text-safe" size={13} />
+              : <WifiOff className="text-alert" size={13} />}
           </div>
-          
-          {/* Logout */}
+
           {user && (
-            <button 
+            <button
               onClick={() => logout()}
               className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/50 transition-all active:scale-90"
               title="Logout"
@@ -62,6 +80,57 @@ function AppBar({ activeTab }: { activeTab: string }) {
         </div>
       </div>
     </header>
+  )
+}
+
+// ─── Desktop Sidebar ──────────────────────────────────────────────────────────
+function Sidebar({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
+  const { user, setShowAuthModal } = useFirebase()
+
+  return (
+    <aside
+      className="hidden md:flex flex-col w-56 lg:w-64 fixed left-0 top-[57px] bottom-0 z-40 border-r border-white/[0.08] py-5 px-3"
+      style={{
+        background: 'linear-gradient(180deg, rgba(6,20,18,0.94) 0%, rgba(6,20,18,0.98) 100%)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+      }}
+    >
+      <nav className="flex flex-col gap-1 flex-1">
+        {navTabs.map(({ id, label, Icon }) => {
+          const isActive = activeTab === id
+          return (
+            <button
+              key={id}
+              onClick={() => onTabChange(id)}
+              id={`sidebar-tab-${id}`}
+              className={`
+                flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 text-left
+                ${isActive
+                  ? 'bg-forest/40 text-wheat border border-forest-light/30 shadow-nature'
+                  : 'text-white/50 hover:text-white/80 hover:bg-white/5 border border-transparent'
+                }
+              `}
+            >
+              <Icon size={18} strokeWidth={isActive ? 2.2 : 1.7} />
+              <span>{label}</span>
+              {id === 'alerts' && (
+                <span className="ml-auto w-2 h-2 bg-alert rounded-full ring-1 ring-forest-deep animate-pulse" />
+              )}
+            </button>
+          )
+        })}
+      </nav>
+
+      {!user && (
+        <button
+          onClick={() => setShowAuthModal(true)}
+          className="mt-4 w-full py-3 rounded-xl border border-forest-light/30 bg-forest/20 text-wheat text-xs font-bold uppercase tracking-widest hover:bg-forest/40 transition-colors"
+        >
+          Sign In
+        </button>
+      )}
+    </aside>
   )
 }
 
@@ -80,7 +149,6 @@ function HomeTab() {
           boxShadow: '0 8px 32px rgba(0,0,0,0.40), inset 0 0 40px rgba(45,102,95,0.12)',
         }}
       >
-        {/* Decorative blobs */}
         <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full blur-3xl opacity-30 pointer-events-none"
           style={{ background: 'radial-gradient(circle, #3D8A81, transparent)' }} />
         <div className="absolute -bottom-10 -left-10 w-44 h-44 rounded-full blur-3xl opacity-15 pointer-events-none"
@@ -97,28 +165,28 @@ function HomeTab() {
         </div>
       </div>
 
-      {/* Status tree — AI Powered */}
-      <StatusTree compact={false} />
-
-      {/* AI Vision Quick Link */}
-      <AIVisionModule />
-
-      {/* Quick weather summary */}
-      <WeatherWidget />
-
-      {/* Community stats */}
-      <div
-        className="p-4 rounded-2xl"
-        style={{
-          background: 'linear-gradient(145deg, rgba(45,102,95,0.18) 0%, rgba(13,36,34,0.55) 100%)',
-          border: '1px solid rgba(61,138,129,0.15)',
-        }}
-      >
-        <p className="text-[11px] text-white/35 uppercase tracking-widest mb-3 font-semibold">Community This Week</p>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <CommunityStat value="247" label="Farmers" emoji="👨‍🌾" />
-          <CommunityStat value="93" label="Reports" emoji="📋" />
-          <CommunityStat value="12" label="Districts" emoji="📍" />
+      {/* Two-column grid on large screens */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+        <div className="space-y-4">
+          <StatusTree compact={false} />
+          <AIVisionModule />
+        </div>
+        <div className="space-y-4">
+          <WeatherWidget />
+          <div
+            className="p-4 rounded-2xl"
+            style={{
+              background: 'linear-gradient(145deg, rgba(45,102,95,0.18) 0%, rgba(13,36,34,0.55) 100%)',
+              border: '1px solid rgba(61,138,129,0.15)',
+            }}
+          >
+            <p className="text-[11px] text-white/35 uppercase tracking-widest mb-3 font-semibold">Community This Week</p>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <CommunityStat value="247" label="Farmers" emoji="👨‍🌾" />
+              <CommunityStat value="93"  label="Reports" emoji="📋" />
+              <CommunityStat value="12"  label="Districts" emoji="📍" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -135,7 +203,7 @@ function CommunityStat({ value, label, emoji }: { value: string; label: string; 
   )
 }
 
-// ─── Market tab ──────────────────────────────────────────────────────────────
+// ─── Market tab ───────────────────────────────────────────────────────────────
 function MarketTab() {
   return (
     <div className="space-y-4 animate-fade-in">
@@ -147,16 +215,15 @@ function MarketTab() {
 // ─── Tab content router ───────────────────────────────────────────────────────
 function TabContent({ tab }: { tab: string }) {
   const { user } = useFirebase()
-  
-  // Home and Market remain open for guest viewing
+
   if (tab === 'home') return <HomeTab />
   if (tab === 'market') return <MarketTab />
-  
-  // Calendar, Chat, and Alerts require Auth
+
   if (!user) return <AuthGate tabName={tab} />
 
   switch (tab) {
     case 'calendar': return <PlantingCalendar />
+    case 'track': return <EcoTrack />
     case 'chat': return (
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center gap-2 px-1">
@@ -168,9 +235,12 @@ function TabContent({ tab }: { tab: string }) {
     )
     case 'alerts': return (
       <div className="space-y-8 animate-fade-in">
-        <PestAlertsPanel />
-        <div className="border-t border-white/10 pt-6">
-          <PestAlertForm />
+        {/* Two-column on large screens */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <PestAlertsPanel />
+          <div className="border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-8">
+            <PestAlertForm />
+          </div>
         </div>
       </div>
     )
@@ -198,7 +268,7 @@ function AuthGate({ tabName }: { tabName: string }) {
       <p className="text-xs text-white/40 mb-6 leading-relaxed max-w-[200px] mx-auto">
         Please sign in to access your personalized {tabName} data and AI advice.
       </p>
-      <button 
+      <button
         onClick={() => setShowAuthModal(true)}
         className="btn-primary text-xs py-2.5 px-6"
       >
@@ -226,15 +296,17 @@ export default function HomePage() {
     <div className="min-h-screen min-h-dvh flex flex-col" style={{ background: '#061412' }}>
       <AppBar activeTab={activeTab} />
 
-      {/* Page content */}
-      <main className="flex-1 overflow-y-auto pb-28 pt-16">
-        <div className="max-w-md mx-auto px-4 py-5">
+      {/* Desktop sidebar */}
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Main content — left-padded on md+ to clear the sidebar */}
+      <main className="flex-1 overflow-y-auto pb-28 md:pb-8 pt-16 md:ml-56 lg:ml-64">
+        <div className="w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-5">
           <TabContent tab={activeTab} />
-          
-          {/* Global sign-in prompt for guests */}
+
           {!user && (
             <div className="mt-8 text-center">
-              <button 
+              <button
                 onClick={() => setShowAuthModal(true)}
                 className="text-xs text-forest-light/70 hover:text-forest-light font-bold uppercase tracking-widest border-b border-forest-light/20 pb-1 transition-colors"
               >
@@ -247,7 +319,10 @@ export default function HomePage() {
 
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Bottom nav — mobile only */}
+      <div className="md:hidden">
+        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
     </div>
   )
 }

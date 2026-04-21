@@ -99,7 +99,7 @@ export default function AIVisionModule() {
       {(status === 'idle' || status === 'error') && (
         <div 
           onClick={() => fileInputRef.current?.click()}
-          className="aspect-square rounded-leaf border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-forest-light/40 transition-colors group relative overflow-hidden"
+          className="aspect-[4/3] sm:aspect-[16/9] rounded-leaf border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-forest-light/40 transition-colors group relative overflow-hidden"
         >
           {imagePreview && (
             <div className="absolute inset-0 opacity-40 mix-blend-overlay">

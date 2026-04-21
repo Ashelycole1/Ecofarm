@@ -55,8 +55,19 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="nature-card w-full max-w-md overflow-hidden animate-slide-up">
+    <div
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="nature-card w-full max-w-md max-h-[92dvh] overflow-y-auto animate-slide-up rounded-t-3xl sm:rounded-[20px_4px_20px_4px] relative">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/20 transition-all"
+          aria-label="Close modal"
+        >
+          ✕
+        </button>
         {/* Banner */}
         <div className="bg-nature-gradient p-6 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/leaf.png')] animate-pulse" />

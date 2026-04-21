@@ -25,7 +25,7 @@ export default function VillageElderChat() {
   }
 
   return (
-    <div className="flex flex-col h-[500px] nature-card overflow-hidden">
+    <div className="flex flex-col h-[55vh] min-h-[360px] max-h-[700px] md:h-[65vh] nature-card overflow-hidden">
       {/* Header */}
       <div className="bg-forest/40 p-3 flex items-center gap-3 border-b border-white/10">
         <div className="w-10 h-10 rounded-full bg-wheat/20 flex items-center justify-center border border-wheat/30">
