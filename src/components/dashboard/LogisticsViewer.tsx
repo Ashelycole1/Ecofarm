@@ -23,6 +23,7 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
   const [status, setStatus] = useState<'connecting' | 'tracking' | 'error'>('connecting');
   const [errorMsg, setErrorMsg] = useState('');
+  const [address, setAddress] = useState('Locating...');
   const [destination, setDestination] = useState<[number, number] | null>(null);
   const [eta, setEta] = useState<number | null>(null); 
   const [distance, setDistance] = useState<number | null>(null); 
@@ -102,6 +103,9 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
             setDistance(Number(d.toFixed(1)));
             setEta(Math.round(d * 4)); // Assume 15km/h avg speed for rural boda
           }
+
+          // Reverse Geocoding
+          fetchAddress(lat, lng);
         }
       )
       .subscribe();
@@ -121,6 +125,18 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
+  };
+
+  const fetchAddress = async (lat: number, lon: number) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+      const data = await res.json();
+      const addr = data.address;
+      const display = addr.suburb || addr.neighbourhood || addr.city_district || addr.town || addr.city || "Kampala District";
+      setAddress(display);
+    } catch (err) {
+      console.warn('Geocoding failed');
+    }
   };
 
   const handleUseMySyncLocation = () => {
@@ -233,8 +249,7 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
               <div>
                 <h3 className="text-white font-display font-black text-lg leading-tight">Farmer Aaron</h3>
                 <div className="flex items-center gap-1 mt-1">
-                  <span className="text-[#FF9800] text-[10px]">★★★★★</span>
-                  <span className="text-white/40 text-[10px] font-bold">4.9 (1.2k)</span>
+                  <span className="text-[#FF9800] text-[8px] font-black uppercase">{address}</span>
                 </div>
               </div>
             </div>

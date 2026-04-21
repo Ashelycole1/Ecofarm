@@ -2,6 +2,12 @@
 
 import { TrendingUp, TrendingDown, ShoppingCart, Phone, RefreshCcw } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
+
+const MapComponent = dynamic(() => import('./MapComponent'), {
+  ssr: false,
+  loading: () => <div className="h-48 w-full bg-white/5 animate-pulse rounded-2xl" />
+})
 
 // Farmer phone numbers (replace with real numbers in production)
 const FARMER_WHATSAPP = '+256700000000'
@@ -88,6 +94,23 @@ export default function MarketDashboard() {
         >
           <RefreshCcw className={`text-leaf ${loading ? 'animate-spin' : ''}`} size={15} />
         </button>
+      </div>
+
+      {/* Live Supply Map - Integrated as requested */}
+      <div 
+        className="h-48 rounded-2xl overflow-hidden relative border border-white/10"
+        style={{ background: 'rgba(13,36,34,0.60)' }}
+      >
+        <MapComponent 
+          currentPosition={[0.3476, 32.5825]} 
+          routeCoordinates={[[0.3476, 32.5825], [0.3500, 32.5900]]} 
+        />
+        <div className="absolute top-3 left-3 z-[1000] px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-safe animate-pulse" />
+            <span className="text-white text-[10px] font-bold uppercase tracking-widest">Regional Supply Active</span>
+          </div>
+        </div>
       </div>
 
       {/* Product Grid */}
