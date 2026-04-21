@@ -1,20 +1,33 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+const getSupabaseConfig = () => {
+  return {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  };
+};
 
-export const supabase = (supabaseUrl && supabaseAnonKey) 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+let _supabase: SupabaseClient | null = null;
 
-// Helper: Insert a batch of coordinates to Supabase
+export const getSupabase = (): SupabaseClient | null => {
+  if (_supabase) return _supabase;
+  const { url, key } = getSupabaseConfig();
+  if (!url || !key) return null;
+  _supabase = createClient(url, key);
+  return _supabase;
+};
+
+// For backward compatibility with existing imports
+export const supabase = typeof window !== 'undefined' ? getSupabase() : null;
+
 export const syncCoordinates = async (
   coords: { trip_id: string; lat: number; lng: number; timestamp: number }[]
 ): Promise<{ error: any }> => {
-  if (!supabase) {
+  const client = getSupabase();
+  if (!client) {
     console.warn('[Supabase] Missing env variables. Buffering offline only.');
     return { error: null };
   }
-  const { error } = await supabase.from('coordinates').insert(coords);
+  const { error } = await client.from('coordinates').insert(coords);
   return { error };
 };
