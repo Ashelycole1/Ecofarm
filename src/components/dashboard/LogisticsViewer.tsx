@@ -28,6 +28,11 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
     if (!tripId) return;
 
     const fetchInitial = async () => {
+      if (!supabase) {
+        setErrorMsg('Supabase configuration missing.');
+        setStatus('error');
+        return;
+      }
       try {
         const { data, error } = await supabase
           .from('coordinates')
@@ -42,14 +47,20 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
           setRouteCoordinates(coords);
           setCurrentPosition(coords[coords.length - 1]);
           setStatus('tracking');
+        } else {
+          setErrorMsg('No coordinates found for this Trip ID.');
+          setStatus('error');
         }
       } catch (err: any) {
         console.error('[Supabase Error]', err);
         setErrorMsg('Could not fetch initial location.');
+        setStatus('error');
       }
     };
 
     fetchInitial();
+
+    if (!supabase) return;
 
     // Subscribe to real-time updates
     const channel = supabase
