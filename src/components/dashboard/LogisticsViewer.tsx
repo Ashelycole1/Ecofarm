@@ -52,9 +52,15 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
           setRouteCoordinates(coords);
           setCurrentPosition(coords[coords.length - 1]);
           setStatus('tracking');
+          
+          if (destination) {
+            const d = calculateDistance(coords[coords.length - 1][0], coords[coords.length - 1][1], destination[0], destination[1]);
+            setDistance(Number(d.toFixed(1)));
+            setEta(Math.round(d * 4));
+          }
         } else {
-          setErrorMsg('No coordinates found for this Trip ID.');
-          setStatus('error');
+          // No data yet? Stay in 'connecting' and wait for the first INSERT via realtime
+          console.log('[Supabase] No initial data, waiting for realtime...');
         }
       } catch (err: any) {
         console.error('[Supabase Error]', err);

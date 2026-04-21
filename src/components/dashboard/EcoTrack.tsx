@@ -76,6 +76,21 @@ export default function EcoTrack() {
     setRouteCoordinates([]);
     setShowQR(false);
 
+    // Get and sync initial position immediately
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const timestamp = Date.now();
+      
+      setCurrentPosition([lat, lng]);
+      setRouteCoordinates([[lat, lng]]);
+      
+      await addCoordinate({ tripId: trip.id, lat, lng, timestamp });
+      if (navigator.onLine) {
+        await syncCoordinates([{ trip_id: trip.id, lat, lng, timestamp }]);
+      }
+    }, (err) => console.warn('[GEO] Initial sync failed:', err));
+
     if (!('geolocation' in navigator)) return;
 
     watchIdRef.current = navigator.geolocation.watchPosition(
