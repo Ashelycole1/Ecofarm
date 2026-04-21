@@ -34,11 +34,12 @@ export default function MapComponent({ currentPosition, routeCoordinates }: MapC
   const defaultCenter: [number, number] = [0.3476, 32.5825]; // Kampala, Uganda as default
 
   return (
-    <MapContainer
-      center={currentPosition || defaultCenter}
-      zoom={14}
-      style={{ height: '100%', width: '100%', borderRadius: '0.75rem' }}
-    >
+    <div style={{ height: '100%', width: '100%' }} className="leaflet-container-wrapper">
+      <MapContainer
+        center={currentPosition || defaultCenter}
+        zoom={14}
+        style={{ height: '100%', width: '100%' }}
+      >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -52,6 +53,7 @@ export default function MapComponent({ currentPosition, routeCoordinates }: MapC
       {routeCoordinates.length > 0 && (
         <Polyline positions={routeCoordinates} color="rgba(16, 185, 129, 0.8)" weight={4} />
       )}
-    </MapContainer>
+      </MapContainer>
+    </div>
   );
 }

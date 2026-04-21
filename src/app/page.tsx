@@ -14,6 +14,7 @@ import { useFirebase } from '@/context/FirebaseContext'
 import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation } from 'lucide-react'
 import MarketDashboard from '@/components/dashboard/MarketDashboard'
 import EcoTrack from '@/components/dashboard/EcoTrack'
+import LogisticsViewer from '@/components/dashboard/LogisticsViewer'
 
 // ─── Sidebar nav items ────────────────────────────────────────────────────────
 const navTabs = [
@@ -212,18 +213,88 @@ function MarketTab() {
   )
 }
 
+// ─── Track tab ──────────────────────────────────────────────────────────────
+function TrackTab() {
+  const [view, setView] = useState<'driver' | 'buyer'>('buyer')
+  const [trackId, setTrackId] = useState('')
+  const [activeId, setActiveId] = useState('')
+
+  return (
+    <div className="space-y-4 animate-fade-in pb-20">
+      <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 max-w-xs mx-auto">
+        <button
+          onClick={() => setView('buyer')}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+            view === 'buyer' ? 'bg-forest/40 text-wheat shadow-lg' : 'text-white/40'
+          }`}
+        >
+          Track Delivery
+        </button>
+        <button
+          onClick={() => setView('driver')}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+            view === 'driver' ? 'bg-forest/40 text-wheat shadow-lg' : 'text-white/40'
+          }`}
+        >
+          Driver Mode
+        </button>
+      </div>
+
+      {view === 'driver' ? (
+        <EcoTrack />
+      ) : (
+        <div className="space-y-4">
+          {!activeId ? (
+            <div className="p-8 rounded-2xl text-center space-y-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)' }}>
+              <div className="w-16 h-16 bg-forest/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Truck className="text-wheat" size={32} />
+              </div>
+              <h3 className="text-white font-bold text-lg">Enter Delivery ID</h3>
+              <p className="text-white/50 text-xs">Enter the tracking ID provided by the farmer or driver.</p>
+              <input
+                type="text"
+                placeholder="e.g. 550e8400-e29b-41d4-a716..."
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white text-center focus:border-forest/50 outline-none"
+                value={trackId}
+                onChange={(e) => setTrackId(e.target.value)}
+              />
+              <button
+                onClick={() => setActiveId(trackId)}
+                className="w-full py-3 rounded-xl bg-btn-primary text-white font-bold shadow-lg transition-all active:scale-95 disabled:opacity-50"
+                disabled={!trackId}
+              >
+                Track Live Movement
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <LogisticsViewer tripId={activeId} />
+              <button
+                onClick={() => setActiveId('')}
+                className="w-full py-2 text-white/40 text-xs hover:text-white/60 transition-colors"
+              >
+                ← Change Trip ID
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Tab content router ───────────────────────────────────────────────────────
 function TabContent({ tab }: { tab: string }) {
   const { user } = useFirebase()
 
   if (tab === 'home') return <HomeTab />
   if (tab === 'market') return <MarketTab />
+  if (tab === 'track') return <TrackTab />
 
   if (!user) return <AuthGate tabName={tab} />
 
   switch (tab) {
     case 'calendar': return <PlantingCalendar />
-    case 'track': return <EcoTrack />
     case 'chat': return (
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center gap-2 px-1">

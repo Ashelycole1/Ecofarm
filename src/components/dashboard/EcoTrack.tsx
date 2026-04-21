@@ -169,10 +169,10 @@ export default function EcoTrack() {
         </div>
       </div>
 
-      {/* Map */}
+      {/* Map Container */}
       <div
-        className="flex-1 min-h-[300px] relative rounded-2xl overflow-hidden"
-        style={{ border: '1px solid rgba(61,138,129,0.20)', background: 'rgba(13,36,34,0.60)' }}
+        className="flex-1 min-h-[400px] h-[400px] relative rounded-2xl overflow-hidden shadow-inner"
+        style={{ border: '1px solid rgba(61,138,129,0.30)', background: 'rgba(13,36,34,0.80)' }}
       >
         {showQR ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm z-10 p-6 text-center gap-4">
@@ -196,7 +196,6 @@ export default function EcoTrack() {
         )}
       </div>
 
-      {/* Controls */}
       {!currentTrip ? (
         <button
           onClick={handleStartTrip}
@@ -209,27 +208,44 @@ export default function EcoTrack() {
           <Navigation size={20} /> Start Trip
         </button>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-3">
           <div
-            className="py-4 rounded-2xl flex flex-col items-center justify-center gap-1"
-            style={{ background: 'rgba(45,102,95,0.20)', border: '1px solid rgba(61,138,129,0.20)' }}
+            className="p-4 rounded-2xl flex flex-col gap-2"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
           >
-            <span className="text-white/50 text-[10px] uppercase tracking-widest">Status</span>
-            <span className="text-leaf font-bold text-sm flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-leaf animate-pulse" />
-              Tracking
-            </span>
+            <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Share Tracking ID</p>
+            <div className="flex items-center justify-between gap-2">
+              <code className="text-wheat text-xs bg-black/40 px-2 py-1.5 rounded-lg flex-1 truncate">{currentTrip.id}</code>
+              <button 
+                onClick={() => { navigator.clipboard.writeText(currentTrip.id); alert('ID Copied!'); }}
+                className="px-3 py-1.5 bg-forest/40 text-wheat text-[10px] font-bold rounded-lg"
+              >
+                Copy
+              </button>
+            </div>
           </div>
-          <button
-            onClick={handleEndTrip}
-            className="py-4 rounded-2xl font-display font-bold text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
-            style={{
-              background: 'linear-gradient(135deg, #e53935 0%, #b71c1c 100%)',
-              boxShadow: '0 6px 24px rgba(229,57,53,0.35)',
-            }}
-          >
-            <MapPin size={18} /> Confirm Delivery
-          </button>
+          <div className="grid grid-cols-2 gap-3">
+            <div
+              className="py-4 rounded-2xl flex flex-col items-center justify-center gap-1"
+              style={{ background: 'rgba(45,102,95,0.20)', border: '1px solid rgba(61,138,129,0.20)' }}
+            >
+              <span className="text-white/50 text-[10px] uppercase tracking-widest">Status</span>
+              <span className="text-leaf font-bold text-sm flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-leaf animate-pulse" />
+                Tracking
+              </span>
+            </div>
+            <button
+              onClick={handleEndTrip}
+              className="py-4 rounded-2xl font-display font-bold text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
+              style={{
+                background: 'linear-gradient(135deg, #e53935 0%, #b71c1c 100%)',
+                boxShadow: '0 6px 24px rgba(229,57,53,0.35)',
+              }}
+            >
+              <MapPin size={18} /> Confirm Delivery
+            </button>
+          </div>
         </div>
       )}
     </div>
