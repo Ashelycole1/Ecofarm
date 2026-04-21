@@ -84,7 +84,7 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (supabase) supabase.removeChannel(channel);
     };
   }, [tripId]);
 
