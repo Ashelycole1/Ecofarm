@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Package, MapPin, Truck, RefreshCw, AlertCircle } from 'lucide-react';
+import { Package, MapPin, Truck, RefreshCw, AlertCircle, Navigation } from 'lucide-react';
 import { getSupabase } from '@/lib/supabaseClient';
 
 const MapComponent = dynamic(() => import('./MapComponent'), {
@@ -23,8 +23,10 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
   const [status, setStatus] = useState<'connecting' | 'tracking' | 'error'>('connecting');
   const [errorMsg, setErrorMsg] = useState('');
-  const [eta, setEta] = useState(15); // Simulated minutes
-  const [distance, setDistance] = useState(2.4); // Simulated km
+  const [destination, setDestination] = useState<[number, number] | null>(null);
+  const [eta, setEta] = useState<number | null>(null); 
+  const [distance, setDistance] = useState<number | null>(null); 
+  const [isSelectingDest, setIsSelectingDest] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabase();
@@ -83,9 +85,12 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
           setRouteCoordinates(prev => [...prev, newPos]);
           setStatus('tracking');
           
-          // Update simulated values
-          setEta(prev => Math.max(1, prev - 1));
-          setDistance(prev => Math.max(0.1, prev - 0.2));
+          // Calculate distance/ETA if destination is set
+          if (destination) {
+            const d = calculateDistance(lat, lng, destination[0], destination[1]);
+            setDistance(Number(d.toFixed(1)));
+            setEta(Math.round(d * 4)); // Assume 15km/h avg speed for rural boda
+          }
         }
       )
       .subscribe();
@@ -93,22 +98,60 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
     return () => {
       if (supabase) supabase.removeChannel(channel);
     };
-  }, [tripId]);
+  }, [tripId, destination]);
+
+  // ── Helper: Haversine Distance ──────────────────────────────────────────
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const handleUseMySyncLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const newDest: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        setDestination(newDest);
+        setIsSelectingDest(false);
+        if (currentPosition) {
+          const d = calculateDistance(currentPosition[0], currentPosition[1], newDest[0], newDest[1]);
+          setDistance(Number(d.toFixed(1)));
+          setEta(Math.round(d * 4));
+        }
+      }, (err) => {
+        alert("Could not get your location. Please select it on the map.");
+      });
+    }
+  };
 
   return (
-    <div className="flex flex-col h-[70vh] sm:h-[600px] relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl animate-fade-in">
+    <div className="flex flex-col h-[75vh] sm:h-[650px] relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl animate-fade-in">
       {/* Top Floating Status */}
-      <div className="absolute top-4 left-4 right-4 z-[1000] pointer-events-none flex justify-between items-start">
-        <div className="px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 shadow-lg pointer-events-auto">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full animate-pulse ${status === 'tracking' ? 'bg-[#FF9800]' : 'bg-white/30'}`} />
-            <span className="text-white text-[10px] font-bold uppercase tracking-wider">
-              {status === 'connecting' ? 'Searching...' : 'In Transit'}
-            </span>
+      <div className="absolute top-4 left-4 right-4 z-[1000] pointer-events-none flex justify-between items-start gap-2">
+        <div className="flex flex-col gap-2 pointer-events-auto">
+          <div className="px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 shadow-lg">
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full animate-pulse ${status === 'tracking' ? 'bg-[#FF9800]' : 'bg-white/30'}`} />
+              <span className="text-white text-[10px] font-bold uppercase tracking-wider">
+                {status === 'connecting' ? 'Searching...' : 'In Transit'}
+              </span>
+            </div>
           </div>
+          
+          {destination && (
+            <div className="px-4 py-2 rounded-2xl bg-forest/40 backdrop-blur-md border border-white/10 shadow-lg flex items-center gap-2">
+              <MapPin size={12} className="text-wheat" />
+              <span className="text-white text-[10px] font-bold">Home point set</span>
+            </div>
+          )}
         </div>
 
-        {status === 'tracking' && (
+        {status === 'tracking' && eta !== null && (
           <div className="px-4 py-2 rounded-2xl bg-[#FF9800] shadow-lg pointer-events-auto animate-bounce-subtle">
             <span className="text-black text-[10px] font-black italic uppercase">Arriving in {eta}m</span>
           </div>
@@ -117,7 +160,29 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
 
       {/* Map - Takes up full background */}
       <div className="absolute inset-0 z-0">
-        <MapComponent currentPosition={currentPosition} routeCoordinates={routeCoordinates} />
+        <MapComponent 
+          currentPosition={currentPosition} 
+          routeCoordinates={routeCoordinates}
+          destination={destination}
+          onMapClick={isSelectingDest ? (lat, lng) => {
+            setDestination([lat, lng]);
+            setIsSelectingDest(false);
+            if (currentPosition) {
+              const d = calculateDistance(currentPosition[0], currentPosition[1], lat, lng);
+              setDistance(Number(d.toFixed(1)));
+              setEta(Math.round(d * 4));
+            }
+          } : undefined}
+        />
+        
+        {isSelectingDest && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            <div className="bg-[#FF9800] text-black px-4 py-2 rounded-full text-xs font-bold shadow-2xl animate-pulse border-2 border-white">
+              Tap map to set delivery spot
+            </div>
+          </div>
+        )}
+
         {status === 'connecting' && !currentPosition && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md z-10">
             <div className="w-20 h-20 rounded-full border-4 border-[#FF9800]/20 border-t-[#FF9800] animate-spin mb-4" />
@@ -145,50 +210,55 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-forest/20 border-2 border-[#FF9800]/30 p-1">
+                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-forest/20 border-2 border-[#FF9800]/30 p-1">
                   <div className="w-full h-full rounded-xl bg-forest/40 flex items-center justify-center text-2xl">
                     👨‍🌾
                   </div>
                 </div>
-                <div className="absolute -bottom-2 -right-2 bg-[#FF9800] text-black text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase">
+                <div className="absolute -bottom-2 -right-2 bg-[#FF9800] text-black text-[7px] font-black px-1 py-0.5 rounded-md uppercase">
                   Safe Farmer
                 </div>
               </div>
               <div>
-                <h3 className="text-white font-display font-black text-xl leading-tight">Farmer Aaron</h3>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map(s => <span key={s} className="text-[#FF9800] text-[10px]">★</span>)}
-                  </div>
-                  <span className="text-white/40 text-[10px] font-bold">4.9 • 1,200+ trips</span>
+                <h3 className="text-white font-display font-black text-lg leading-tight">Farmer Aaron</h3>
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-[#FF9800] text-[10px]">★★★★★</span>
+                  <span className="text-white/40 text-[10px] font-bold">4.9 (1.2k)</span>
                 </div>
               </div>
             </div>
             
-            <div className="text-right">
-              <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
-                <p className="text-white/40 text-[8px] uppercase font-black tracking-tighter">Plate Number</p>
-                <p className="text-wheat font-mono font-bold text-sm">ECO-2024</p>
+            {!destination ? (
+              <button 
+                onClick={() => setIsSelectingDest(true)}
+                className="bg-[#FF9800] text-black text-[10px] font-black px-4 py-2 rounded-xl uppercase shadow-lg shadow-[#FF9800]/20 active:scale-95 transition-all"
+              >
+                Set Location
+              </button>
+            ) : (
+              <div className="text-right">
+                <p className="text-white/40 text-[8px] uppercase font-black">ECO-2024</p>
+                <p className="text-wheat font-bold text-xs underline cursor-pointer" onClick={() => setIsSelectingDest(true)}>Change Home</p>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Trip Progress Bar */}
-          <div className="relative pt-4">
+          <div className="relative pt-2">
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-[#FF9800] transition-all duration-1000" 
-                style={{ width: status === 'tracking' ? '65%' : '0%' }}
+                style={{ width: destination ? '75%' : '0%' }}
               />
             </div>
             <div className="flex justify-between mt-2">
               <div className="flex flex-col">
-                <span className="text-white font-bold text-xs">Farm</span>
-                <span className="text-white/30 text-[9px]">Mbarara</span>
+                <span className="text-white font-bold text-[10px]">Farmer</span>
+                <span className="text-white/30 text-[8px]">In Transit</span>
               </div>
               <div className="flex flex-col text-right">
-                <span className="text-[#FF9800] font-bold text-xs">{distance}km</span>
-                <span className="text-white/30 text-[9px]">Remaining</span>
+                <span className="text-[#FF9800] font-bold text-[10px]">{distance !== null ? `${distance}km` : '--'}</span>
+                <span className="text-white/30 text-[8px]">to your home</span>
               </div>
             </div>
           </div>
@@ -196,14 +266,14 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-3">
             <button 
-              onClick={() => window.location.reload()}
-              className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-sm transition-all active:scale-95"
+              onClick={handleUseMySyncLocation}
+              className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-xs transition-all active:scale-95"
             >
-              <RefreshCw size={18} className="text-wheat" /> Refresh
+              <Navigation size={14} className="text-wheat" /> My Location
             </button>
             <a 
               href="tel:+256700000000"
-              className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-[#FF9800] text-black font-black text-sm transition-all active:scale-95 shadow-lg shadow-[#FF9800]/20"
+              className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#FF9800] text-black font-black text-xs transition-all active:scale-95 shadow-lg shadow-[#FF9800]/20"
             >
                Call Driver
             </a>
