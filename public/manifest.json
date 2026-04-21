@@ -1,0 +1,21 @@
+{
+  "name": "EcoFarm PWA",
+  "short_name": "EcoFarm",
+  "description": "Climate-Resilient Farming App for Uganda",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06260a",
+  "theme_color": "#06260a",
+  "icons": [
+    {
+      "src": "/globe.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/window.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,100 +1,195 @@
 'use client'
 
-import { TrendingUp, TrendingDown, RefreshCcw, DollarSign } from 'lucide-react'
+import { TrendingUp, TrendingDown, ShoppingCart, Phone, RefreshCcw } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
-interface MarketItem {
+// Farmer phone numbers (replace with real numbers in production)
+const FARMER_WHATSAPP = '+256700000000'
+
+interface Product {
   id: string
   name: string
+  emoji: string
+  description: string
   price: number
   unit: string
   trend: 'up' | 'down' | 'stable'
   percentage: string
-  lastUpdated: string
+  available: string // e.g. "200 kg"
+  farmerName: string
 }
 
-const staticMarketData: MarketItem[] = [
-  { id: 'm1', name: 'Maize (White)', price: 1200, unit: 'UGX/kg', trend: 'up', percentage: '+4.2%', lastUpdated: 'Today, 08:30 AM' },
-  { id: 'm2', name: 'Beans (Nambale)', price: 3500, unit: 'UGX/kg', trend: 'down', percentage: '-1.5%', lastUpdated: 'Today, 08:30 AM' },
-  { id: 'm3', name: 'Matooke (Bunch)', price: 15000, unit: 'UGX/bunch', trend: 'up', percentage: '+12.0%', lastUpdated: 'Yesterday, 16:00 PM' },
-  { id: 'm4', name: 'Cassava (Fresh)', price: 800, unit: 'UGX/kg', trend: 'stable', percentage: '0.0%', lastUpdated: 'Today, 09:15 AM' },
+const products: Product[] = [
+  {
+    id: 'p1',
+    name: 'White Maize',
+    emoji: '🌽',
+    description: 'Grade A Ugandan white maize, sun-dried and sorted. Ready for posho milling.',
+    price: 1200,
+    unit: 'per kg',
+    trend: 'up',
+    percentage: '+4.2%',
+    available: '500 kg',
+    farmerName: 'James Okello',
+  },
+  {
+    id: 'p2',
+    name: 'Nambale Beans',
+    emoji: '🫘',
+    description: 'High-protein Nambale beans from Busoga region. Clean & hand-sorted.',
+    price: 3500,
+    unit: 'per kg',
+    trend: 'down',
+    percentage: '-1.5%',
+    available: '150 kg',
+    farmerName: 'Grace Namukasa',
+  },
+  {
+    id: 'p3',
+    name: 'Matooke',
+    emoji: '🍌',
+    description: 'Fresh green matooke bunches from Mbarara. Harvested within 24 hours.',
+    price: 15000,
+    unit: 'per bunch',
+    trend: 'up',
+    percentage: '+12.0%',
+    available: '80 bunches',
+    farmerName: 'Robert Tumwine',
+  },
 ]
 
+function buildWhatsappUrl(product: Product): string {
+  const message = encodeURIComponent(
+    `Hello, I'm interested in buying *${product.name}* at UGX ${product.price.toLocaleString()} ${product.unit}.\n\nAvailable stock: ${product.available}\n\nPlease confirm availability and delivery options. Thank you!`
+  )
+  return `https://wa.me/${FARMER_WHATSAPP.replace(/\D/g, '')}?text=${message}`
+}
+
 export default function MarketDashboard() {
-  const [data, setData] = useState<MarketItem[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchMarketData = () => {
-    setLoading(true)
-    // Simulating API Fetch
-    setTimeout(() => {
-      setData(staticMarketData)
-      setLoading(false)
-    }, 800)
-  }
-
   useEffect(() => {
-    fetchMarketData()
+    const timer = setTimeout(() => setLoading(false), 600)
+    return () => clearTimeout(timer)
   }, [])
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-2">
+    <div className="space-y-5 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display font-bold text-xl text-white">Market Prices</h2>
-          <p className="text-xs text-white/40">Estimated national averages</p>
+          <h2 className="font-display font-bold text-xl text-white">🛒 Marketplace</h2>
+          <p className="text-xs text-white/40 mt-0.5">Fresh produce · Buy direct from farmers</p>
         </div>
         <button
-          onClick={fetchMarketData}
-          className="w-9 h-9 flex items-center justify-center rounded-full border border-white/10 hover:border-forest-light/40 transition-all"
-          style={{ background: 'rgba(45,102,95,0.25)' }}
+          onClick={() => { setLoading(true); setTimeout(() => setLoading(false), 600) }}
+          className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
+          style={{ background: 'rgba(46,125,50,0.25)', border: '1px solid rgba(67,160,71,0.30)' }}
         >
-          <RefreshCcw className={`text-wheat ${loading ? 'animate-spin' : ''}`} size={15} />
+          <RefreshCcw className={`text-leaf ${loading ? 'animate-spin' : ''}`} size={15} />
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="skeleton h-16 rounded-2xl" />
-          ))
-        ) : (
-          data.map(item => (
+      {/* Product Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-64 rounded-2xl skeleton" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {products.map(product => (
             <div
-              key={item.id}
-              className="flex items-center justify-between p-4 rounded-2xl"
+              key={product.id}
+              className="flex flex-col rounded-2xl overflow-hidden transition-all hover:scale-[1.02] duration-200"
               style={{
-                background: 'linear-gradient(145deg, rgba(45,102,95,0.18) 0%, rgba(13,36,34,0.55) 100%)',
-                border: '1px solid rgba(61,138,129,0.18)',
-                backdropFilter: 'blur(12px)',
+                background: 'linear-gradient(160deg, rgba(46,125,50,0.22) 0%, rgba(6,38,10,0.80) 100%)',
+                border: '1px solid rgba(67,160,71,0.25)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
               }}
             >
-              <div className="space-y-0.5">
-                <h3 className="font-bold text-white text-sm">{item.name}</h3>
-                <div className="flex items-center gap-1 text-xs text-white/45">
-                  <DollarSign size={11} />
-                  <span>{item.price.toLocaleString()} {item.unit}</span>
-                </div>
+              {/* Product Image / Emoji Hero */}
+              <div
+                className="flex items-center justify-center py-8 text-6xl"
+                style={{ background: 'rgba(46,125,50,0.15)' }}
+              >
+                {product.emoji}
               </div>
-              <div className="flex flex-col items-end gap-0.5">
-                <div className={`flex items-center gap-1 font-black text-sm ${
-                  item.trend === 'up'   ? 'text-safe' :
-                  item.trend === 'down' ? 'text-alert' : 'text-wheat'
-                }`}>
-                  {item.trend === 'up'   && <TrendingUp size={15} strokeWidth={2.5} />}
-                  {item.trend === 'down' && <TrendingDown size={15} strokeWidth={2.5} />}
-                  {item.percentage}
+
+              {/* Product Details */}
+              <div className="p-4 flex flex-col flex-1 gap-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-display font-bold text-white text-base">{product.name}</h3>
+                    <span className={`text-xs font-bold flex items-center gap-0.5 ${
+                      product.trend === 'up' ? 'text-safe' : product.trend === 'down' ? 'text-alert' : 'text-wheat'
+                    }`}>
+                      {product.trend === 'up' && <TrendingUp size={12} />}
+                      {product.trend === 'down' && <TrendingDown size={12} />}
+                      {product.percentage}
+                    </span>
+                  </div>
+                  <p className="text-white/50 text-xs leading-relaxed">{product.description}</p>
                 </div>
-                <span className="text-[9px] text-white/25 uppercase tracking-wide">{item.lastUpdated}</span>
+
+                {/* Price & Availability */}
+                <div
+                  className="rounded-xl p-3"
+                  style={{ background: 'rgba(0,0,0,0.30)' }}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/40 text-[10px] uppercase tracking-widest">Price</span>
+                    <span className="text-white/40 text-[10px] uppercase tracking-widest">In Stock</span>
+                  </div>
+                  <div className="flex justify-between items-center mt-0.5">
+                    <span className="font-display font-black text-wheat text-lg">
+                      UGX {product.price.toLocaleString()}
+                    </span>
+                    <span className="text-safe text-xs font-semibold">{product.available}</span>
+                  </div>
+                  <p className="text-[10px] text-white/30 mt-0.5">{product.unit}</p>
+                </div>
+
+                {/* Farmer Info */}
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-forest/50 flex items-center justify-center text-xs">
+                    👨‍🌾
+                  </div>
+                  <span className="text-white/50 text-xs">{product.farmerName}</span>
+                </div>
+
+                {/* Buy Now Button */}
+                <a
+                  href={buildWhatsappUrl(product)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-auto w-full py-3.5 rounded-xl font-display font-bold text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
+                  style={{
+                    background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                    boxShadow: '0 4px 16px rgba(37,211,102,0.30)',
+                  }}
+                >
+                  <Phone size={16} />
+                  Buy via WhatsApp
+                </a>
               </div>
             </div>
-          ))
-        )}
-      </div>
-      
-      <div className="mt-4 px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <p className="text-[10px] text-white/30 text-center leading-relaxed">
-          Market prices are estimated regional averages for analytical purposes. Real-time API sync coming soon.
+          ))}
+        </div>
+      )}
+
+      {/* Cart CTA */}
+      <div
+        className="flex items-center gap-3 p-4 rounded-2xl"
+        style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.07)',
+        }}
+      >
+        <ShoppingCart className="text-white/30 shrink-0" size={18} />
+        <p className="text-[11px] text-white/35 leading-relaxed">
+          Prices are current regional averages updated daily. Click &quot;Buy via WhatsApp&quot; to contact the farmer directly and arrange delivery.
         </p>
       </div>
     </div>

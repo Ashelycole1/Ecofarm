@@ -31,15 +31,16 @@ export default function AIVisionModule() {
         const base64data = (reader.result as string).split(',')[1]
 
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
-        const prompt = `You are a specialist agronomist in Uganda. Analyze this crop image. Identify the disease and provide 'Appropriate Technology' solutions (organic, low-cost). Format exact response into JSON format:
+        const prompt = `You are a specialist agronomist based in East Africa, experienced in Ugandan smallholder farming systems. Analyze this crop image.
+        Identify the disease, pest, or deficiency — and provide ONLY organic, low-cost 'Appropriate Technology' solutions that are available in rural Uganda (e.g., neem leaves, wood ash, cow dung, crop rotation, intercropping).
+        Respond ONLY in the following JSON format with no markdown, backticks, or extra text:
         {
           "diagnosis": "string",
           "prevention": "string",
           "curative": "string"
-        }
-        Return ONLY valid raw JSON array, without any markdown formatting or backticks.`
+        }`
 
         const imagePart = {
           inlineData: {

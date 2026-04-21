@@ -1,4 +1,4 @@
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import Dexie, { type EntityTable } from 'dexie';
 
 export interface Trip {
   id: string;
@@ -17,77 +17,56 @@ export interface Coordinate {
   synced: boolean;
 }
 
-interface EcoTrackDB extends DBSchema {
-  trips: {
-    key: string;
-    value: Trip;
-  };
-  coordinates: {
-    key: number;
-    value: Coordinate;
-    indexes: { 'by-trip': string };
-  };
-}
+class EcoTrackDB extends Dexie {
+  trips!: EntityTable<Trip, 'id'>;
+  coordinates!: EntityTable<Coordinate, 'id'>;
 
-let dbPromise: Promise<IDBPDatabase<EcoTrackDB>> | null = null;
-
-export const getDB = () => {
-  if (typeof window === 'undefined') return null;
-  
-  if (!dbPromise) {
-    dbPromise = openDB<EcoTrackDB>('eco-track-db', 1, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains('trips')) {
-          db.createObjectStore('trips', { keyPath: 'id' });
-        }
-        if (!db.objectStoreNames.contains('coordinates')) {
-          const coordStore = db.createObjectStore('coordinates', { keyPath: 'id', autoIncrement: true });
-          coordStore.createIndex('by-trip', 'tripId');
-        }
-      },
+  constructor() {
+    super('eco-track-db');
+    this.version(1).stores({
+      trips: 'id, status',
+      coordinates: '++id, tripId, synced',
     });
   }
-  return dbPromise;
-};
+}
+
+export const db = typeof window !== 'undefined' ? new EcoTrackDB() : null;
 
 export const startTrip = async (farmerId: string): Promise<Trip> => {
-  const db = await getDB();
-  if (!db) throw new Error('DB not available');
-
   const trip: Trip = {
     id: crypto.randomUUID(),
     farmerId,
     startTime: Date.now(),
     status: 'in-progress',
   };
-
-  await db.add('trips', trip);
+  await db?.trips.add(trip);
   return trip;
 };
 
 export const endTrip = async (tripId: string): Promise<Trip | undefined> => {
-  const db = await getDB();
-  if (!db) return;
-
-  const trip = await db.get('trips', tripId);
+  const trip = await db?.trips.get(tripId);
   if (trip) {
     trip.endTime = Date.now();
     trip.status = 'completed';
-    await db.put('trips', trip);
+    await db?.trips.put(trip);
   }
   return trip;
 };
 
-export const addCoordinate = async (coord: Omit<Coordinate, 'id' | 'synced'>): Promise<void> => {
-  const db = await getDB();
-  if (!db) return;
+export const addCoordinate = async (
+  coord: Omit<Coordinate, 'id' | 'synced'>
+): Promise<void> => {
+  await db?.coordinates.add({ ...coord, synced: false });
+};
 
-  await db.add('coordinates', { ...coord, synced: false });
+export const getUnsyncedCoordinates = async (): Promise<Coordinate[]> => {
+  return (await db?.coordinates.where('synced').equals(0).toArray()) ?? [];
+};
+
+export const markCoordinatesSynced = async (ids: number[]): Promise<void> => {
+  await db?.coordinates.where('id').anyOf(ids).modify({ synced: true });
 };
 
 export const getTripCoordinates = async (tripId: string): Promise<Coordinate[]> => {
-  const db = await getDB();
-  if (!db) return [];
-
-  return db.getAllFromIndex('coordinates', 'by-trip', tripId);
+  return (await db?.coordinates.where('tripId').equals(tripId).toArray()) ?? [];
 };
