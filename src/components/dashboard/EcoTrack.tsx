@@ -138,12 +138,12 @@ export default function EcoTrack() {
       <div
         className="flex items-center justify-between rounded-2xl p-4"
         style={{
-          background: 'linear-gradient(135deg, rgba(46,125,50,0.30) 0%, rgba(6,38,10,0.75) 100%)',
-          border: '1px solid rgba(67,160,71,0.25)',
+          background: 'linear-gradient(135deg, rgba(45,102,95,0.30) 0%, rgba(13,36,34,0.75) 100%)',
+          border: '1px solid rgba(61,138,129,0.25)',
         }}
       >
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: 'rgba(46,125,50,0.35)' }}>
+          <div className="p-2.5 rounded-xl" style={{ background: 'rgba(45,102,95,0.35)' }}>
             <Truck className="text-leaf" size={22} />
           </div>
           <div>
@@ -172,7 +172,7 @@ export default function EcoTrack() {
       {/* Map */}
       <div
         className="flex-1 min-h-[300px] relative rounded-2xl overflow-hidden"
-        style={{ border: '1px solid rgba(67,160,71,0.20)', background: 'rgba(6,38,10,0.60)' }}
+        style={{ border: '1px solid rgba(61,138,129,0.20)', background: 'rgba(13,36,34,0.60)' }}
       >
         {showQR ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm z-10 p-6 text-center gap-4">
@@ -186,7 +186,7 @@ export default function EcoTrack() {
             <button
               onClick={() => { setShowQR(false); setRouteCoordinates([]); setCurrentPosition(null); }}
               className="mt-2 px-8 py-3 rounded-xl font-bold text-sm text-white transition-all"
-              style={{ background: 'rgba(46,125,50,0.40)', border: '1px solid rgba(67,160,71,0.40)' }}
+              style={{ background: 'rgba(45,102,95,0.40)', border: '1px solid rgba(61,138,129,0.40)' }}
             >
               Start New Trip
             </button>
@@ -202,8 +202,8 @@ export default function EcoTrack() {
           onClick={handleStartTrip}
           className="w-full py-4 rounded-2xl font-display font-bold text-white text-base flex items-center justify-center gap-2.5 transition-all active:scale-95 shadow-lg"
           style={{
-            background: 'linear-gradient(135deg, #43a047 0%, #2e7d32 100%)',
-            boxShadow: '0 6px 24px rgba(46,125,50,0.40)',
+            background: 'linear-gradient(135deg, #3D8A81 0%, #2D665F 100%)',
+            boxShadow: '0 6px 24px rgba(45,102,95,0.40)',
           }}
         >
           <Navigation size={20} /> Start Trip
@@ -212,7 +212,7 @@ export default function EcoTrack() {
         <div className="grid grid-cols-2 gap-3">
           <div
             className="py-4 rounded-2xl flex flex-col items-center justify-center gap-1"
-            style={{ background: 'rgba(46,125,50,0.20)', border: '1px solid rgba(67,160,71,0.20)' }}
+            style={{ background: 'rgba(45,102,95,0.20)', border: '1px solid rgba(61,138,129,0.20)' }}
           >
             <span className="text-white/50 text-[10px] uppercase tracking-widest">Status</span>
             <span className="text-leaf font-bold text-sm flex items-center gap-1.5">
