@@ -4,8 +4,8 @@
   "description": "Climate-Resilient Farming App for Uganda",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#061412",
-  "theme_color": "#061412",
+  "background_color": "#06260a",
+  "theme_color": "#06260a",
   "icons": [
     {
       "src": "/globe.svg",

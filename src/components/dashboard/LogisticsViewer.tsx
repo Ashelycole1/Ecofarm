@@ -83,12 +83,12 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
       <div
         className="flex items-center justify-between rounded-2xl p-4"
         style={{
-          background: 'linear-gradient(135deg, rgba(45,102,95,0.30) 0%, rgba(13,36,34,0.75) 100%)',
-          border: '1px solid rgba(61,138,129,0.25)',
+          background: 'linear-gradient(135deg, rgba(46,125,50,0.30) 0%, rgba(6,38,10,0.75) 100%)',
+          border: '1px solid rgba(67,160,71,0.25)',
         }}
       >
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: 'rgba(45,102,95,0.35)' }}>
+          <div className="p-2.5 rounded-xl" style={{ background: 'rgba(46,125,50,0.35)' }}>
             <Package className="text-leaf" size={22} />
           </div>
           <div>
@@ -120,7 +120,7 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
       {/* Map */}
       <div
         className="flex-1 min-h-[400px] h-[400px] relative rounded-2xl overflow-hidden shadow-inner"
-        style={{ border: '1px solid rgba(61,138,129,0.30)', background: 'rgba(13,36,34,0.80)' }}
+        style={{ border: '1px solid rgba(67,160,71,0.20)', background: 'rgba(6,38,10,0.60)' }}
       >
         {status === 'connecting' && !currentPosition ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm z-10">

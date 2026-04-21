@@ -16,7 +16,7 @@ const outfit = Outfit({
 })
 
 export const viewport: Viewport = {
-  themeColor: '#061412',
+  themeColor: '#06260a',
 }
 
 export const metadata: Metadata = {

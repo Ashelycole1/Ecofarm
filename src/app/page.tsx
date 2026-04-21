@@ -43,7 +43,7 @@ function AppBar({ activeTab }: { activeTab: string }) {
     <header
       className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.08]"
       style={{
-        background: 'rgba(6,20,18,0.85)',
+        background: 'rgba(6,38,10,0.88)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
       }}
@@ -92,7 +92,7 @@ function Sidebar({ activeTab, onTabChange }: { activeTab: string; onTabChange: (
     <aside
       className="hidden md:flex flex-col w-56 lg:w-64 fixed left-0 top-[57px] bottom-0 z-40 border-r border-white/[0.08] py-5 px-3"
       style={{
-        background: 'linear-gradient(180deg, rgba(6,20,18,0.94) 0%, rgba(6,20,18,0.98) 100%)',
+        background: 'linear-gradient(180deg, rgba(6,38,10,0.94) 0%, rgba(6,38,10,0.98) 100%)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
       }}
@@ -145,15 +145,15 @@ function HomeTab() {
       <div
         className="relative overflow-hidden rounded-2xl p-5"
         style={{
-          background: 'linear-gradient(135deg, rgba(45,102,95,0.55) 0%, rgba(13,36,34,0.80) 100%)',
-          border: '1px solid rgba(61,138,129,0.25)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.40), inset 0 0 40px rgba(45,102,95,0.12)',
+          background: 'linear-gradient(135deg, rgba(46,125,50,0.45) 0%, rgba(6,38,10,0.85) 100%)',
+          border: '1px solid rgba(67,160,71,0.25)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.40), inset 0 0 40px rgba(46,125,50,0.12)',
         }}
       >
         <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full blur-3xl opacity-30 pointer-events-none"
-          style={{ background: 'radial-gradient(circle, #3D8A81, transparent)' }} />
+          style={{ background: 'radial-gradient(circle, #2e7d32, transparent)' }} />
         <div className="absolute -bottom-10 -left-10 w-44 h-44 rounded-full blur-3xl opacity-15 pointer-events-none"
-          style={{ background: 'radial-gradient(circle, #2D665F, transparent)' }} />
+          style={{ background: 'radial-gradient(circle, #1b5e20, transparent)' }} />
 
         <div className="relative z-10">
           <p className="text-[11px] text-forest-light/80 uppercase tracking-widest font-semibold">Good day</p>
@@ -356,7 +356,7 @@ export default function HomePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: '#061412' }}>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: '#06260a' }}>
         <div className="w-12 h-12 border-2 border-forest rounded-full border-t-forest-light animate-spin" />
         <p className="text-white/30 text-sm font-medium tracking-wide">Loading EcoFarm...</p>
       </div>
@@ -364,7 +364,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen min-h-dvh flex flex-col" style={{ background: '#061412' }}>
+    <div className="min-h-screen min-h-dvh flex flex-col" style={{ background: '#06260a' }}>
       <AppBar activeTab={activeTab} />
 
       {/* Desktop sidebar */}

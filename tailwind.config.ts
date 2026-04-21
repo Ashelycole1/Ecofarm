@@ -9,12 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary teal brand palette
+        // Primary Dark Forest palette
         'forest': {
-          DEFAULT: '#2D665F',
-          light:   '#3D8A81',
-          dark:    '#1A3E3A',
-          deeper:  '#0D2422',
+          DEFAULT: '#2e7d32',
+          light:   '#43a047',
+          dark:    '#1b5e20',
+          deeper:  '#0a2e0c',
         },
         // Accent / supporting
         'earth': {
@@ -32,16 +32,16 @@ const config: Config = {
           light:   '#B0E0F5',
           dark:    '#5BA3C9',
         },
-        'leaf':  '#5DBD8A',
+        'leaf':  '#66bb6a',
         'rain':  '#4FC3F7',
         'alert': '#FF6B6B',
-        'safe':  '#5DBD8A',
+        'safe':  '#66bb6a',
         'warn':  '#FFA726',
         // Glass surfaces
         'surface': {
-          DEFAULT: 'rgba(45, 102, 95, 0.18)',
-          light:   'rgba(61, 138, 129, 0.22)',
-          dark:    'rgba(13, 36, 34,  0.60)',
+          DEFAULT: 'rgba(46,125,50,0.18)',
+          light:   'rgba(67,160,71,0.22)',
+          dark:    'rgba(6,38,10,0.80)',
         },
       },
       borderRadius: {
@@ -55,16 +55,16 @@ const config: Config = {
         'display': ['Outfit', 'Inter', 'sans-serif'],
       },
       backgroundImage: {
-        // Deep teal dark gradient — body bg
-        'nature-gradient': 'linear-gradient(160deg, #061412 0%, #0D2422 40%, #142E2A 75%, #061412 100%)',
+        // Dark Forest body bg
+        'nature-gradient': 'linear-gradient(160deg, #06260a 0%, #0a2e0c 40%, #112a13 75%, #06260a 100%)',
         // Card gradients
-        'card-gradient':   'linear-gradient(145deg, rgba(45,102,95,0.22) 0%, rgba(13,36,34,0.55) 100%)',
-        'card-glow':       'linear-gradient(145deg, rgba(61,138,129,0.18) 0%, rgba(45,102,95,0.08) 100%)',
+        'card-gradient':   'linear-gradient(145deg, rgba(46,125,50,0.22) 0%, rgba(6,38,10,0.75) 100%)',
+        'card-glow':       'linear-gradient(145deg, rgba(67,160,71,0.18) 0%, rgba(46,125,50,0.08) 100%)',
         // Button gradient
-        'btn-primary':     'linear-gradient(135deg, #3D8A81 0%, #2D665F 100%)',
+        'btn-primary':     'linear-gradient(135deg, #43a047 0%, #2e7d32 100%)',
         // Misc
         'wheat-gradient':  'linear-gradient(135deg, #D4AC0D 0%, #F2C94C 100%)',
-        'hero-glow':       'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(45,102,95,0.35) 0%, transparent 70%)',
+        'hero-glow':       'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(46,125,50,0.35) 0%, transparent 70%)',
       },
       boxShadow: {
         'nature':      '0 4px 28px rgba(45, 102, 95, 0.40)',

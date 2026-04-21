@@ -23,7 +23,7 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
       <div
         className="border-t border-white/[0.08] px-2 pt-2 pb-3"
         style={{
-          background: 'linear-gradient(180deg, rgba(6,20,18,0.85) 0%, rgba(6,20,18,0.97) 100%)',
+          background: 'linear-gradient(180deg, rgba(6,38,10,0.85) 0%, rgba(6,38,10,0.97) 100%)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
         }}
