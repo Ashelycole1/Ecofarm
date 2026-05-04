@@ -15,6 +15,7 @@ import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageC
 import MarketDashboard from '@/components/dashboard/MarketDashboard'
 import EcoTrack from '@/components/dashboard/EcoTrack'
 import LogisticsViewer from '@/components/dashboard/LogisticsViewer'
+import RequestRider from '@/components/dashboard/RequestRider'
 
 // ─── Sidebar nav items ────────────────────────────────────────────────────────
 const navTabs = [
@@ -215,20 +216,28 @@ function MarketTab() {
 
 // ─── Track tab ──────────────────────────────────────────────────────────────
 function TrackTab() {
-  const [view, setView] = useState<'driver' | 'buyer'>('buyer')
+  const [view, setView] = useState<'request' | 'driver' | 'buyer'>('request')
   const [trackId, setTrackId] = useState('')
   const [activeId, setActiveId] = useState('')
 
   return (
     <div className="space-y-4 animate-fade-in pb-20">
-      <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 max-w-xs mx-auto">
+      <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 max-w-md mx-auto">
+        <button
+          onClick={() => setView('request')}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+            view === 'request' ? 'bg-[#FF9800] text-black shadow-lg' : 'text-white/40'
+          }`}
+        >
+          Book Truck
+        </button>
         <button
           onClick={() => setView('buyer')}
           className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
             view === 'buyer' ? 'bg-forest/40 text-wheat shadow-lg' : 'text-white/40'
           }`}
         >
-          Track Delivery
+          Track Load
         </button>
         <button
           onClick={() => setView('driver')}
@@ -240,7 +249,13 @@ function TrackTab() {
         </button>
       </div>
 
-      {view === 'driver' ? (
+      {view === 'request' ? (
+        <RequestRider onRiderFound={(tripId) => {
+          setTrackId(tripId)
+          setActiveId(tripId)
+          setView('buyer')
+        }} />
+      ) : view === 'driver' ? (
         <EcoTrack />
       ) : (
         <div className="space-y-4">

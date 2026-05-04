@@ -99,9 +99,7 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
           
           // Calculate distance/ETA if destination is set
           if (destination) {
-            const d = calculateDistance(lat, lng, destination[0], destination[1]);
-            setDistance(Number(d.toFixed(1)));
-            setEta(Math.round(d * 4)); // Assume 15km/h avg speed for rural boda
+            fetchORSStats(lat, lng, destination[0], destination[1]);
           }
 
           // Reverse Geocoding
@@ -125,6 +123,29 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
+  };
+
+  const fetchORSStats = async (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const orsKey = process.env.NEXT_PUBLIC_ORS_API_KEY;
+    try {
+      if (orsKey) {
+        const res = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${orsKey}&start=${lon1},${lat1}&end=${lon2},${lat2}`);
+        const data = await res.json();
+        if (data.features && data.features[0]) {
+          const props = data.features[0].properties.summary;
+          setDistance(Number((props.distance / 1000).toFixed(1)));
+          setEta(Math.round(props.duration / 60));
+          return;
+        }
+      }
+      
+      // Basic fallback if no key
+      const d = calculateDistance(lat1, lon1, lat2, lon2);
+      setDistance(Number(d.toFixed(1)));
+      setEta(Math.round(d * 4));
+    } catch (err) {
+      console.warn('ORS stats failed');
+    }
   };
 
   const fetchAddress = async (lat: number, lon: number) => {

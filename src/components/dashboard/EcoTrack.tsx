@@ -72,21 +72,32 @@ export default function EcoTrack() {
     }
   };
 
-  // ── Requirement 3: Routing & ETA (OSRM - OpenSource Alternative to ORS) ─────
+  // ── Requirement 3: Routing & ETA (OpenRouteService) ─────────────────────────
   const fetchRoute = async (start: [number, number], end: [number, number]) => {
+    const orsKey = process.env.NEXT_PUBLIC_ORS_API_KEY;
+    
     try {
-      // Using OSRM Public API (Free/Open Source)
-      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`);
+      if (orsKey) {
+        // Use Official OpenRouteService
+        const res = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${orsKey}&start=${start[1]},${start[0]}&end=${end[1]},${end[0]}`);
+        const data = await res.json();
+        if (data.features && data.features[0]) {
+          const props = data.features[0].properties.summary;
+          setDistance((props.distance / 1000).toFixed(1) + ' km');
+          setEta(Math.round(props.duration / 60) + ' min');
+          if (props.distance < 50) setCanGenerateQR(true);
+          return;
+        }
+      }
+
+      // Fallback to OSRM if no key
+      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full`);
       const data = await res.json();
       if (data.routes && data.routes[0]) {
         const route = data.routes[0];
         setDistance((route.distance / 1000).toFixed(1) + ' km');
         setEta(Math.round(route.duration / 60) + ' min');
-        
-        // Requirement 5: Radius Check (50m)
-        if (route.distance < 50) {
-          setCanGenerateQR(true);
-        }
+        if (route.distance < 50) setCanGenerateQR(true);
       }
     } catch (err) {
       console.warn('Routing failed');
