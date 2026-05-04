@@ -1,8 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { MapPin, Navigation, Truck, Package, DollarSign, Search, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react';
+import { MapPin, Navigation, Truck, DollarSign, Search, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react';
 import { getSupabase } from '@/lib/supabaseClient';
+import dynamic from 'next/dynamic';
+
+const MapComponent = dynamic(() => import('./MapComponent'), {
+  ssr: false,
+  loading: () => <div className="absolute inset-0 bg-forest/10 animate-pulse" />
+});
 
 interface RequestRiderProps {
   onRiderFound: (tripId: string) => void;
@@ -14,18 +20,63 @@ export default function RequestRider({ onRiderFound }: RequestRiderProps) {
   const [dropoff, setDropoff] = useState('');
   const [loadSize, setLoadSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [estimatedPrice, setEstimatedPrice] = useState(0);
-  const [driver, setDriver] = useState<any>(null);
+  const [driver, setDriver] = useState<{name?: string, vehicle_type?: string, vehicle_plate?: string, dist_meters?: number, rating?: string, id: string} | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  
+  const [pickupCoords, setPickupCoords] = useState<[number, number] | null>(null);
+  const [dropoffCoords, setDropoffCoords] = useState<[number, number] | null>(null);
+  const [routeDistance, setRouteDistance] = useState<string | null>(null);
 
-  // Simple pseudo-random price generator based on load
+  // Simple pseudo-random price generator based on load and distance
   useEffect(() => {
     if (pickup && dropoff) {
       const base = loadSize === 'small' ? 15000 : loadSize === 'medium' ? 35000 : 80000;
-      setEstimatedPrice(base + Math.floor(Math.random() * 5000));
+      // Add distance multiplier if we have a real route distance
+      const distMult = routeDistance ? parseFloat(routeDistance) * 1500 : 0;
+      setEstimatedPrice(base + distMult + Math.floor(Math.random() * 5000));
     } else {
       setEstimatedPrice(0);
     }
-  }, [pickup, dropoff, loadSize]);
+  }, [pickup, dropoff, loadSize, routeDistance]);
+
+  // Debounced geocoding for live map preview
+  useEffect(() => {
+    const geocode = async () => {
+      try {
+        if (pickup.length > 3) {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(pickup + ', Uganda')}`);
+          const data = await res.json();
+          if (data && data.length > 0) setPickupCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+        }
+        if (dropoff.length > 3) {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(dropoff + ', Uganda')}`);
+          const data = await res.json();
+          if (data && data.length > 0) setDropoffCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+        }
+      } catch (err) {
+        console.warn('Geocoding preview failed');
+      }
+    };
+    
+    const timer = setTimeout(geocode, 1500); // 1.5s debounce
+    return () => clearTimeout(timer);
+  }, [pickup, dropoff]);
+
+  // Calculate distance when both coords are available
+  useEffect(() => {
+    if (pickupCoords && dropoffCoords) {
+      // Simple Haversine for UI preview (in km)
+      const R = 6371; 
+      const dLat = (dropoffCoords[0] - pickupCoords[0]) * Math.PI / 180;
+      const dLon = (dropoffCoords[1] - pickupCoords[1]) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(pickupCoords[0] * Math.PI / 180) * Math.cos(dropoffCoords[0] * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const dist = R * c;
+      setRouteDistance(dist.toFixed(1));
+    }
+  }, [pickupCoords, dropoffCoords]);
 
   const handleRequest = async () => {
     if (!pickup || !dropoff) return;
@@ -33,16 +84,17 @@ export default function RequestRider({ onRiderFound }: RequestRiderProps) {
     setErrorMsg('');
     
     try {
-      // 1. Geocode the pickup location using Nominatim (OpenStreetMap)
-      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(pickup + ', Uganda')}`);
-      const geoData = await geoRes.json();
+      let lat = pickupCoords ? pickupCoords[0] : 0.3476; 
+      let lng = pickupCoords ? pickupCoords[1] : 32.5825;
       
-      let lat = 0.3476; // Default to Kampala
-      let lng = 32.5825;
-      
-      if (geoData && geoData.length > 0) {
-        lat = parseFloat(geoData[0].lat);
-        lng = parseFloat(geoData[0].lon);
+      // If we didn't geocode from the preview, do it now
+      if (!pickupCoords) {
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(pickup + ', Uganda')}`);
+        const geoData = await geoRes.json();
+        if (geoData && geoData.length > 0) {
+          lat = parseFloat(geoData[0].lat);
+          lng = parseFloat(geoData[0].lon);
+        }
       }
 
       // 2. Call Supabase PostGIS RPC to find nearest driver
@@ -73,9 +125,10 @@ export default function RequestRider({ onRiderFound }: RequestRiderProps) {
         onRiderFound(mockTripId);
       }, 2500);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setErrorMsg(err.message || "Failed to find driver.");
+      const errorMessage = err instanceof Error ? err.message : "Failed to find driver.";
+      setErrorMsg(errorMessage);
       setStep('details');
     }
   };
@@ -128,16 +181,40 @@ export default function RequestRider({ onRiderFound }: RequestRiderProps) {
   }
 
   return (
-    <div className="bg-[#0A1A18] rounded-3xl border border-white/10 p-5 shadow-2xl animate-fade-in">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2.5 rounded-xl bg-[#FF9800]/20 border border-[#FF9800]/30">
-          <Truck className="text-[#FF9800]" size={20} />
-        </div>
-        <div>
-          <h2 className="text-white font-display font-black text-xl">Request Eco-Rider</h2>
-          <p className="text-white/40 text-xs font-bold uppercase tracking-widest">On-Demand Farm Logistics</p>
-        </div>
+    <div className="flex flex-col h-[75vh] sm:h-[650px] relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl animate-fade-in bg-[#0A1A18]">
+      
+      {/* Background Map Component */}
+      <div className="absolute inset-0 z-0">
+        <MapComponent 
+          currentPosition={pickupCoords || null}
+          destination={dropoffCoords || null}
+          routeCoordinates={pickupCoords && dropoffCoords ? [pickupCoords, dropoffCoords] : []}
+        />
+        {/* Gradient overlay to make text readable */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A1A18] via-[#0A1A18]/80 to-transparent pointer-events-none" />
       </div>
+
+      {/* Floating Header */}
+      <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
+        <div className="flex items-center gap-3 bg-black/50 backdrop-blur-md p-2 pr-4 rounded-full border border-white/10 shadow-lg">
+          <div className="p-2 rounded-full bg-[#FF9800]/20">
+            <Truck className="text-[#FF9800]" size={16} />
+          </div>
+          <div>
+            <h2 className="text-white font-display font-black text-sm">Request Eco-Rider</h2>
+          </div>
+        </div>
+        
+        {routeDistance && (
+          <div className="bg-[#FF9800] text-black px-3 py-1.5 rounded-full font-black text-[10px] shadow-lg animate-bounce-subtle">
+            {routeDistance} KM TRIP
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Sheet Form */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/40 backdrop-blur-xl border-t border-white/10 p-5 rounded-t-[32px] max-h-[85%] overflow-y-auto custom-scrollbar">
+        <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-6" />
 
       <div className="space-y-4 mb-8 relative">
         {errorMsg && (
@@ -190,7 +267,7 @@ export default function RequestRider({ onRiderFound }: RequestRiderProps) {
           ].map((type) => (
             <button
               key={type.id}
-              onClick={() => setLoadSize(type.id as any)}
+              onClick={() => setLoadSize(type.id as 'small' | 'medium' | 'large')}
               className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all ${
                 loadSize === type.id 
                   ? 'bg-forest/40 border-wheat/50 text-wheat shadow-lg' 
@@ -230,6 +307,7 @@ export default function RequestRider({ onRiderFound }: RequestRiderProps) {
       >
         Find Nearest Rider <ChevronRight size={20} />
       </button>
+      </div>
     </div>
   );
 }

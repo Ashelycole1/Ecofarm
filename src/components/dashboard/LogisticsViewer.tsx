@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Package, MapPin, Truck, RefreshCw, AlertCircle, Navigation } from 'lucide-react';
+import { Package, MapPin, Truck, RefreshCw, AlertCircle, Navigation, Star, CheckCircle2 } from 'lucide-react';
 import { getSupabase } from '@/lib/supabaseClient';
 
 const MapComponent = dynamic(() => import('./MapComponent'), {
@@ -28,6 +28,15 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
   const [eta, setEta] = useState<number | null>(null); 
   const [distance, setDistance] = useState<number | null>(null); 
   const [isSelectingDest, setIsSelectingDest] = useState(false);
+  const [tripCompleted, setTripCompleted] = useState(false);
+  const [rating, setRating] = useState(0);
+
+  // Check for trip completion
+  useEffect(() => {
+    if (distance !== null && distance <= 0.1 && status === 'tracking') {
+      setTripCompleted(true);
+    }
+  }, [distance, status]);
 
   useEffect(() => {
     // Auto-locate on mount
@@ -177,6 +186,60 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
     }
   };
 
+  if (tripCompleted) {
+    return (
+      <div className="flex flex-col h-[75vh] sm:h-[650px] relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl animate-fade-in bg-[#0A1A18]">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center z-10">
+          <div className="w-24 h-24 bg-safe/20 rounded-full flex items-center justify-center mb-6 animate-bounce-subtle">
+            <div className="w-16 h-16 bg-safe rounded-full flex items-center justify-center text-black">
+              <CheckCircle2 size={40} />
+            </div>
+          </div>
+          <h2 className="text-white font-display font-black text-3xl mb-2">Delivery Arrived!</h2>
+          <p className="text-white/60 mb-8 max-w-[250px] text-sm">Your Eco-Rider has reached the destination. Please confirm receipt and rate the driver.</p>
+          
+          <div className="bg-white/5 border border-white/10 p-5 rounded-2xl w-full max-w-sm mb-8">
+            <h3 className="text-white font-bold text-sm mb-4">How was your driver?</h3>
+            <div className="flex justify-center gap-3 mb-6">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button 
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className="transition-transform active:scale-90"
+                >
+                  <Star 
+                    size={36} 
+                    fill={rating >= star ? "#FF9800" : "transparent"} 
+                    className={rating >= star ? "text-[#FF9800]" : "text-white/20"} 
+                  />
+                </button>
+              ))}
+            </div>
+            
+            <textarea 
+              placeholder="Leave a compliment or comment..." 
+              className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm text-white focus:border-[#FF9800]/50 outline-none resize-none h-20"
+            />
+          </div>
+
+          <button 
+            disabled={rating === 0}
+            className={`w-full max-w-sm py-4 rounded-2xl font-black text-lg uppercase transition-all ${
+              rating > 0 
+                ? 'bg-[#FF9800] text-black shadow-[0_0_20px_rgba(255,152,0,0.4)] active:scale-[0.98]' 
+                : 'bg-white/5 text-white/20 cursor-not-allowed'
+            }`}
+          >
+            Submit Review
+          </button>
+        </div>
+        
+        {/* Background confeti/blur effect */}
+        <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-safe/20 to-transparent pointer-events-none" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-[75vh] sm:h-[650px] relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl animate-fade-in">
       {/* Top Floating Status */}
@@ -283,9 +346,11 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
                 Set Location
               </button>
             ) : (
-              <div className="text-right">
+              <div className="text-right flex flex-col gap-1 items-end">
                 <p className="text-white/40 text-[8px] uppercase font-black">ECO-2024</p>
                 <p className="text-wheat font-bold text-xs underline cursor-pointer" onClick={() => setIsSelectingDest(true)}>Change Home</p>
+                {/* Developer debug button to force arrival */}
+                <button onClick={() => setTripCompleted(true)} className="text-[8px] bg-white/10 px-2 py-0.5 rounded text-white/50 mt-1">Force Arrival</button>
               </div>
             )}
           </div>
