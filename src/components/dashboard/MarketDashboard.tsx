@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, TrendingDown, ShoppingCart, Phone, RefreshCcw } from 'lucide-react'
+import { TrendingUp, TrendingDown, ShoppingCart, Phone, RefreshCcw, MapPin, Navigation } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 
@@ -73,43 +73,110 @@ function buildWhatsappUrl(product: Product): string {
 
 export default function MarketDashboard() {
   const [loading, setLoading] = useState(true)
+  const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null)
+  const [activeCategory, setActiveCategory] = useState('All')
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 600)
+    
+    // Fetch real-time location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setCurrentPosition([pos.coords.latitude, pos.coords.longitude])
+        },
+        (err) => {
+          console.warn('Geolocation error:', err)
+          // Fallback to Kampala default if user denies location
+          setCurrentPosition([0.3476, 32.5825])
+        }
+      )
+    }
+
     return () => clearTimeout(timer)
   }, [])
 
+  const categories = ['All', 'Leafy / Vegetables', 'Grains', 'Root Crops', 'Cash Crops', 'Legumes', 'Fruits']
+
   return (
-    <div className="space-y-5 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-display font-bold text-xl text-white">🛒 Marketplace</h2>
-          <p className="text-xs text-white/40 mt-0.5">Fresh produce · Buy direct from farmers</p>
+    <div className="space-y-5 animate-fade-in pb-10">
+      {/* Premium Header from Image */}
+      <div 
+        className="p-5 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, rgba(6,20,18,0.95) 0%, rgba(13,36,34,0.98) 100%)',
+        }}
+      >
+        <div className="flex justify-between items-start relative z-10">
+          <div>
+            <h2 className="font-display font-black text-2xl text-white tracking-tight">Farm Intelligence Map</h2>
+            <div className="flex gap-3 mt-1.5">
+              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">10 FARMS</span>
+              <span className="text-white/20 text-[10px]">•</span>
+              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">5 ECO MARKETS</span>
+            </div>
+          </div>
+          <button className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </button>
         </div>
-        <button
-          onClick={() => { setLoading(true); setTimeout(() => setLoading(false), 600) }}
-          className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
-          style={{ background: 'rgba(46,125,50,0.25)', border: '1px solid rgba(67,160,71,0.30)' }}
-        >
-          <RefreshCcw className={`text-leaf ${loading ? 'animate-spin' : ''}`} size={15} />
-        </button>
       </div>
 
-      {/* Live Supply Map - Integrated as requested */}
-      <div 
-        className="h-48 rounded-2xl overflow-hidden relative border border-white/10"
-        style={{ background: 'rgba(13,36,34,0.60)' }}
+      {/* Find Nearest Button */}
+      <button 
+        className="w-full py-5 rounded-3xl font-display font-black text-white text-base flex items-center justify-center gap-3 shadow-2xl shadow-forest/20 active:scale-[0.98] transition-all border border-white/20"
+        style={{ background: 'linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%)' }}
       >
+        <MapPin size={22} />
+        🌿 FIND NEAREST ECO-BUYER
+      </button>
+
+      {/* Live Map with Category Chips Overlay */}
+      <div 
+        className="h-[450px] rounded-3xl overflow-hidden relative border border-white/10 shadow-2xl"
+        style={{ background: 'rgba(13,36,34,0.80)' }}
+      >
+        {/* Category Chips Over Map */}
+        <div className="absolute top-4 left-4 right-4 z-[1000] flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`flex-shrink-0 px-4 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border ${
+                activeCategory === cat 
+                ? 'bg-white text-forest border-white shadow-xl scale-105' 
+                : 'bg-black/40 text-white/60 border-white/10 backdrop-blur-md hover:bg-black/60'
+              }`}
+            >
+              {cat === 'Leafy / Vegetables' && '🥬 '}
+              {cat === 'Grains' && '🌾 '}
+              {cat === 'Root Crops' && '🥔 '}
+              {cat === 'Cash Crops' && '☕ '}
+              {cat === 'Legumes' && '🫘 '}
+              {cat === 'Fruits' && '🍎 '}
+              {cat}
+            </button>
+          ))}
+        </div>
+
         <MapComponent 
-          currentPosition={[0.3476, 32.5825]} 
-          routeCoordinates={[[0.3476, 32.5825], [0.3500, 32.5900]]} 
+          currentPosition={currentPosition} 
+          routeCoordinates={[]} 
         />
-        <div className="absolute top-3 left-3 z-[1000] px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-safe animate-pulse" />
-            <span className="text-white text-[10px] font-bold uppercase tracking-widest">Regional Supply Active</span>
-          </div>
+        
+        <div className="absolute bottom-6 right-6 z-[1000]">
+           <button 
+            className="w-12 h-12 rounded-2xl bg-white text-forest shadow-2xl flex items-center justify-center active:scale-90 transition-all"
+            onClick={() => {
+               if (navigator.geolocation) {
+                 navigator.geolocation.getCurrentPosition((pos) => {
+                   setCurrentPosition([pos.coords.latitude, pos.coords.longitude]);
+                 });
+               }
+            }}
+           >
+             <Navigation size={20} fill="currentColor" />
+           </button>
         </div>
       </div>
 
