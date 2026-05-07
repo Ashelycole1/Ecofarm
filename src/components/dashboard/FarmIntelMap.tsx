@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { MapPin, Navigation, RefreshCw, Info, X, Truck } from 'lucide-react';
+import { MapPin, Navigation, RefreshCw, Info, X, Truck, Layers } from 'lucide-react';
 import type { Farm, EcoMarket } from '@/lib/db';
 import { mockFarmsGIS, mockEcoMarkets, CROP_CATEGORY_COLORS, CROP_CATEGORY_LABELS } from '@/lib/gisData';
 import { findNearestEcoBuyer, getProximityRoute, rankFarmsByDistance, getCropCategoryColor, haversineDistance, formatETA } from '@/lib/farmIntelligence';
 import TrustBadge from './TrustBadge';
 import type { MapComponentProps } from './MapComponent';
+
 
 // ── Dynamic map import (no SSR) ────────────────────────────────────────────────
 const MapComponent = dynamic(() => import('./MapComponent'), {
@@ -152,6 +153,16 @@ export default function FarmIntelMap() {
   const [mapFilter, setMapFilter] = useState<string>('all');
   const [locating, setLocating] = useState(false);
   const [nearMeMsg, setNearMeMsg] = useState('');
+  const [showHeatmap, setShowHeatmap] = useState(false);
+
+  // Generate heatmap points from farms
+  const heatmapPoints = farms.map(f => ({
+    lat: f.lat,
+    lng: f.lng,
+    intensity: f.sustainability_score / 100,
+    color: f.is_certified_organic ? '#22C55E' : '#F59E0B'
+  }));
+
 
   // Filter farms by category
   const filteredFarms = mapFilter === 'all' ? farms : farms.filter(f => f.cropCategory === mapFilter);
@@ -164,7 +175,7 @@ export default function FarmIntelMap() {
     const displayLng = isConfidential ? Math.floor(f.lng * 100) / 100 : f.lng;
 
     return {
-      position: { lat: displayLat, lng: displayLng } as google.maps.LatLngLiteral,
+      position: { lat: displayLat, lng: displayLng },
       color: getCropCategoryColor(f.cropCategory),
       label: f.name,
       data: f,
@@ -174,12 +185,13 @@ export default function FarmIntelMap() {
   });
 
   const marketMarkers = markets.map(m => ({
-    position: { lat: m.lat, lng: m.lng } as google.maps.LatLngLiteral,
+    position: { lat: m.lat, lng: m.lng },
     color: '#60A5FA',
     label: m.name,
     data: m,
     type: 'market' as const,
   }));
+
 
   const handleNearMe = useCallback(() => {
     setLocating(true);
@@ -237,12 +249,21 @@ export default function FarmIntelMap() {
         </div>
         <div className="flex gap-2">
           <button
+            onClick={() => setShowHeatmap(v => !v)}
+            className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${showHeatmap ? 'bg-leaf text-white border-leaf shadow-lg shadow-leaf/20' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'}`}
+            title="Toggle Soil Health Heatmap"
+          >
+            <Layers size={14} />
+          </button>
+          <button
             onClick={() => setShowLegend(v => !v)}
             className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:bg-white/10 transition-all"
+            title="Map Info"
           >
             <Info size={14} />
           </button>
         </div>
+
       </div>
 
       {/* Near Me Button */}
@@ -301,7 +322,10 @@ export default function FarmIntelMap() {
           farmMarkers={farmMarkers}
           marketMarkers={marketMarkers}
           onFarmClick={(farm) => setSelectedFarm(farm as Farm)}
+          showHeatmap={showHeatmap}
+          heatmapPoints={heatmapPoints}
         />
+
 
         {/* Route info */}
         {routeInfo && (
