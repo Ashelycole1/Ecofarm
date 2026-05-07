@@ -1,4 +1,6 @@
 "use client";
+// Diagnostic comment for commit test
+
 
 import { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents, Circle, Popup, ScaleControl } from 'react-leaflet';
