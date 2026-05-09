@@ -6,9 +6,10 @@ import { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents, Circle, Popup, ScaleControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { LocateFixed, Map as MapIcon, Layers, Info } from 'lucide-react';
+import { LocateFixed, Map as MapIcon, Layers, Info, Plus } from 'lucide-react';
 
 import type { Farm, EcoMarket } from '@/lib/db';
+import EcofarmReportForm from './EcofarmReportForm';
 
 // ── Icons & Markers ─────────────────────────────────────────────────────────
 
@@ -196,6 +197,7 @@ export default function MapComponent({
   const defaultCenter: [number, number] = [0.3476, 32.5825];
   const [mapTheme, setMapTheme] = useState<'voyager' | 'light_all' | 'dark_all' | 'satellite'>('voyager');
   const [isLocating, setIsLocating] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const handleLocateMe = () => {
     setIsLocating(true);
@@ -256,6 +258,13 @@ export default function MapComponent({
         }
       `}</style>
 
+      {showReportModal && (
+        <EcofarmReportForm 
+          onClose={() => setShowReportModal(false)} 
+          userPos={currentPosition}
+        />
+      )}
+
       <MapContainer
         center={currentPosition || defaultCenter}
         zoom={14}
@@ -289,6 +298,15 @@ export default function MapComponent({
           </div>
 
           <div className="flex flex-col gap-3 pointer-events-auto">
+            <button 
+              onClick={() => setShowReportModal(true)}
+              className="w-10 h-10 rounded-xl bg-forest border border-white/20 flex flex-col items-center justify-center text-wheat shadow-xl transition-all active:scale-95 hover:bg-forest-light"
+              title="Report Update"
+            >
+              <Plus size={18} />
+              <span className="text-[6px] font-black uppercase">Report</span>
+            </button>
+
             <button 
               onClick={handleLocateMe}
               className="w-10 h-10 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xl transition-all active:scale-95 hover:bg-black/80"
