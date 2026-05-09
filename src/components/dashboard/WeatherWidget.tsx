@@ -1,7 +1,5 @@
-'use client'
-
 import { useFirebase } from '@/context/FirebaseContext'
-import { AlertTriangle, Droplets, Wind, Thermometer, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Droplets, Wind, Thermometer, RefreshCw, Sun, Cloud, CloudRain, Zap } from 'lucide-react'
 
 const weatherIcons: Record<string, string> = {
   sunny:  '☀️',
@@ -11,12 +9,12 @@ const weatherIcons: Record<string, string> = {
   drought:'🌵',
 }
 
-const weatherAccent: Record<string, string> = {
-  sunny:  'rgba(242,201,76,0.18)',
-  cloudy: 'rgba(135,206,235,0.18)',
-  rainy:  'rgba(79,195,247,0.18)',
-  stormy: 'rgba(126,87,194,0.18)',
-  drought:'rgba(255,107,107,0.18)',
+const statusColors: Record<string, string> = {
+  sunny:  'safe',
+  cloudy: 'safe',
+  rainy:  'warning',
+  stormy: 'alert',
+  drought:'alert',
 }
 
 export default function WeatherWidget() {
@@ -27,7 +25,6 @@ export default function WeatherWidget() {
       <div className="nature-card p-5 space-y-3">
         <div className="skeleton h-3 w-1/3 mb-1" />
         <div className="skeleton h-12 w-1/2" />
-        <div className="skeleton h-3 w-2/3" />
         <div className="grid grid-cols-3 gap-2 pt-2">
           {[0,1,2].map(i => <div key={i} className="skeleton h-14 rounded-xl" />)}
         </div>
@@ -35,110 +32,92 @@ export default function WeatherWidget() {
     )
   }
 
-  const accentColor = weatherAccent[weather.status] || weatherAccent.cloudy
-  const icon = weatherIcons[weather.status] || '🌤️'
+  const status = statusColors[weather.status] || 'safe'
+  const isAlert = status === 'alert'
+  const isWarning = status === 'warning'
 
   return (
-    <div
-      className="relative overflow-hidden rounded-[20px] border border-white/[0.12] p-5 shadow-card"
-      style={{
-        background: `linear-gradient(145deg, ${accentColor} 0%, rgba(13,36,34,0.65) 100%)`,
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-      }}
-    >
-      {/* Subtle glow blob */}
-      <div
-        className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl opacity-20 pointer-events-none"
-        style={{ background: accentColor }}
-      />
+    <div className={`relative overflow-hidden rounded-3xl p-6 shadow-2xl transition-all duration-700 border-2 ${
+      isAlert ? 'bg-alert/10 border-alert/30' : isWarning ? 'bg-warning/10 border-warning/30' : 'bg-forest/40 border-safe/20'
+    }`}>
+      {/* Massive Visual Glow for Zero-Reading */}
+      <div className={`absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[100px] opacity-20 pointer-events-none transition-colors duration-1000 ${
+        isAlert ? 'bg-alert' : isWarning ? 'bg-warning' : 'bg-safe'
+      }`} />
 
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4 relative z-10">
-        <div>
-          <p className="text-[11px] text-white/50 uppercase tracking-widest font-semibold">
-            📍 {weather.location}, {weather.region}
-          </p>
-          <p className="text-[10px] text-white/25 mt-0.5">
-            Updated {new Date(weather.lastUpdated).toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit' })}
-          </p>
+      {/* Header with Traffic Light Badge */}
+      <div className="flex items-start justify-between mb-8 relative z-10">
+        <div className={`px-4 py-1.5 rounded-full border flex items-center gap-2 ${
+          isAlert ? 'bg-alert text-white border-white/20' : isWarning ? 'bg-warning text-black border-black/10' : 'bg-safe text-white border-white/10'
+        }`}>
+          <span className={`w-2 h-2 rounded-full animate-pulse ${isAlert ? 'bg-white' : isWarning ? 'bg-black' : 'bg-white'}`} />
+          <span className="text-[10px] font-black uppercase tracking-widest">
+            {isAlert ? 'STAY HOME' : isWarning ? 'WEAR BOOTS' : 'GOOD HARVEST'}
+          </span>
         </div>
         <button
           onClick={refreshWeather}
-          id="weather-refresh-btn"
-          className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/40 hover:text-wheat hover:bg-forest/30 transition-all"
-          aria-label="Refresh weather"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/40 hover:text-white transition-all"
         >
-          <RefreshCw size={14} />
+          <RefreshCw size={16} />
         </button>
       </div>
 
-      {/* Main temp */}
-      <div className="flex items-end gap-4 mb-5 relative z-10">
-        <div className="float-anim text-6xl leading-none select-none">{icon}</div>
+      {/* Main Impact Symbols */}
+      <div className="flex items-center gap-6 mb-8 relative z-10">
+        <div className={`text-7xl drop-shadow-2xl transition-transform duration-700 hover:scale-110 ${isAlert ? 'animate-pulse' : 'float-anim'}`}>
+          {weatherIcons[weather.status] || '🌤️'}
+        </div>
         <div>
-          <div className="text-5xl font-display font-bold text-white high-contrast-text leading-none">
+          <div className="text-6xl font-black text-white tracking-tighter leading-none mb-1">
             {weather.temperature}°
           </div>
-          <div className="text-sm text-white/50 mt-1">
-            Feels like {weather.feelsLike}°C
-          </div>
+          <p className="text-[10px] text-white/30 uppercase font-black tracking-widest ml-1">
+            📍 {weather.location}
+          </p>
         </div>
       </div>
 
-      {/* Stat grid */}
-      <div className="grid grid-cols-3 gap-2 mb-4 relative z-10">
-        <StatPill icon={<Droplets size={13} />} label="Rain"     value={`${weather.rainfall}mm`}   color="text-rain" />
-        <StatPill icon={<Wind size={13} />}     label="Wind"     value={`${weather.windSpeed}km/h`} color="text-white/70" />
-        <StatPill icon={<Thermometer size={13} />} label="Humidity" value={`${weather.humidity}%`} color="text-sky" />
+      {/* Large-Scale Iconic Stats */}
+      <div className="grid grid-cols-3 gap-3 mb-6 relative z-10">
+        <IconicPill icon={<CloudRain size={24} />} value={`${weather.rainfall}mm`} label="RAIN" status={weather.rainfall > 5 ? 'warning' : 'green'} />
+        <IconicPill icon={<Wind size={24} />} value={`${weather.windSpeed}k`} label="WIND" status={weather.windSpeed > 20 ? 'red' : 'green'} />
+        <IconicPill icon={<Thermometer size={24} />} value={`${weather.humidity}%`} label="HUMID" status="green" />
       </div>
 
-      {/* 5-day mini forecast */}
-      <div className="grid grid-cols-5 gap-1.5 relative z-10">
-        {weather.forecast.map((day, i) => (
-          <div
-            key={i}
-            className="flex flex-col items-center gap-0.5 rounded-xl py-2 px-1"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.06)' }}
-          >
-            <span className="text-[9px] text-white/45 font-semibold uppercase">{day.day}</span>
-            <span className="text-base leading-none">{weatherIcons[day.status] ?? '🌤️'}</span>
-            <span className="text-[10px] text-white font-bold">{day.high}°</span>
-            {day.rainfall > 0 && (
-              <span className="text-[8px] text-rain">{day.rainfall}mm</span>
-            )}
-          </div>
-        ))}
+      {/* Traffic Light 5-Day Forecast */}
+      <div className="grid grid-cols-5 gap-2 relative z-10 pt-4 border-t border-white/5">
+        {weather.forecast.map((day, i) => {
+          const dayStatus = statusColors[day.status] || 'safe'
+          return (
+            <div
+              key={i}
+              className={`flex flex-col items-center gap-1 rounded-2xl py-3 border transition-all ${
+                dayStatus === 'alert' ? 'bg-alert/20 border-alert/30' : 
+                dayStatus === 'warning' ? 'bg-warning/20 border-warning/30' : 
+                'bg-white/5 border-white/5'
+              }`}
+            >
+              <span className="text-[8px] text-white/40 font-black uppercase">{day.day}</span>
+              <span className="text-xl leading-none my-1">{weatherIcons[day.status] ?? '🌤️'}</span>
+              <div className={`w-1.5 h-1.5 rounded-full ${
+                dayStatus === 'alert' ? 'bg-alert' : dayStatus === 'warning' ? 'bg-warning' : 'bg-safe'
+              }`} />
+            </div>
+          )
+        })}
       </div>
-
-      {/* UV Index warning */}
-      {weather.uvIndex >= 7 && (
-        <div className="mt-4 flex items-center gap-2 px-3 py-2.5 rounded-xl border border-wheat/20 bg-wheat/8 relative z-10">
-          <div className="absolute -top-2 right-3 bg-forest-dark/90 border border-wheat/25 px-2 py-0.5 rounded-full">
-            <span className="text-[8px] font-black text-wheat uppercase tracking-wider">AI Insight</span>
-          </div>
-          <AlertTriangle size={13} className="text-wheat shrink-0" />
-          <p className="text-xs text-wheat/90">High UV ({weather.uvIndex}). Wear a hat when farming.</p>
-        </div>
-      )}
     </div>
   )
 }
 
-function StatPill({ icon, label, value, color }: {
-  icon: React.ReactNode
-  label: string
-  value: string
-  color: string
-}) {
+function IconicPill({ icon, value, label, status }: { icon: React.ReactNode; value: string; label: string; status: 'red' | 'warning' | 'green' }) {
+  const color = status === 'red' ? 'text-alert' : status === 'warning' ? 'text-warning' : 'text-safe'
   return (
-    <div
-      className="flex flex-col items-center py-2.5 px-1 gap-1 rounded-xl"
-      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
-    >
-      <span className={`${color}`}>{icon}</span>
-      <span className="text-[9px] text-white/35 uppercase tracking-wide font-semibold">{label}</span>
-      <span className="text-[11px] font-bold text-white">{value}</span>
+    <div className="flex flex-col items-center p-4 bg-white/5 rounded-2xl border border-white/5 group hover:bg-white/10 transition-all">
+      <span className={`${color} mb-3 transition-transform group-hover:scale-125`}>{icon}</span>
+      <span className="text-sm font-black text-white">{value}</span>
+      <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] mt-1">{label}</span>
     </div>
   )
 }
