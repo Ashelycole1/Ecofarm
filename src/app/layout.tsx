@@ -1,3 +1,4 @@
+// Deployment Heartbeat: 2026-05-09 17:40
 import type { Metadata, Viewport } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import './globals.css'
