@@ -256,42 +256,6 @@ export default function MapComponent({
         }
       `}</style>
 
-      {/* Controls Overlay */}
-      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-3">
-        <div className="flex flex-col gap-1 p-1 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl">
-          {[
-            { id: 'voyager', label: 'Eco', icon: '🌿' },
-            { id: 'satellite', label: 'Sat', icon: '🛰️' },
-            { id: 'light_all', label: 'Day', icon: '☀️' },
-            { id: 'dark_all', label: 'Night', icon: '🌙' },
-          ].map((type) => (
-            <button 
-              key={type.id}
-              onClick={() => setMapTheme(type.id as any)}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${
-                mapTheme === type.id 
-                ? 'bg-forest text-white border border-white/20' 
-                : 'text-white/40 hover:bg-white/5'
-              }`}
-              title={type.label}
-            >
-              <span className="text-xs">{type.icon}</span>
-              <span className="text-[7px] font-black uppercase mt-0.5">{type.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <button 
-          onClick={handleLocateMe}
-          className="w-10 h-10 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xl transition-all active:scale-95 hover:bg-black/80"
-          title="My Location"
-        >
-          <LocateFixed size={18} className={isLocating ? 'animate-pulse text-leaf' : ''} />
-        </button>
-
-        <ZoomControl />
-      </div>
-
       <MapContainer
         center={currentPosition || defaultCenter}
         zoom={14}
@@ -299,6 +263,43 @@ export default function MapComponent({
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
       >
+        {/* Controls Overlay moved inside MapContainer context */}
+        <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-3 pointer-events-none">
+          <div className="flex flex-col gap-1 p-1 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl pointer-events-auto">
+            {[
+              { id: 'voyager', label: 'Eco', icon: '🌿' },
+              { id: 'satellite', label: 'Sat', icon: '🛰️' },
+              { id: 'light_all', label: 'Day', icon: '☀️' },
+              { id: 'dark_all', label: 'Night', icon: '🌙' },
+            ].map((type) => (
+              <button 
+                key={type.id}
+                onClick={() => setMapTheme(type.id as any)}
+                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${
+                  mapTheme === type.id 
+                  ? 'bg-forest text-white border border-white/20' 
+                  : 'text-white/40 hover:bg-white/5'
+                }`}
+                title={type.label}
+              >
+                <span className="text-xs">{type.icon}</span>
+                <span className="text-[7px] font-black uppercase mt-0.5">{type.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-3 pointer-events-auto">
+            <button 
+              onClick={handleLocateMe}
+              className="w-10 h-10 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xl transition-all active:scale-95 hover:bg-black/80"
+              title="My Location"
+            >
+              <LocateFixed size={18} className={isLocating ? 'animate-pulse text-leaf' : ''} />
+            </button>
+
+            <ZoomControl />
+          </div>
+        </div>
         <TileLayer
           key={mapTheme}
           attribution='&copy; CartoDB'
