@@ -42,17 +42,39 @@ export default function VillageElderChat() {
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} mb-4`}
           >
-            <div
-              className={`max-w-[80%] p-3 rounded-leaf-sm text-sm shadow-sm ${
-                msg.sender === 'user'
-                  ? 'bg-forest text-white rounded-br-none'
-                  : 'bg-white/10 text-white/90 border border-white/10 rounded-bl-none'
-              }`}
-            >
-              <p>{msg.text}</p>
-              <p className="text-[10px] opacity-40 mt-1 text-right">{msg.timestamp}</p>
+            <div className="flex items-end gap-2 max-w-[90%]">
+              {msg.sender === 'elder' && (
+                <div className="w-8 h-8 rounded-full bg-forest-light/20 flex items-center justify-center text-lg border border-forest-light/30 shadow-nature">
+                  {msg.metadata?.icon || '👴'}
+                </div>
+              )}
+              <div
+                className={`p-3 rounded-2xl text-sm shadow-xl transition-all ${
+                  msg.sender === 'user'
+                    ? 'bg-forest text-wheat rounded-br-none border border-forest-light/30'
+                    : 'bg-white/10 text-white/90 border border-white/10 rounded-bl-none backdrop-blur-md'
+                }`}
+              >
+                {msg.sender === 'elder' && msg.metadata?.emotion && (
+                  <div className="text-[10px] uppercase font-black tracking-widest text-leaf mb-1 opacity-60">
+                    Detected: {msg.metadata.emotion}
+                  </div>
+                )}
+                <p className="leading-relaxed font-medium">{msg.text}</p>
+                
+                {msg.metadata?.brief && (
+                  <div className="mt-2 pt-2 border-t border-white/10 text-[10px] italic text-wheat/60">
+                    "{msg.metadata.brief}"
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between mt-2 gap-4">
+                  <span className="text-[9px] font-bold text-white/30 uppercase">{msg.metadata?.dialect || ''}</span>
+                  <p className="text-[10px] opacity-40 font-mono">{msg.timestamp}</p>
+                </div>
+              </div>
             </div>
           </div>
         ))}

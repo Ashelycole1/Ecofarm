@@ -268,17 +268,57 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
       const model = genAI.getGenerativeModel({ 
         model: "gemini-2.5-flash",
-        systemInstruction: "You are a professional agricultural expert and agronomist in Uganda. Provide highly accurate, scientific, and practical advice on planting, soil analysis, and crop growth. Keep responses concise, professional, and directly actionable for farmers.",
       })
-      const chat = model.startChat()
-      const result = await chat.sendMessage(text)
-      const responseText = result.response.text()
+
+      const systemPrompt = `Role: You are the "Village Elder," an expert Agronomist and Community Mentor for EcoFarm. Your purpose is to provide highly practical, empathetic, and spoken-word agricultural advice to rural farmers.
+      
+      Contextual Constraints:
+      - Audience: Small-scale farmers with limited literacy.
+      - Delivery: The output will be converted to speech. Use short sentences and a rhythmic, conversational tone.
+      - Environment: Weather is ${weather?.status || 'unknown'}, Temp: ${weather?.temperature || '??'}°C, Location: ${weather?.location || 'Uganda'}.
+
+      Task:
+      Analyze the farmer's message. Provide a response that prioritizes traditional knowledge integrated with modern science.
+      
+      Response Structure (Strict JSON Format):
+      Return ONLY a JSON object with these keys:
+      {
+        "primary_dialect": "Identify the language spoke (e.g., Luganda, Swahili, English)",
+        "emotional_tone": "mood of the farmer (e.g., anxious, curious, hopeful)",
+        "voice_script": "Response under 60 words. Short sentences. Use 'The Traffic Light' logic (Green=Go, Yellow=Caution, Red=Stop)",
+        "action_icon": "Single emoji representing the main task (e.g., 🪣, 🌽, 🐛, 🌧️)",
+        "daily_brief": "One-sentence summary for the Daily Farm Brief"
+      }
+      Return ONLY the raw JSON object, no markdown.`
+
+      const chat = model.startChat({
+        history: messages.map(m => ({
+          role: m.sender === 'user' ? 'user' : 'model',
+          parts: [{ text: m.text }],
+        })),
+      })
+      
+      const result = await chat.sendMessage(systemPrompt + "\n\nFarmer Message: " + text)
+      const responseText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
+      
+      let aiData;
+      try {
+        aiData = JSON.parse(responseText)
+      } catch (e) {
+        aiData = { voice_script: responseText, action_icon: '👴' }
+      }
 
       const elderMsg: ChatMessage = {
         id: `m_${Date.now() + 1}`,
-        text: responseText,
+        text: aiData.voice_script,
         sender: 'elder',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        metadata: {
+          dialect: aiData.primary_dialect,
+          emotion: aiData.emotional_tone,
+          icon: aiData.action_icon,
+          brief: aiData.daily_brief
+        }
       }
       setMessages(prev => [...prev, elderMsg])
     } catch (err: any) {

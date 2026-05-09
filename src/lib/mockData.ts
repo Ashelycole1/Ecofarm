@@ -66,6 +66,12 @@ export interface ChatMessage {
   text: string
   sender: 'user' | 'elder'
   timestamp: string
+  metadata?: {
+    dialect?: string
+    emotion?: string
+    icon?: string
+    brief?: string
+  }
 }
 
 // ─── Mock AI Advice (Stoic Agronomist style) ───────────────────────────────────
