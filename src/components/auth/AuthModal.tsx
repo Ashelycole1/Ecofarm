@@ -5,7 +5,7 @@ import { auth } from '@/lib/firebase'
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider
 } from 'firebase/auth'
 import { Leaf, Mail, Lock, User, LogIn, ChevronRight, Grape } from 'lucide-react'
@@ -45,11 +45,10 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     setError(null)
     try {
       const provider = new GoogleAuthProvider()
-      await signInWithPopup(auth, provider)
-      onClose()
+      // Use redirect instead of popup to avoid "popup-blocked" errors on mobile/browsers
+      await signInWithRedirect(auth, provider)
     } catch (err: any) {
       setError(err.message)
-    } finally {
       setLoading(false)
     }
   }
