@@ -1,10 +1,20 @@
 import { useState, useRef, useEffect } from 'react'
 import { useFirebase } from '@/context/FirebaseContext'
-import { Send, User, TreePine, Mic, MicOff, Volume2 } from 'lucide-react'
+import { Send, User, TreePine, Mic, MicOff, Volume2, Globe } from 'lucide-react'
+
+const LANGUAGES = [
+  { id: 'English', label: 'English' },
+  { id: 'Luganda', label: 'Luganda (Central)' },
+  { id: 'Lusoga', label: 'Lusoga (Eastern)' },
+  { id: 'Runyankole', label: 'Runyankole (Western)' },
+  { id: 'Acholi', label: 'Acholi (Northern)' },
+  { id: 'Lugbara', label: 'Lugbara (West Nile)' },
+]
 
 export default function VillageElderChat() {
   const { messages, sendMessage, isGeneratingAI } = useFirebase()
   const [inputText, setInputText] = useState('')
+  const [selectedLanguage, setSelectedLanguage] = useState('English')
   const [isListening, setIsListening] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
@@ -75,7 +85,7 @@ export default function VillageElderChat() {
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault()
     if (!inputText.trim() || isGeneratingAI) return
-    sendMessage(inputText)
+    sendMessage(inputText, selectedLanguage)
     setInputText('')
   }
 
@@ -88,17 +98,40 @@ export default function VillageElderChat() {
             <TreePine className="text-wheat" size={20} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white">Agricultural Expert</h3>
-            <p className="text-[10px] text-safe font-medium">Online · Professional Advice</p>
+            <h3 className="text-sm font-bold text-white">Village Elder</h3>
+            <p className="text-[10px] text-safe font-medium">Online · Expert Advisory</p>
           </div>
         </div>
-        <button 
-          onClick={() => window.speechSynthesis.cancel()}
-          className="text-white/30 hover:text-white/60 p-2"
-          title="Stop Audio"
-        >
-          <Volume2 size={16} />
-        </button>
+        
+        <div className="flex items-center gap-2">
+          <div className="relative group/lang">
+            <button className="flex items-center gap-1.5 px-2 py-1 bg-white/5 rounded-lg border border-white/10 text-wheat text-[10px] font-bold hover:bg-white/10 transition-all">
+              <Globe size={12} />
+              {selectedLanguage}
+            </button>
+            <div className="absolute top-full right-0 mt-1 w-40 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl opacity-0 invisible group-hover/lang:opacity-100 group-hover/lang:visible transition-all z-[1001]">
+              {LANGUAGES.map(lang => (
+                <button
+                  key={lang.id}
+                  onClick={() => setSelectedLanguage(lang.id)}
+                  className={`w-full text-left px-3 py-2 text-[10px] hover:bg-forest transition-colors ${
+                    selectedLanguage === lang.id ? 'bg-forest text-white' : 'text-wheat/60'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <button 
+            onClick={() => window.speechSynthesis.cancel()}
+            className="text-white/30 hover:text-white/60 p-2"
+            title="Stop Audio"
+          >
+            <Volume2 size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}

@@ -59,7 +59,7 @@ export interface FirebaseContextValue {
   getFavoriteCrops: () => Crop[]
   setFavoriteCrops: (cropIds: string[]) => void
   getClimateAdvice: (weatherData: WeatherData, cropType: string) => Promise<void>
-  sendMessage: (text: string) => Promise<void>
+  sendMessage: (text: string, language?: string) => Promise<void>
   setShowAuthModal: (show: boolean) => void
 }
 
@@ -254,7 +254,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const sendMessage = async (text: string) => {
+  const sendMessage = async (text: string, language: string = 'English') => {
     const userMsg: ChatMessage = {
       id: `m_${Date.now()}`,
       text,
@@ -272,21 +272,23 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
       const systemPrompt = `Role: You are the "Village Elder," an expert Agronomist and Community Mentor for EcoFarm. Your purpose is to provide highly practical, empathetic, and spoken-word agricultural advice to rural farmers.
       
+      Language: Respond ONLY in ${language}. If ${language} is a local Ugandan dialect, use authentic phrasing and cultural idioms.
+      
       Contextual Constraints:
       - Audience: Small-scale farmers with limited literacy.
       - Delivery: The output will be converted to speech. Use short sentences and a rhythmic, conversational tone.
       - Environment: Weather is ${weather?.status || 'unknown'}, Temp: ${weather?.temperature || '??'}°C, Location: ${weather?.location || 'Uganda'}.
 
       Task:
-      Analyze the farmer's message. Provide a response that prioritizes traditional knowledge integrated with modern science.
+      Analyze the farmer's message. Provide a response in ${language} that prioritizes traditional knowledge integrated with modern science.
       
       Response Structure (Strict JSON Format):
       Return ONLY a JSON object with these keys:
       {
-        "primary_dialect": "Identify the language spoke (e.g., Luganda, Swahili, English)",
+        "primary_dialect": "${language}",
         "emotional_tone": "mood of the farmer (e.g., anxious, curious, hopeful)",
-        "voice_script": "Response under 60 words. Short sentences. Use 'The Traffic Light' logic (Green=Go, Yellow=Caution, Red=Stop)",
-        "action_icon": "Single emoji representing the main task (e.g., 🪣, 🌽, 🐛, 🌧️)",
+        "voice_script": "Response in ${language} under 60 words. Short sentences. Use 'The Traffic Light' logic (Green=Go, Yellow=Caution, Red=Stop)",
+        "action_icon": "Single emoji representing the main task",
         "daily_brief": "One-sentence summary for the Daily Farm Brief"
       }
       Return ONLY the raw JSON object, no markdown.`
