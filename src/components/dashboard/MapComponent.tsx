@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents, Circle, Popup, ScaleControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { LocateFixed, Map as MapIcon, Layers, Info, Plus } from 'lucide-react';
+import { LocateFixed, Map as MapIcon, Layers, Info, Plus, Maximize2, Minimize2 } from 'lucide-react';
 
 import type { Farm, EcoMarket } from '@/lib/db';
 import EcofarmReportForm from './EcofarmReportForm';
@@ -198,13 +198,37 @@ export default function MapComponent({
   const [mapTheme, setMapTheme] = useState<'voyager' | 'light_all' | 'dark_all' | 'satellite'>('voyager');
   const [isLocating, setIsLocating] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleLocateMe = () => {
     setIsLocating(true);
   };
 
+  const handleToggleFullScreen = () => {
+    if (!containerRef.current) return;
+    
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  useEffect(() => {
+    const handleFSChange = () => setIsFullScreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFSChange);
+    return () => document.removeEventListener('fullscreenchange', handleFSChange);
+  }, []);
+
   return (
-    <div style={{ height: '100%', width: '100%' }} className="leaflet-container-wrapper relative group">
+    <div 
+      ref={containerRef}
+      style={{ height: '100%', width: '100%' }} 
+      className={`leaflet-container-wrapper relative group ${isFullScreen ? 'bg-[#061412]' : ''}`}
+    >
       <style jsx global>{`
         .marker-pulse {
           width: 12px;
@@ -305,6 +329,14 @@ export default function MapComponent({
             >
               <Plus size={18} />
               <span className="text-[6px] font-black uppercase">Report</span>
+            </button>
+
+            <button 
+              onClick={handleToggleFullScreen}
+              className="w-10 h-10 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xl transition-all active:scale-95 hover:bg-black/80"
+              title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
+            >
+              {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
             </button>
 
             <button 
