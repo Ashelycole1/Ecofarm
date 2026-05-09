@@ -52,11 +52,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{
           __html: `
             if ('serviceWorker' in navigator) {
-              window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(
-                  function(reg) { console.log('[SW] Registered:', reg.scope); },
-                  function(err) { console.warn('[SW] Registration failed:', err); }
-                );
+              navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                  registration.unregister();
+                  console.log('[SW] Unregistered to ensure latest updates');
+                }
               });
             }
           `
