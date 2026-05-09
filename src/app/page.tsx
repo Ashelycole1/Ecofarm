@@ -11,7 +11,7 @@ import VillageElderChat from '@/components/ai/VillageElderChat'
 import AIVisionModule from '@/components/ai/AIVisionModule'
 import AuthModal from '@/components/auth/AuthModal'
 import { useFirebase } from '@/context/FirebaseContext'
-import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation, Truck, Map as MapIcon, FlaskConical } from 'lucide-react'
+import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation, Truck, Map as MapIcon, FlaskConical, FileText } from 'lucide-react'
 import MarketDashboard from '@/components/dashboard/MarketDashboard'
 import EcoTrack from '@/components/dashboard/EcoTrack'
 import LogisticsViewer from '@/components/dashboard/LogisticsViewer'
@@ -20,6 +20,7 @@ import FarmIntelMap from '@/components/dashboard/FarmIntelMap'
 import SoilLogger from '@/components/dashboard/SoilLogger'
 import MarketPriceBoard from '@/components/dashboard/MarketPriceBoard'
 import CropInsightEngine from '@/components/ai/CropInsightEngine'
+import AwarenessBrief from '@/components/dashboard/AwarenessBrief'
 
 // ─── Sidebar nav items ────────────────────────────────────────────────────────
 const navTabs = [
@@ -31,6 +32,7 @@ const navTabs = [
   { id: 'alerts',   label: 'Alerts',   Icon: Bell },
   { id: 'soil',     label: 'Soil',     Icon: FlaskConical },
   { id: 'track',    label: 'Track',    Icon: Navigation },
+  { id: 'briefs',   label: 'Briefs',   Icon: FileText },
 ]
 
 const tabTitles: Record<string, string> = {
@@ -314,6 +316,7 @@ function TabContent({ tab }: { tab: string }) {
   if (tab === 'map') return <div className="animate-fade-in"><FarmIntelMap /></div>
   if (tab === 'market') return <MarketTab />
   if (tab === 'track') return <TrackTab />
+  if (tab === 'briefs') return <AwarenessBrief />
 
   if (!user) return <AuthGate tabName={tab} />
 

@@ -317,6 +317,7 @@ export default function FarmIntelMap() {
 
         <MapComponent
           currentPosition={userPos}
+          onLocationFound={(lat, lng) => setUserPos([lat, lng])}
           routeCoordinates={routeCoords}
           destination={destination}
           farmMarkers={farmMarkers}

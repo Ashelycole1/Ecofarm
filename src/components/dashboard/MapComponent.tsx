@@ -90,6 +90,7 @@ export interface MapComponentProps {
   routeCoordinates?: [number, number][];
   destination?: [number, number] | null;
   onMapClick?: (lat: number, lng: number) => void;
+  onLocationFound?: (lat: number, lng: number) => void;
   farmMarkers?: FarmMarkerData[];
   marketMarkers?: FarmMarkerData[];
   onFarmClick?: (item: Farm | EcoMarket) => void;
@@ -112,6 +113,34 @@ const RecenterAutomatically = ({ position, zoom }: { position: [number, number] 
       }
     }
   }, [position, map, zoom]);
+  return null;
+};
+
+const MapLocate = ({ onLocationFound, isLocating, setIsLocating }: { 
+  onLocationFound?: (lat: number, lng: number) => void;
+  isLocating: boolean;
+  setIsLocating: (val: boolean) => void;
+}) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (isLocating) {
+      map.locate({ setView: true, maxZoom: 16 });
+    }
+  }, [isLocating, map]);
+
+  useMapEvents({
+    locationfound(e) {
+      setIsLocating(false);
+      if (onLocationFound) {
+        onLocationFound(e.latlng.lat, e.latlng.lng);
+      }
+    },
+    locationerror() {
+      setIsLocating(false);
+    }
+  });
+
   return null;
 };
 
@@ -155,6 +184,7 @@ export default function MapComponent({
   routeCoordinates = [], 
   destination,
   onMapClick,
+  onLocationFound,
   farmMarkers = [],
   marketMarkers = [],
   onFarmClick,
@@ -164,20 +194,11 @@ export default function MapComponent({
 }: MapComponentProps) {
 
   const defaultCenter: [number, number] = [0.3476, 32.5825];
-  const [mapType, setMapType] = useState<'m' | 's' | 'y' | 'p' | 'h'>('m'); // m: roadmap, s: satellite, y: hybrid, p: terrain, h: roads only
+  const [mapTheme, setMapTheme] = useState<'voyager' | 'light_all' | 'dark_all' | 'satellite'>('voyager');
   const [isLocating, setIsLocating] = useState(false);
 
   const handleLocateMe = () => {
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude: lat, longitude: lng } = pos.coords;
-        // In a real app we'd update currentPosition via a callback, 
-        // but here we just center the map as a temporary visual aid if prop isn't set
-        setIsLocating(false);
-      },
-      () => setIsLocating(false)
-    );
   };
 
   return (
@@ -228,7 +249,7 @@ export default function MapComponent({
         }
 
         .leaflet-tile {
-          filter: brightness(0.9) contrast(1.1);
+          filter: ${mapTheme === 'dark_all' ? 'invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%)' : 'brightness(0.9) contrast(1.1)'};
         }
         .leaflet-container {
           background: #061412 !important;
@@ -239,16 +260,16 @@ export default function MapComponent({
       <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-3">
         <div className="flex flex-col gap-1 p-1 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl">
           {[
-            { id: 'm', label: 'Road', icon: '🗺️' },
-            { id: 's', label: 'Sat', icon: '🛰️' },
-            { id: 'y', label: 'Hyb', icon: '🌍' },
-            { id: 'p', label: 'Ter', icon: '🏔️' },
+            { id: 'voyager', label: 'Eco', icon: '🌿' },
+            { id: 'satellite', label: 'Sat', icon: '🛰️' },
+            { id: 'light_all', label: 'Day', icon: '☀️' },
+            { id: 'dark_all', label: 'Night', icon: '🌙' },
           ].map((type) => (
             <button 
               key={type.id}
-              onClick={() => setMapType(type.id as any)}
+              onClick={() => setMapTheme(type.id as any)}
               className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${
-                mapType === type.id 
+                mapTheme === type.id 
                 ? 'bg-forest text-white border border-white/20' 
                 : 'text-white/40 hover:bg-white/5'
               }`}
@@ -279,14 +300,17 @@ export default function MapComponent({
         scrollWheelZoom={true}
       >
         <TileLayer
-          key={mapType}
-          attribution='&copy; Google Maps'
-          url={`https://mt1.google.com/vt/lyrs=${mapType}&x={x}&y={y}&z={z}`}
+          key={mapTheme}
+          attribution='&copy; CartoDB'
+          url={mapTheme === 'satellite' 
+            ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+            : `https://{s}.basemaps.cartocdn.com/rastertiles/${mapTheme}/{z}/{x}/{y}{r}.png`}
         />
         
         <ScaleControl position="bottomleft" />
         
         <MapEvents onMapClick={onMapClick} />
+        <MapLocate onLocationFound={onLocationFound} isLocating={isLocating} setIsLocating={setIsLocating} />
 
         {/* Heatmap Overlay */}
         {showHeatmap && heatmapPoints.map((p, i) => (
