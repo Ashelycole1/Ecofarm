@@ -61,6 +61,7 @@ export interface FirebaseContextValue {
   getClimateAdvice: (weatherData: WeatherData, cropType: string) => Promise<void>
   sendMessage: (text: string, language?: string) => Promise<void>
   analyzeCropImage: (imageFile: File, cropType: string) => Promise<any>
+  submitCommunityTip: (audioTranscript: string) => Promise<any>
   setShowAuthModal: (show: boolean) => void
 }
 
@@ -419,6 +420,39 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           return JSON.parse(text)
         } catch (error) {
           console.error("Analysis Error:", error)
+          throw error
+        } finally {
+          setIsGeneratingAI(false)
+        }
+      },
+      submitCommunityTip: async (audioTranscript: string) => {
+        setIsGeneratingAI(true)
+        try {
+          const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
+          const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+
+          const prompt = `Role: You are the EcoFarm Community Warden and Storyteller. Your job is to manage the "Digital Village Square," where farmers share voice tips, and to award "Trust Badges" for high-quality, verified reporting.
+
+          Task:
+          Audit Audio Tips: Analyze this transcript: "${audioTranscript}"
+          Ensure it is safe, helpful, and not spreading misinformation.
+
+          Response Structure (Strict JSON Format):
+          Return ONLY a JSON object with these keys:
+          {
+            "safety_check": "Approved" | "Flagged",
+            "summary_icon": "emoji (e.g., 🧪, 🌦️, 💰)",
+            "trust_reward": "Sprouting Seed" | "Iron Hoe" | "Golden Harvest",
+            "celebration_script": "A 15-word congratulatory voice script",
+            "audio_board_caption": "A 3-word visual title"
+          }
+          Gamification: Award "Golden Harvest" only for data-driven pro-tips. Award "Sprouting Seed" for first-timers. Flag dangerous chemicals or harmful myths.`
+
+          const result = await model.generateContent(prompt)
+          const text = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
+          return JSON.parse(text)
+        } catch (error) {
+          console.error("Community Warden Error:", error)
           throw error
         } finally {
           setIsGeneratingAI(false)

@@ -11,7 +11,8 @@ import VillageElderChat from '@/components/ai/VillageElderChat'
 import AIVisionModule from '@/components/ai/AIVisionModule'
 import AuthModal from '@/components/auth/AuthModal'
 import { useFirebase } from '@/context/FirebaseContext'
-import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation, Truck, Map as MapIcon, FlaskConical, FileText } from 'lucide-react'
+import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation, Truck, Map as MapIcon, FlaskConical, FileText, Globe } from 'lucide-react'
+import VillageSquare from '@/components/dashboard/VillageSquare'
 import MarketDashboard from '@/components/dashboard/MarketDashboard'
 import EcoTrack from '@/components/dashboard/EcoTrack'
 import LogisticsViewer from '@/components/dashboard/LogisticsViewer'
@@ -29,6 +30,7 @@ const navTabs = [
   { id: 'calendar', label: 'Planting', Icon: Leaf },
   { id: 'chat',     label: 'Chat',     Icon: MessageCircle },
   { id: 'alerts',   label: 'Alerts',   Icon: Bell },
+  { id: 'community', label: 'Village',  Icon: Globe },
   { id: 'soil',     label: 'Soil',     Icon: FlaskConical },
   { id: 'track',    label: 'Track',    Icon: Navigation },
 ]
@@ -40,6 +42,7 @@ const tabTitles: Record<string, string> = {
   calendar: '📅 Planting',
   chat:     '👵 Village Elder',
   alerts:   '🚨 Pest Alerts',
+  community: '🤝 Digital Village Square',
   soil:     '🌱 Soil Logger',
   track:    '🚚 Eco-Track',
 }
@@ -346,6 +349,7 @@ function TabContent({ tab }: { tab: string }) {
         </div>
       </div>
     )
+    case 'community': return <VillageSquare />
     default: return <HomeTab />
   }
 }
