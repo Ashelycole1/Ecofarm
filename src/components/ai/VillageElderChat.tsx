@@ -1,13 +1,13 @@
-'use client'
-
 import { useState, useRef, useEffect } from 'react'
 import { useFirebase } from '@/context/FirebaseContext'
-import { Send, User, TreePine } from 'lucide-react'
+import { Send, User, TreePine, Mic, MicOff, Volume2 } from 'lucide-react'
 
 export default function VillageElderChat() {
   const { messages, sendMessage, isGeneratingAI } = useFirebase()
   const [inputText, setInputText] = useState('')
+  const [isListening, setIsListening] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const recognitionRef = useRef<any>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -16,6 +16,61 @@ export default function VillageElderChat() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition()
+        recognitionRef.current.continuous = false
+        recognitionRef.current.interimResults = false
+        recognitionRef.current.lang = 'en-US' // Default to English, but can handle Ugandan accents better with this
+
+        recognitionRef.current.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript
+          setInputText(transcript)
+          setIsListening(false)
+        }
+
+        recognitionRef.current.onerror = () => {
+          setIsListening(false)
+        }
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false)
+        }
+      }
+    }
+  }, [])
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop()
+    } else {
+      setInputText('')
+      recognitionRef.current?.start()
+      setIsListening(true)
+    }
+  }
+
+  const speakMessage = (text: string) => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel()
+      
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.rate = 0.9 // Slower for clarity
+      utterance.pitch = 0.8 // Deeper "Elder" tone
+      
+      // Try to find a warm, natural voice
+      const voices = window.speechSynthesis.getVoices()
+      const preferredVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Natural'))
+      if (preferredVoice) utterance.voice = preferredVoice
+
+      window.speechSynthesis.speak(utterance)
+    }
+  }
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,14 +82,23 @@ export default function VillageElderChat() {
   return (
     <div className="flex flex-col h-[55vh] min-h-[360px] max-h-[700px] md:h-[65vh] nature-card overflow-hidden">
       {/* Header */}
-      <div className="bg-forest/40 p-3 flex items-center gap-3 border-b border-white/10">
-        <div className="w-10 h-10 rounded-full bg-wheat/20 flex items-center justify-center border border-wheat/30">
-          <TreePine className="text-wheat" size={20} />
+      <div className="bg-forest/40 p-3 flex items-center justify-between border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-wheat/20 flex items-center justify-center border border-wheat/30">
+            <TreePine className="text-wheat" size={20} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white">Agricultural Expert</h3>
+            <p className="text-[10px] text-safe font-medium">Online · Professional Advice</p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-sm font-bold text-white">Agricultural Expert</h3>
-          <p className="text-[10px] text-safe font-medium">Online · Professional Advice</p>
-        </div>
+        <button 
+          onClick={() => window.speechSynthesis.cancel()}
+          className="text-white/30 hover:text-white/60 p-2"
+          title="Stop Audio"
+        >
+          <Volume2 size={16} />
+        </button>
       </div>
 
       {/* Messages */}
@@ -46,8 +110,17 @@ export default function VillageElderChat() {
           >
             <div className="flex items-end gap-2 max-w-[90%]">
               {msg.sender === 'elder' && (
-                <div className="w-8 h-8 rounded-full bg-forest-light/20 flex items-center justify-center text-lg border border-forest-light/30 shadow-nature">
-                  {msg.metadata?.icon || '👴'}
+                <div className="flex flex-col gap-2 items-center">
+                  <div className="w-8 h-8 rounded-full bg-forest-light/20 flex items-center justify-center text-lg border border-forest-light/30 shadow-nature">
+                    {msg.metadata?.icon || '👴'}
+                  </div>
+                  <button 
+                    onClick={() => speakMessage(msg.text)}
+                    className="p-1.5 rounded-full bg-wheat/10 text-wheat hover:bg-wheat/20 transition-all shadow-sm"
+                    title="Listen to Elder"
+                  >
+                    <Volume2 size={12} />
+                  </button>
                 </div>
               )}
               <div
@@ -91,22 +164,39 @@ export default function VillageElderChat() {
       </div>
 
       {/* Footer / Input */}
-      <form onSubmit={handleSend} className="p-3 bg-black/20 border-t border-white/10 flex gap-2">
-        <input
-          type="text"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          placeholder="Ask for agricultural advice..."
-          className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:border-forest-light transition-colors"
-        />
-        <button
-          type="submit"
-          disabled={!inputText.trim() || isGeneratingAI}
-          className="w-10 h-10 rounded-full bg-forest text-wheat flex items-center justify-center hover:bg-forest-light transition-colors disabled:opacity-50"
-        >
-          <Send size={18} />
-        </button>
-      </form>
+      <div className="p-3 bg-black/20 border-t border-white/10">
+        <form onSubmit={handleSend} className="flex gap-2">
+          <button
+            type="button"
+            onClick={toggleListening}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+              isListening ? 'bg-alert text-white animate-pulse' : 'bg-white/5 text-white/50 hover:bg-white/10'
+            }`}
+          >
+            {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+          </button>
+          
+          <input
+            type="text"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder={isListening ? "Listening..." : "Ask for agricultural advice..."}
+            className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:border-forest-light transition-colors"
+          />
+          <button
+            type="submit"
+            disabled={!inputText.trim() || isGeneratingAI}
+            className="w-10 h-10 rounded-full bg-forest text-wheat flex items-center justify-center hover:bg-forest-light transition-colors disabled:opacity-50"
+          >
+            <Send size={18} />
+          </button>
+        </form>
+        {isListening && (
+          <p className="text-[9px] text-wheat/40 mt-2 text-center uppercase tracking-widest font-black">
+            Speak clearly to the Elder
+          </p>
+        )}
+      </div>
     </div>
   )
 }
