@@ -195,7 +195,8 @@ export default function MapComponent({
 }: MapComponentProps) {
 
   const defaultCenter: [number, number] = [0.3476, 32.5825];
-  const [mapTheme, setMapTheme] = useState<'voyager' | 'light_all' | 'dark_all' | 'satellite'>('voyager');
+  const [tileSource, setTileSource] = useState<'eco' | 'sat'>('eco');
+  const [mode, setMode] = useState<'day' | 'night'>('day');
   const [isLocating, setIsLocating] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -204,6 +205,11 @@ export default function MapComponent({
   const handleLocateMe = () => {
     setIsLocating(true);
   };
+
+  // Auto-locate on first load
+  useEffect(() => {
+    setIsLocating(true);
+  }, []);
 
   const handleToggleFullScreen = () => {
     if (!containerRef.current) return;
@@ -275,7 +281,7 @@ export default function MapComponent({
         }
 
         .leaflet-tile {
-          filter: ${mapTheme === 'dark_all' ? 'invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%)' : 'brightness(0.9) contrast(1.1)'};
+          filter: ${mode === 'night' ? 'invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%)' : 'brightness(0.9) contrast(1.1)'};
         }
         .leaflet-container {
           background: #061412 !important;
@@ -289,36 +295,66 @@ export default function MapComponent({
         />
       )}
 
+      {/* Map Type Indicator */}
+      <div className="absolute bottom-24 left-4 z-[1000] pointer-events-none">
+        <div className="px-3 py-1 bg-black/40 backdrop-blur-md rounded-lg border border-white/10">
+          <span className="text-[10px] font-black text-wheat uppercase tracking-widest">
+            {tileSource === 'eco' ? '🌿 Eco Intelligence' : '🛰️ Satellite View'}
+            {mode === 'night' ? ' · 🌙 Night Mode' : ''}
+          </span>
+        </div>
+      </div>
+
       <MapContainer
         center={currentPosition || defaultCenter}
         zoom={14}
         zoomControl={false}
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
+        dragging={true}
+        doubleClickZoom={true}
+        touchZoom={true}
       >
         {/* Controls Overlay moved inside MapContainer context */}
         <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-3 pointer-events-none">
           <div className="flex flex-col gap-1 p-1 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl pointer-events-auto">
-            {[
-              { id: 'voyager', label: 'Eco', icon: '🌿' },
-              { id: 'satellite', label: 'Sat', icon: '🛰️' },
-              { id: 'light_all', label: 'Day', icon: '☀️' },
-              { id: 'dark_all', label: 'Night', icon: '🌙' },
-            ].map((type) => (
-              <button 
-                key={type.id}
-                onClick={() => setMapTheme(type.id as any)}
-                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${
-                  mapTheme === type.id 
-                  ? 'bg-forest text-white border border-white/20' 
-                  : 'text-white/40 hover:bg-white/5'
-                }`}
-                title={type.label}
-              >
-                <span className="text-xs">{type.icon}</span>
-                <span className="text-[7px] font-black uppercase mt-0.5">{type.label}</span>
-              </button>
-            ))}
+            <button 
+              onClick={() => setTileSource('eco')}
+              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${
+                tileSource === 'eco' ? 'bg-forest text-white border border-white/20' : 'text-white/40 hover:bg-white/5'
+              }`}
+            >
+              <span className="text-xs">🌿</span>
+              <span className="text-[7px] font-black uppercase mt-0.5">Eco</span>
+            </button>
+            <button 
+              onClick={() => setTileSource('sat')}
+              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${
+                tileSource === 'sat' ? 'bg-forest text-white border border-white/20' : 'text-white/40 hover:bg-white/5'
+              }`}
+            >
+              <span className="text-xs">🛰️</span>
+              <span className="text-[7px] font-black uppercase mt-0.5">Sat</span>
+            </button>
+            <div className="h-px bg-white/10 mx-2 my-0.5" />
+            <button 
+              onClick={() => setMode('day')}
+              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${
+                mode === 'day' ? 'bg-forest text-white border border-white/20' : 'text-white/40 hover:bg-white/5'
+              }`}
+            >
+              <span className="text-xs">☀️</span>
+              <span className="text-[7px] font-black uppercase mt-0.5">Day</span>
+            </button>
+            <button 
+              onClick={() => setMode('night')}
+              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center transition-all ${
+                mode === 'night' ? 'bg-forest text-white border border-white/20' : 'text-white/40 hover:bg-white/5'
+              }`}
+            >
+              <span className="text-xs">🌙</span>
+              <span className="text-[7px] font-black uppercase mt-0.5">Night</span>
+            </button>
           </div>
 
           <div className="flex flex-col gap-3 pointer-events-auto">
@@ -351,11 +387,11 @@ export default function MapComponent({
           </div>
         </div>
         <TileLayer
-          key={mapTheme}
+          key={`${tileSource}-${mode}`}
           attribution='&copy; CartoDB'
-          url={mapTheme === 'satellite' 
+          url={tileSource === 'sat' 
             ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-            : `https://{s}.basemaps.cartocdn.com/rastertiles/${mapTheme}/{z}/{x}/{y}{r}.png`}
+            : `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png`}
         />
         
         <ScaleControl position="bottomleft" />
