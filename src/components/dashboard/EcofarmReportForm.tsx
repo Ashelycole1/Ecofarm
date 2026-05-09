@@ -27,7 +27,7 @@ export default function EcofarmReportForm({ onClose, userPos }: EcofarmReportFor
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
+
     // Simulate network delay
     setTimeout(() => {
       setIsSubmitting(false)
@@ -54,7 +54,7 @@ export default function EcofarmReportForm({ onClose, userPos }: EcofarmReportFor
   return (
     <div className="fixed inset-0 z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      
+
       <div className="relative w-full max-w-md bg-[#061412] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/5 bg-white/5">
@@ -81,11 +81,10 @@ export default function EcofarmReportForm({ onClose, userPos }: EcofarmReportFor
                         key={cat.id}
                         type="button"
                         onClick={() => setCategory(cat.id)}
-                        className={`flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all ${
-                          isActive 
-                            ? 'bg-forest text-white border-white/20 shadow-lg shadow-forest/20 scale-105' 
+                        className={`flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all ${isActive
+                            ? 'bg-forest text-white border-white/20 shadow-lg shadow-forest/20 scale-105'
                             : 'bg-white/5 text-white/40 border-white/5 hover:bg-white/10'
-                        }`}
+                          }`}
                       >
                         <Icon size={20} style={{ color: isActive ? '#fff' : cat.color }} />
                         <span className="text-[10px] font-bold uppercase text-center">{cat.label}</span>
@@ -94,8 +93,8 @@ export default function EcofarmReportForm({ onClose, userPos }: EcofarmReportFor
                   })}
                 </div>
               </div>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setStep(2)}
                 className="w-full py-4 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-widest hover:bg-wheat transition-all active:scale-95"
               >
@@ -125,11 +124,10 @@ export default function EcofarmReportForm({ onClose, userPos }: EcofarmReportFor
                         key={level}
                         type="button"
                         onClick={() => setUrgency(level)}
-                        className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase border transition-all ${
-                          urgency === level 
-                            ? 'bg-white/20 text-white border-white/30' 
+                        className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase border transition-all ${urgency === level
+                            ? 'bg-white/20 text-white border-white/30'
                             : 'bg-white/5 text-white/30 border-white/5'
-                        }`}
+                          }`}
                       >
                         {level}
                       </button>
@@ -146,14 +144,14 @@ export default function EcofarmReportForm({ onClose, userPos }: EcofarmReportFor
               </div>
 
               <div className="flex gap-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setStep(1)}
                   className="flex-1 py-4 rounded-2xl bg-white/5 text-white/50 font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all"
                 >
                   Back
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={isSubmitting || !description}
                   className="flex-[2] py-4 rounded-2xl bg-forest text-wheat font-black text-xs uppercase tracking-widest hover:bg-forest-light transition-all active:scale-95 disabled:opacity-50"

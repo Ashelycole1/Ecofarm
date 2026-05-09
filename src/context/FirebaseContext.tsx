@@ -60,6 +60,7 @@ export interface FirebaseContextValue {
   setFavoriteCrops: (cropIds: string[]) => void
   getClimateAdvice: (weatherData: WeatherData, cropType: string) => Promise<void>
   sendMessage: (text: string, language?: string) => Promise<void>
+  analyzeCropImage: (imageFile: File, cropType: string) => Promise<any>
   setShowAuthModal: (show: boolean) => void
 }
 
@@ -365,6 +366,64 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       getClimateAdvice,
       sendMessage,
       setShowAuthModal,
+      analyzeCropImage: async (imageFile: File, cropType: string) => {
+        setIsGeneratingAI(true)
+        try {
+          const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
+          const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+
+          // Convert file to base64
+          const readFileAsBase64 = (file: File): Promise<string> => {
+            return new Promise((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onload = () => {
+                const base64String = (reader.result as string).split(',')[1]
+                resolve(base64String)
+              }
+              reader.onerror = reject
+              reader.readAsDataURL(file)
+            })
+          }
+
+          const base64Data = await readFileAsBase64(imageFile)
+
+          const prompt = `Role: You are the EcoFarm Visual Pathologist. Your expertise lies in identifying agricultural pests, crop diseases, and nutrient deficiencies from images. Your goal is to guide a farmer who cannot read through a visual recovery plan.
+
+          Task:
+          Analyze the uploaded image (leaf, fruit, or insect) for a ${cropType} crop.
+          Identify the specific issue with 95% confidence.
+
+          Response Structure (Strict JSON Format):
+          Return ONLY a JSON object with these keys:
+          {
+            "identification": "Common name of the pest/disease (e.g., 'Fall Armyworm')",
+            "threat_level": number (1-10),
+            "visual_status": "Green" | "Yellow" | "Red",
+            "audio_explanation": "A 30-word script in simple, fatherly/motherly language",
+            "visual_steps": [
+              {
+                "step_icon": "emoji",
+                "step_description": "5-word caption",
+                "media_search_query": "keyword for instructional GIF"
+              }
+            ]
+          }
+          Instructions: No scientific names. Use local/descriptive names. Suggest tools rural farmers already have (soapy water, ash, manual removal).`
+
+          const result = await model.generateContent([
+            prompt,
+            { inlineData: { data: base64Data, mimeType: imageFile.type } }
+          ])
+
+          const text = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
+          return JSON.parse(text)
+        } catch (error) {
+          console.error("Analysis Error:", error)
+          throw error
+        } finally {
+          setIsGeneratingAI(false)
+        }
+      }
     }}>
       {children}
     </FirebaseContext.Provider>
