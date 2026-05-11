@@ -154,7 +154,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     const fetchDynamicCrops = async (weatherStatus: string) => {
       try {
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
         const prompt = `Return a JSON array of exactly 4 optimal farming crops for a Ugandan farmer during ${weatherStatus} weather. 
         Each object must exactly match this TypeScript interface:
         { id: string, name: string, emoji: string, status: "optimal" | "warning", plantingDate: string, tips: string }
@@ -347,7 +347,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     setIsGeneratingAI(true)
     try {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
       const prompt = `Advisory for a Ugandan farmer. 
                      Weather: ${weatherData.status}, Temp: ${weatherData.temperature}°C. 
@@ -378,7 +378,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     try {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash",
+        model: "gemini-1.5-flash",
       })
 
       const systemPrompt = `Role: You are the "Village Elder," an expert Agronomist and Community Mentor for EcoFarm. Your purpose is to provide highly practical, empathetic, and spoken-word agricultural advice to rural farmers.
@@ -398,7 +398,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       {
         "primary_dialect": "${language}",
         "emotional_tone": "mood of the farmer (e.g., anxious, curious, hopeful)",
-        "voice_script": "Response in ${language} under 60 words. Short sentences. Use 'The Traffic Light' logic (Green=Go, Yellow=Caution, Red=Stop). End with a warm, elder-like sign-off.",
+        "voice_script": "A warm, spoken-word response in ${language} under 60 words. Give specific, high-quality agricultural advice based on modern agronomy mixed with local wisdom. Use 'The Traffic Light' logic (Green=Go, Yellow=Caution, Red=Stop). End with a warm, elder-like sign-off.",
         "action_icon": "Single emoji representing the main task",
         "daily_brief": "One-sentence summary for the Daily Farm Brief"
       }
@@ -480,7 +480,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         setIsGeneratingAI(true)
         try {
           const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-          const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+          const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
           // Convert file to base64
           const readFileAsBase64 = (file: File): Promise<string> => {
@@ -538,13 +538,17 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         setIsGeneratingAI(true)
         try {
           const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-          const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+          const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
-          const prompt = `Role: You are the EcoFarm Community Warden and Storyteller. Your job is to manage the "Digital Village Square," where farmers share voice tips, and to award "Trust Badges" for high-quality, verified reporting.
+          const prompt = `Role: You are the "Village Elder," the most respected Agricultural Expert and Community Mentor of EcoFarm. Your job is to audit tips shared in the "Digital Village Square" and provide actual, high-quality agricultural feedback to help the community grow.
 
           Task:
-          Audit Audio Tips: Analyze this transcript: "${audioTranscript}"
-          Ensure it is safe, helpful, and not spreading misinformation.
+          Analyze this farmer's tip: "${audioTranscript}"
+          
+          Guidelines:
+          1. Check if the tip is agriculturally sound and safe.
+          2. Provide a warm, wise, and highly practical agricultural feedback/validation.
+          3. If the tip is good, award a badge. If it's harmful (e.g., suggesting dangerous chemicals without PPE, or myths that hurt soil), flag it and explain why kindly.
 
           Response Structure (Strict JSON Format):
           Return ONLY a JSON object with these keys:

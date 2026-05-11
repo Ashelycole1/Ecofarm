@@ -6,7 +6,7 @@ import { Mic, Trophy, Play, CheckCircle2, AlertCircle, Share2, Sparkles, Loader2
 import confetti from 'canvas-confetti'
 
 export default function VillageSquare() {
-  const { submitCommunityTip, isGeneratingAI, user } = useFirebase()
+  const { submitCommunityTip, isGeneratingAI, user, generateOpenAIVoice } = useFirebase()
   const [tipText, setTipText] = useState('')
   const [result, setResult] = useState<any>(null)
   const [badges, setBadges] = useState<string[]>([])
@@ -31,7 +31,20 @@ export default function VillageSquare() {
     }
   }
 
-  const speakText = (text: string) => {
+  const speakText = async (text: string) => {
+    // 1. Try OpenAI High-Quality Voice (Elder tone)
+    try {
+      const audioUrl = await generateOpenAIVoice(text)
+      if (audioUrl) {
+        const audio = new Audio(audioUrl)
+        audio.play()
+        return
+      }
+    } catch (e) {
+      console.warn('OpenAI Voice unavailable, falling back to browser TTS')
+    }
+
+    // 2. Fallback to Browser Speech Synthesis
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(text)
@@ -69,7 +82,7 @@ export default function VillageSquare() {
               <Mic className="text-wheat animate-pulse" size={32} />
             </div>
             <h4 className="text-white font-bold">Share Your Wisdom</h4>
-            <p className="text-white/40 text-[10px] uppercase font-black tracking-widest">Village Warden Audit Required</p>
+            <p className="text-white/40 text-[10px] uppercase font-black tracking-widest">Village Elder Audit Required</p>
           </div>
 
           <div className="space-y-4">
@@ -87,7 +100,7 @@ export default function VillageSquare() {
               {isGeneratingAI ? <Loader2 className="animate-spin" size={20} /> : (
                 <>
                   <Share2 size={18} />
-                  Voice to Village Square
+                  Voice to Village Elder
                 </>
               )}
             </button>
@@ -109,7 +122,7 @@ export default function VillageSquare() {
               <h3 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">
                 {result.audio_board_caption}
               </h3>
-              <p className="text-xs text-white/60 font-medium italic">&quot;{result.celebration_script}&quot;</p>
+              <p className="text-[13px] text-wheat/90 font-medium leading-relaxed bg-black/20 p-4 rounded-2xl border border-wheat/10">&quot;{result.celebration_script}&quot;</p>
             </div>
 
             <div className="flex flex-col gap-3">
@@ -118,7 +131,7 @@ export default function VillageSquare() {
                 className="w-full py-4 bg-white/10 rounded-2xl flex items-center justify-center gap-3 text-wheat font-bold hover:bg-white/20 transition-all"
               >
                 <Play fill="currentColor" size={20} />
-                Listen to Warden
+                Listen to Elder
               </button>
               
               <button 
