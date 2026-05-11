@@ -154,7 +154,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     const fetchDynamicCrops = async (weatherStatus: string) => {
       try {
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+        const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" })
         const prompt = `Return a JSON array of exactly 4 optimal farming crops for a Ugandan farmer during ${weatherStatus} weather. 
         Each object must exactly match this TypeScript interface:
         { id: string, name: string, emoji: string, status: "optimal" | "warning", plantingDate: string, tips: string }
@@ -347,7 +347,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     setIsGeneratingAI(true)
     try {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+      const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" })
 
       const prompt = `Advisory for a Ugandan farmer. 
                      Weather: ${weatherData.status}, Temp: ${weatherData.temperature}°C. 
@@ -378,7 +378,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     try {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
+        model: "models/gemini-1.5-flash",
       })
 
       const systemPrompt = `Role: You are the "Village Elder," an expert Agronomist and Community Mentor for EcoFarm. Your purpose is to provide highly practical, empathetic, and spoken-word agricultural advice to rural farmers.
@@ -391,14 +391,14 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       - Environment: Weather is ${weather?.status || 'unknown'}, Temp: ${weather?.temperature || '??'}°C, Location: ${weather?.location || 'Uganda'}.
  
       Task:
-      Analyze the farmer's message. Provide a response in ${language} that prioritizes traditional knowledge integrated with modern science.
-      
+      Analyze the farmer's message. Provide a response in ${language} that prioritizes traditional knowledge integrated with modern science. Do NOT be generic. Use specific Ugandan farming terms (e.g., names of pests like 'Nsenene' for grasshoppers, or 'Kasooli' for maize).
+
       Response Structure (Strict JSON Format):
       Return ONLY a JSON object with these keys:
       {
         "primary_dialect": "${language}",
         "emotional_tone": "mood of the farmer (e.g., anxious, curious, hopeful)",
-        "voice_script": "A warm, spoken-word response in ${language} under 60 words. Give specific, high-quality agricultural advice based on modern agronomy mixed with local wisdom. Use 'The Traffic Light' logic (Green=Go, Yellow=Caution, Red=Stop). End with a warm, elder-like sign-off.",
+        "voice_script": "A wise, fatherly response in ${language} (maximum 60 words). Provide AUTHENTIC, deep agricultural advice specific to the farmer's concern. Use specific cultural idioms and local wisdom from the ${language}-speaking region. Ensure the feedback is actionable and scientifically sound, but delivered with the warmth of an Elder. End with a traditional blessing in ${language}.",
         "action_icon": "Single emoji representing the main task",
         "daily_brief": "One-sentence summary for the Daily Farm Brief"
       }
@@ -480,7 +480,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         setIsGeneratingAI(true)
         try {
           const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-          const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+          const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" })
 
           // Convert file to base64
           const readFileAsBase64 = (file: File): Promise<string> => {
@@ -538,7 +538,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         setIsGeneratingAI(true)
         try {
           const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-          const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+          const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" })
 
           const prompt = `Role: You are the "Village Elder," the most respected Agricultural Expert and Community Mentor of EcoFarm. Your job is to audit tips shared in the "Digital Village Square" and provide actual, high-quality agricultural feedback to help the community grow.
 
