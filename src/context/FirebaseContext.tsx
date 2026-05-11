@@ -12,6 +12,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { diagnosticTestGemini } from '@/lib/ai-test'
 import {
   mockCrops,
   mockPestAlerts,
@@ -66,9 +67,10 @@ export interface FirebaseContextValue {
   sendMessage: (text: string, language?: string) => Promise<void>
   analyzeCropImage: (imageFile: File, cropType: string) => Promise<any>
   submitCommunityTip: (audioTranscript: string) => Promise<any>
+  transcribeAudio: (audioBlob: Blob) => Promise<string | null>
+  generatePlantingSchedule: (crop: string, region: string) => Promise<any>
   setShowAuthModal: (show: boolean) => void
   loginAsGuest: () => void
-  generateOpenAIVoice: (text: string, language?: string) => Promise<string | null>
   translateWithSunbird: (text: string, source: string, target: string) => Promise<string>
 }
 
@@ -117,6 +119,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       setAuthLoading(false)
     })
     return () => unsubscribe()
+    // Run AI Diagnostic
+    diagnosticTestGemini()
   }, [])
 
   // ── Firestore Listeners ────────────────────────────────────────────────────
@@ -306,69 +310,6 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // ── OpenAI Helper ────────────────────────────────────────────────────────────
-  const openAIRequest = async (endpoint: string, body: any) => {
-    const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY
-    if (!apiKey) throw new Error('OpenAI API Key missing')
-
-    const res = await fetch(`https://api.openai.com/v1/${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(body)
-    })
-
-    if (!res.ok) {
-      const err = await res.json()
-      throw new Error(err.error?.message || 'OpenAI Request Failed')
-    }
-    return res.json()
-  }
-
-  const generateOpenAIVoice = async (text: string, language: string = 'English'): Promise<string | null> => {
-    try {
-      // 1. For Local Ugandan Languages, use Sunbird TTS (Specialized)
-      const localLangMap: Record<string, number> = {
-        'Luganda': 240, // Example IDs based on typical Sunbird mappings
-        'Acholi': 241,
-        'Runyankole': 243,
-        'Lugbara': 245,
-        'Lusoga': 244
-      }
-
-      if (language !== 'English' && localLangMap[language]) {
-        return await generateSunbirdTTS(text, localLangMap[language])
-      }
-
-      // 2. For English, use OpenAI (Premium)
-      const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY
-      if (!apiKey) return null
-
-      const response = await fetch('https://api.openai.com/v1/audio/speech', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'tts-1',
-          input: text,
-          voice: 'onyx', 
-          speed: 0.9
-        })
-      })
-
-      if (!response.ok) return null
-      
-      const blob = await response.blob()
-      return URL.createObjectURL(blob)
-    } catch (e) {
-      console.error('TTS Error:', e)
-      return null
-    }
-  }
 
   // ── Sunbird AI Integration ──────────────────────────────────────────────────
   const sunbirdRequest = async (endpoint: string, body: any) => {
@@ -499,7 +440,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         inputForAI = await translateWithSunbird(text, language, 'English')
       }
 
-      const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
+      if (!apiKey) {
+        console.error("[AI] Gemini API Key is MISSING in environment variables!")
+      }
+      const genAI = new GoogleGenerativeAI(apiKey || '')
       
       const systemPrompt = `Role: You are the "Village Elder," an expert Agronomist and Community Mentor for EcoFarm. Your purpose is to provide highly practical, empathetic, and spoken-word agricultural advice to rural farmers.
       
@@ -525,11 +470,16 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       Return ONLY the raw JSON object, no markdown.`
 
       // Fallback model list for maximum resilience
-      const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+      const modelNames = [
+        "gemini-2.5-flash",
+        "gemini-2.5-pro",
+        "gemini-1.5-flash"
+      ]
       let responseText = ""
       
       for (const name of modelNames) {
         try {
+          console.log(`[AI] Attempting Gemini with model: ${name}...`)
           const model = genAI.getGenerativeModel({ model: name })
           const chat = model.startChat({
             history: messages.map(m => ({
@@ -540,9 +490,12 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           
           const result = await chat.sendMessage(systemPrompt + "\n\nFarmer Message: " + inputForAI)
           responseText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
-          if (responseText) break
-        } catch (e) {
-          console.warn(`Model ${name} failed in chat, trying next...`, e)
+          if (responseText) {
+            console.log(`[AI] Gemini Success with ${name}`)
+            break
+          }
+        } catch (e: any) {
+          console.error(`[AI] Gemini ${name} failed:`, e.message || e)
         }
       }
 
@@ -616,6 +569,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       getClimateAdvice,
       sendMessage,
       setShowAuthModal,
+
       analyzeCropImage: async (imageFile: File, cropType: string) => {
         setIsGeneratingAI(true)
         try {
@@ -659,24 +613,62 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           }
           Instructions: No scientific names. Use local/descriptive names. Suggest tools rural farmers already have (soapy water, ash, manual removal).`
 
-          const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro"]
+          const modelNames = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash"]
+          let visionResponse = ""
           for (const name of modelNames) {
             try {
+              console.log(`[Vision] Attempting Gemini Vision with model: ${name}...`)
               const model = genAI.getGenerativeModel({ model: name })
               const result = await model.generateContent([
                 prompt,
                 { inlineData: { data: base64Data, mimeType: imageFile.type } }
               ])
-              const text = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
-              return JSON.parse(text)
-            } catch (e) {
-              console.warn(`Vision failed for ${name}`)
+              visionResponse = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
+              if (visionResponse) {
+                console.log(`[Vision] Gemini Success with ${name}`)
+                break
+              }
+            } catch (e: any) {
+              console.error(`[Vision] Gemini ${name} failed:`, e.message || e)
             }
           }
-          throw new Error("Vision analysis failed for all models.")
+
+          return JSON.parse(visionResponse)
         } catch (error) {
+
           console.error("Analysis Error:", error)
           throw error
+        } finally {
+          setIsGeneratingAI(false)
+        }
+      },
+      generatePlantingSchedule: async (crop: string, region: string) => {
+        setIsGeneratingAI(true)
+        try {
+          const prompt = `Generate a highly specific planting calendar JSON array of 3 distinct varieties or complementary options for growing ${crop} in the ${region} region of Uganda. 
+          Each object must strictly match this exact JSON schema:
+          { "id": "string", "name": "string", "localName": "string", "region": ["string"], "status": "optimal" | "good" | "caution" | "avoid", "tip": "string", "waterNeed": "low" | "medium" | "high", "harvestWeeks": number, "plantingMonths": number[], "emoji": "string", "plantingDate": "string", "tips": "string" }
+          Return ONLY valid raw JSON array, without markdown.`
+
+          let responseText = ""
+          
+          // 1. Try Gemini
+          const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
+          try {
+            console.log(`[Planner] Attempting Gemini with model: gemini-2.5-flash...`)
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+            const result = await model.generateContent(prompt)
+            responseText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
+            if (responseText) console.log('[Planner] Gemini Success')
+          } catch (e: any) {
+            console.error('[Planner] Gemini failed:', e.message || e)
+          }
+
+          return JSON.parse(responseText)
+        } catch (error) {
+
+          console.error('Planner AI Error:', error)
+          return null
         } finally {
           setIsGeneratingAI(false)
         }

@@ -5,8 +5,6 @@ import { useFirebase } from '@/context/FirebaseContext'
 import { ChevronDown, ChevronUp, Calendar, Droplets, Clock } from 'lucide-react'
 import type { Crop } from '@/lib/mockData'
 
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
 // ... same status, icons, and CropCard components ...
 const statusConfig = {
   optimal: { label: 'Optimal Now',   bg: 'bg-safe/15',  border: 'border-safe/40',  text: 'text-safe',  dot: 'bg-safe'  },
@@ -107,39 +105,23 @@ function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 export default function PlantingCalendar() {
-  const { crops } = useFirebase()
+  const { crops, generatePlantingSchedule, isGeneratingAI } = useFirebase()
   const [filter, setFilter] = useState<'all' | 'optimal' | 'good' | 'caution'>('all')
   
   const [selectedRegion, setSelectedRegion] = useState('Central (Kampala)')
   const [selectedCrop, setSelectedCrop] = useState('Maize')
-  const [isGenerating, setIsGenerating] = useState(false)
   const [aiCustomCrops, setAiCustomCrops] = useState<Crop[] | null>(null)
 
   const activeCrops = aiCustomCrops || crops
   const filtered = filter === 'all' ? activeCrops : activeCrops.filter(c => c.status === filter)
 
-  const generateSchedule = async () => {
-    setIsGenerating(true)
+  const handleGenerate = async () => {
     setFilter('all')
-    try {
-      const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-      const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" })
-
-      const prompt = `Generate a highly specific planting calendar JSON array of 3 distinct varieties or complementary options for growing ${selectedCrop} in the ${selectedRegion} region of Uganda. 
-        Each object must strictly match this exact JSON schema:
-        { "id": "string", "name": "string", "localName": "string", "region": ["string"], "status": "optimal" | "good" | "caution" | "avoid", "tip": "string", "waterNeed": "low" | "medium" | "high", "harvestWeeks": number, "plantingMonths": number[], "emoji": "string", "plantingDate": "string", "tips": "string" }
-        Return ONLY valid raw JSON array, without markdown. Treat "tip" and "tips" similarly.`
-
-      const result = await model.generateContent(prompt)
-      const text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim()
-      const calendarCrops = JSON.parse(text)
-      
-      setAiCustomCrops(calendarCrops)
-    } catch (err) {
-      console.warn("AI Generation Failed for Calendar", err)
-      alert("AI Generation failed. Ensure API key is set and try again.")
-    } finally {
-      setIsGenerating(false)
+    const result = await generatePlantingSchedule(selectedCrop, selectedRegion)
+    if (result) {
+      setAiCustomCrops(result)
+    } else {
+      alert("AI Generation failed. Ensure API keys are set correctly.")
     }
   }
 
@@ -179,11 +161,11 @@ export default function PlantingCalendar() {
          </select>
 
          <button 
-           onClick={generateSchedule}
-           disabled={isGenerating}
+           onClick={handleGenerate}
+           disabled={isGeneratingAI}
            className="sm:col-span-1 col-span-2 py-2.5 rounded-leaf bg-forest/40 border border-white/10 text-wheat font-bold text-xs uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-forest transition-colors"
          >
-           {isGenerating ? <><Clock className="animate-spin" size={14} /> Generating...</> : 'Generate AI Schedule'}
+           {isGeneratingAI ? <><Clock className="animate-spin" size={14} /> Generating...</> : 'Generate AI Schedule'}
          </button>
       </div>
       <button 

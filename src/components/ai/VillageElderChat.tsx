@@ -12,7 +12,7 @@ const LANGUAGES = [
 ]
 
 export default function VillageElderChat() {
-  const { messages, sendMessage, isGeneratingAI, generateOpenAIVoice } = useFirebase()
+  const { messages, sendMessage, isGeneratingAI } = useFirebase()
   const [inputText, setInputText] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState('English')
   const [isListening, setIsListening] = useState(false)
@@ -81,19 +81,7 @@ export default function VillageElderChat() {
   }
 
   const speakMessage = async (text: string, language: string = 'English') => {
-    // 1. Try OpenAI/Sunbird High-Quality Voice
-    try {
-      const audioUrl = await generateOpenAIVoice(text, language)
-      if (audioUrl) {
-        const audio = new Audio(audioUrl)
-        audio.play()
-        return
-      }
-    } catch (e) {
-      console.warn('OpenAI Voice unavailable, falling back to browser TTS')
-    }
-
-    // 2. Fallback to Browser Speech Synthesis
+    // Fallback to Browser Speech Synthesis
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(text)
