@@ -118,6 +118,16 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
         return;
       }
       try {
+        // 1. Fetch Trip & Driver Metadata
+        const { data: tripData, error: tripErr } = await supabase
+          .from('trips')
+          .select('*, drivers(*)')
+          .eq('id', tripId)
+          .single();
+
+        if (tripErr) throw tripErr;
+
+        // 2. Fetch Initial Coordinates
         const { data, error } = await supabase
           .from('coordinates')
           .select('lat, lng, timestamp')
@@ -137,13 +147,10 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
             setDistance(Number(d.toFixed(1)));
             setEta(Math.round(d * 4));
           }
-        } else {
-          // No data yet? Stay in 'connecting' and wait for the first INSERT via realtime
-          console.log('[Supabase] No initial data, waiting for realtime...');
         }
       } catch (err: any) {
         console.error('[Supabase Error]', err);
-        setErrorMsg('Could not fetch initial location.');
+        setErrorMsg('Could not fetch trip information.');
         setStatus('error');
       }
     };

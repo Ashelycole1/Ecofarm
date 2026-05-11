@@ -116,13 +116,28 @@ export default function RequestRider({ onRiderFound }: RequestRiderProps) {
 
       const matchedDriver = nearestDrivers[0];
       setDriver(matchedDriver);
+      
+      // 3. Create actual trip record in Supabase
+      const { data: tripData, error: tripError } = await supabase
+        .from('trips')
+        .insert([{
+          farmer_id: 'farmer-001', // Should come from context
+          driver_id: matchedDriver.id,
+          pickup_address: pickup,
+          dropoff_address: dropoff,
+          estimated_price: estimatedPrice,
+          status: 'in-progress'
+        }])
+        .select()
+        .single();
+
+      if (tripError) throw tripError;
+
       setStep('found');
       
-      // 3. Hand off to Tracking after 2.5 seconds
+      // 4. Hand off to Tracking after 2.5 seconds
       setTimeout(() => {
-        // We simulate a trip ID. In production, you'd insert a trip row into a trips table.
-        const mockTripId = `trip-${matchedDriver.id.substr(0, 8)}`;
-        onRiderFound(mockTripId);
+        onRiderFound(tripData.id);
       }, 2500);
 
     } catch (err: unknown) {

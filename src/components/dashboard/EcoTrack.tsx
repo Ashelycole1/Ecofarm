@@ -139,6 +139,17 @@ export default function EcoTrack() {
     const trip = await dbStartTrip('farmer-001');
     setCurrentTrip(trip);
 
+    // ── Supabase Integration ──
+    const supabase = getSupabase();
+    if (supabase && isOnline) {
+      await supabase.from('trips').insert([{
+        id: trip.id,
+        farmer_id: 'farmer-001',
+        status: 'in-progress',
+        created_at: new Date(trip.startTime).toISOString()
+      }]);
+    }
+
     watchIdRef.current = navigator.geolocation.watchPosition(
       async (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords;
