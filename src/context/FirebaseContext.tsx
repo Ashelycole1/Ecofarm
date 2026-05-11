@@ -122,21 +122,28 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   // ── Firestore Listeners ────────────────────────────────────────────────────
   useEffect(() => {
     // 1. Pest Alerts
-    const alertsQuery = query(collection(db, 'pestAlerts'), orderBy('reportCount', 'desc'))
-    const unsubAlerts = onSnapshot(alertsQuery, (snapshot) => {
-      if (!snapshot.empty) {
-        const alerts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PestAlert))
-        setPestAlerts(alerts)
-      } else {
-          setPestAlerts([])
-        }
-      }, (error) => {
-        // Suppress repetitive 'Database (default) not found' errors in console
-        if (!error.message.includes('Database \'(default)\' not found')) {
-          console.warn("Firestore Alerts Error:", error)
-        }
-        setPestAlerts(mockPestAlerts) // Fallback to mock data
-      })
+    try {
+      const alertsQuery = query(collection(db, 'pestAlerts'), orderBy('reportCount', 'desc'))
+      const unsubAlerts = onSnapshot(alertsQuery, (snapshot) => {
+        if (!snapshot.empty) {
+          const alerts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PestAlert))
+          setPestAlerts(alerts)
+        } else {
+            setPestAlerts([])
+          }
+        }, (error) => {
+          // Suppress repetitive 'Database (default) not found' errors in console
+          if (!error.message.includes('Database \'(default)\' not found')) {
+            console.warn("Firestore Alerts Error:", error)
+          }
+          setPestAlerts(mockPestAlerts) // Fallback to mock data
+        })
+
+        return () => unsubAlerts()
+    } catch (e) {
+        console.warn("Firestore initialization failed, using mock alerts.")
+        setPestAlerts(mockPestAlerts)
+    }
   
       // 2. Open-Meteo Weather Fetching & Dynamic Crops
       setFarmStatus({
@@ -155,18 +162,28 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     const fetchDynamicCrops = async (weatherStatus: string) => {
       try {
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-        const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" })
-        const prompt = `Return a JSON array of exactly 4 optimal farming crops for a Ugandan farmer during ${weatherStatus} weather. 
-        Each object must exactly match this TypeScript interface:
-        { id: string, name: string, emoji: string, status: "optimal" | "warning", plantingDate: string, tips: string }
-        Return ONLY valid raw JSON array, without any markdown formatting or backticks.`
+        const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+        let dynamicCrops = []
         
-        const result = await model.generateContent(prompt)
-        const rawText = result.response.text()
-        const text = rawText.replace(/```json/g, '').replace(/```/g, '').replace(/\\n/g, '').trim()
-        const dynamicCrops = JSON.parse(text)
+        for (const name of modelNames) {
+          try {
+            const model = genAI.getGenerativeModel({ model: name })
+            const prompt = `Return a JSON array of exactly 4 optimal farming crops for a Ugandan farmer during ${weatherStatus} weather. 
+            Each object must exactly match this TypeScript interface:
+            { id: string, name: string, emoji: string, status: "optimal" | "warning", plantingDate: string, tips: string }
+            Return ONLY valid raw JSON array, without any markdown formatting or backticks.`
+            
+            const result = await model.generateContent(prompt)
+            const rawText = result.response.text()
+            const text = rawText.replace(/```json/g, '').replace(/```/g, '').replace(/\\n/g, '').trim()
+            dynamicCrops = JSON.parse(text)
+            if (dynamicCrops.length > 0) break
+          } catch (e) {
+            console.warn(`Crop fetch failed for ${name}`)
+          }
+        }
         
-        setCrops(dynamicCrops)
+        setCrops(dynamicCrops.length > 0 ? dynamicCrops : mockCrops.slice(0, 4))
       } catch (err: any) {
         console.warn("Gemini Quota/Error: Falling back to local crop intelligence.", err.message)
         // Filter mock crops based on weather for a smart fallback
@@ -237,10 +254,6 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       )
     } else {
       fetchLiveWeather(0.3476, 32.5825)
-    }
-
-    return () => {
-      unsubAlerts()
     }
   }, [user])
 
@@ -380,7 +393,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
   const translateWithSunbird = async (text: string, source: string, target: string): Promise<string> => {
     try {
-      // Map app language names to Sunbird 3-letter codes
+      // 1. Try Sunbird AI (Gold standard for Ugandan dialects)
       const langMap: Record<string, string> = {
         'English': 'eng',
         'Luganda': 'lug',
@@ -396,10 +409,26 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         src_lang: langMap[source] || 'eng',
         tgt_lang: langMap[target] || 'lug'
       })
-      return res.output || text
+      
+      if (res.output) {
+        console.log(`[Sunbird] Translated ${source} -> ${target}`)
+        return res.output
+      }
+      throw new Error('Empty Sunbird response')
     } catch (e) {
-      console.warn('Sunbird Translation Error:', e)
-      return text
+      console.warn('Sunbird failed, falling back to Gemini Native Translation:', e)
+      
+      // 2. Fallback to Gemini Native Translation (Reasonable for major dialects)
+      try {
+        const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
+        const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" })
+        const prompt = `Translate this text from ${source} to ${target}. Return ONLY the translated text: "${text}"`
+        const result = await model.generateContent(prompt)
+        return result.response.text().trim()
+      } catch (gemErr) {
+        console.error('Gemini translation fallback failed:', gemErr)
+        return text // Last resort: return original
+      }
     }
   }
 
@@ -415,7 +444,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       }
       return null
     } catch (e) {
-      console.error('Sunbird TTS Error:', e)
+      console.error('Sunbird TTS failed, using browser speech only.')
       return null
     }
   }
@@ -425,16 +454,26 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     setIsGeneratingAI(true)
     try {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-      const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" })
-
-      const prompt = `Advisory for a Ugandan farmer. 
-                     Weather: ${weatherData.status}, Temp: ${weatherData.temperature}°C. 
-                     Crop: ${cropType}. Use a professional, scientific Agronomist tone. Short and actionable advice only on planting and growth.`
-
-      const result = await model.generateContent(prompt)
-      const advice = result.response.text()
       
-      setFarmStatus(prev => prev ? { ...prev, aiAdvice: advice } : prev)
+      // Fallback model list
+      const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+      let advice = ""
+      
+      for (const name of modelNames) {
+        try {
+          const model = genAI.getGenerativeModel({ model: name })
+          const prompt = `Advisory for a Ugandan farmer. 
+                         Weather: ${weatherData.status}, Temp: ${weatherData.temperature}°C. 
+                         Crop: ${cropType}. Use a professional, scientific Agronomist tone. Short and actionable advice only on planting and growth.`
+          const result = await model.generateContent(prompt)
+          advice = result.response.text()
+          if (advice) break
+        } catch (e) {
+          console.warn(`Model ${name} failed, trying next...`)
+        }
+      }
+      
+      setFarmStatus(prev => prev ? { ...prev, aiAdvice: advice || "Could not generate advice at this time." } : prev)
     } catch (error: any) {
       console.warn("AI Generation Error:", error)
       setFarmStatus(prev => prev ? { ...prev, aiAdvice: `Error: ${error.message || "Could not fetch advice"}` } : prev)
@@ -461,10 +500,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       }
 
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-      const model = genAI.getGenerativeModel({ 
-        model: "models/gemini-1.5-flash",
-      })
-
+      
       const systemPrompt = `Role: You are the "Village Elder," an expert Agronomist and Community Mentor for EcoFarm. Your purpose is to provide highly practical, empathetic, and spoken-word agricultural advice to rural farmers.
       
       Language: Respond ONLY in English. Your response will be translated to ${language} by a specialized system. Use authentic phrasing, cultural idioms, and local wisdom that translates well.
@@ -488,15 +524,29 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       }
       Return ONLY the raw JSON object, no markdown.`
 
-      const chat = model.startChat({
-        history: messages.map(m => ({
-          role: m.sender === 'user' ? 'user' : 'model',
-          parts: [{ text: m.text }],
-        })),
-      })
+      // Fallback model list for maximum resilience
+      const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+      let responseText = ""
       
-      const result = await chat.sendMessage(systemPrompt + "\n\nFarmer Message: " + inputForAI)
-      const responseText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
+      for (const name of modelNames) {
+        try {
+          const model = genAI.getGenerativeModel({ model: name })
+          const chat = model.startChat({
+            history: messages.map(m => ({
+              role: m.sender === 'user' ? 'user' : 'model',
+              parts: [{ text: m.text }],
+            })),
+          })
+          
+          const result = await chat.sendMessage(systemPrompt + "\n\nFarmer Message: " + inputForAI)
+          responseText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
+          if (responseText) break
+        } catch (e) {
+          console.warn(`Model ${name} failed in chat, trying next...`, e)
+        }
+      }
+
+      if (!responseText) throw new Error("All AI models failed to respond.")
       
       let aiData;
       try {
@@ -570,8 +620,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         setIsGeneratingAI(true)
         try {
           const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-          const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" })
-
+          
           // Convert file to base64
           const readFileAsBase64 = (file: File): Promise<string> => {
             return new Promise((resolve, reject) => {
@@ -610,13 +659,21 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           }
           Instructions: No scientific names. Use local/descriptive names. Suggest tools rural farmers already have (soapy water, ash, manual removal).`
 
-          const result = await model.generateContent([
-            prompt,
-            { inlineData: { data: base64Data, mimeType: imageFile.type } }
-          ])
-
-          const text = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
-          return JSON.parse(text)
+          const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro"]
+          for (const name of modelNames) {
+            try {
+              const model = genAI.getGenerativeModel({ model: name })
+              const result = await model.generateContent([
+                prompt,
+                { inlineData: { data: base64Data, mimeType: imageFile.type } }
+              ])
+              const text = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
+              return JSON.parse(text)
+            } catch (e) {
+              console.warn(`Vision failed for ${name}`)
+            }
+          }
+          throw new Error("Vision analysis failed for all models.")
         } catch (error) {
           console.error("Analysis Error:", error)
           throw error
@@ -628,8 +685,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         setIsGeneratingAI(true)
         try {
           const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-          const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" })
-
+          
           const prompt = `Role: You are the "Village Elder," the most respected Agricultural Expert and Community Mentor of EcoFarm. Your job is to audit tips shared in the "Digital Village Square" and provide actual, high-quality agricultural feedback to help the community grow.
 
           Task:
@@ -644,32 +700,43 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           Return ONLY a JSON object with these keys:
           {
             "safety_check": "Approved" | "Flagged",
-            "summary_icon": "emoji (e.g., 🧪, 🌦️, 💰)",
+            "summary_icon": "emoji related to the topic",
             "trust_reward": "Sprouting Seed" | "Iron Hoe" | "Golden Harvest",
-            "celebration_script": "A 15-word congratulatory voice script",
-            "audio_board_caption": "A 3-word visual title"
+            "celebration_script": "A 20-30 word wise response from the Village Elder giving actual feedback on the tip. Be specific about the agricultural practice mentioned.",
+            "audio_board_caption": "A 3-word title for the tip"
           }
-          Gamification: Award "Golden Harvest" only for data-driven pro-tips. Award "Sprouting Seed" for first-timers. Flag dangerous chemicals or harmful myths.`
+          Gamification: Award "Golden Harvest" only for expert-level pro-tips. Award "Sprouting Seed" for simple but helpful ones. Flag dangerous practices.`
 
-          const result = await model.generateContent(prompt)
-          const rawText = result.response.text()
-          const text = rawText.replace(/```json/g, '').replace(/```/g, '').trim()
-          
-          try {
-            return JSON.parse(text)
-          } catch (e) {
-            console.warn("JSON Parse failed for Warden, using fallback", text)
-            return {
-              safety_check: "Approved",
-              summary_icon: "🌾",
-              trust_reward: "Sprouting Seed",
-              celebration_script: "Your wisdom has been shared with the village!",
-              audio_board_caption: "Village Wisdom"
+          const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+          for (const name of modelNames) {
+            try {
+              const model = genAI.getGenerativeModel({ model: name })
+              const result = await model.generateContent(prompt)
+              const rawText = result.response.text()
+              const text = rawText.replace(/```json/g, '').replace(/```/g, '').trim()
+              const data = JSON.parse(text)
+              if (data && data.celebration_script) return data
+            } catch (e) {
+              console.warn(`Village Elder audit failed for ${name}`)
             }
           }
+          
+          return {
+            safety_check: "Approved",
+            summary_icon: "🌾",
+            trust_reward: "Sprouting Seed",
+            celebration_script: "Your wisdom on agricultural practices is valued! Every piece of traditional knowledge helps our community grow stronger.",
+            audio_board_caption: "Village Wisdom"
+          }
         } catch (error) {
-          console.error("Community Warden Error:", error)
-          throw error
+          console.error("Village Elder Feedback Error:", error)
+          return {
+            safety_check: "Approved",
+            summary_icon: "🌾",
+            trust_reward: "Sprouting Seed",
+            celebration_script: "Your wisdom has been shared with the village!",
+            audio_board_caption: "Village Wisdom"
+          }
         } finally {
           setIsGeneratingAI(false)
         }
