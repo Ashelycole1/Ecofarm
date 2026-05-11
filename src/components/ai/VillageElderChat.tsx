@@ -18,6 +18,7 @@ export default function VillageElderChat() {
   const [isListening, setIsListening] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
+  const lastMsgIdRef = useRef<string | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -25,6 +26,13 @@ export default function VillageElderChat() {
 
   useEffect(() => {
     scrollToBottom()
+    
+    // Auto-speak the last message if it's from the elder and hasn't been spoken
+    const lastMsg = messages[messages.length - 1]
+    if (lastMsg && lastMsg.sender === 'elder' && lastMsg.id !== lastMsgIdRef.current) {
+      speakMessage(lastMsg.text)
+      lastMsgIdRef.current = lastMsg.id
+    }
   }, [messages])
 
   // Initialize Speech Recognition
@@ -35,7 +43,15 @@ export default function VillageElderChat() {
         recognitionRef.current = new SpeechRecognition()
         recognitionRef.current.continuous = false
         recognitionRef.current.interimResults = false
-        recognitionRef.current.lang = 'en-US' // Default to English, but can handle Ugandan accents better with this
+        
+        // Map selected language to best available recognition code
+        const getLangCode = (id: string) => {
+          if (id === 'English') return 'en-UG'
+          if (id === 'Luganda') return 'lug-UG' // Might not be supported, will fallback to en-UG
+          return 'en-UG'
+        }
+        
+        recognitionRef.current.lang = getLangCode(selectedLanguage)
 
         recognitionRef.current.onresult = (event: any) => {
           const transcript = event.results[0][0].transcript
@@ -52,7 +68,7 @@ export default function VillageElderChat() {
         }
       }
     }
-  }, [])
+  }, [selectedLanguage])
 
   const toggleListening = () => {
     if (isListening) {
@@ -90,7 +106,7 @@ export default function VillageElderChat() {
   }
 
   return (
-    <div className="flex flex-col h-[55vh] min-h-[360px] max-h-[700px] md:h-[65vh] nature-card overflow-hidden">
+    <div className="flex flex-col h-[60vh] sm:h-[55vh] min-h-[400px] max-h-[800px] md:h-[65vh] nature-card overflow-hidden transition-all duration-300">
       {/* Header */}
       <div className="bg-forest/40 p-3 flex items-center justify-between border-b border-white/10">
         <div className="flex items-center gap-3">
@@ -202,26 +218,26 @@ export default function VillageElderChat() {
           <button
             type="button"
             onClick={toggleListening}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-              isListening ? 'bg-alert text-white animate-pulse' : 'bg-white/5 text-white/50 hover:bg-white/10'
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shrink-0 ${
+              isListening ? 'bg-alert text-white animate-pulse shadow-[0_0_15px_rgba(231,76,60,0.5)]' : 'bg-white/5 text-white/50 hover:bg-white/10'
             }`}
           >
-            {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+            {isListening ? <MicOff size={22} /> : <Mic size={22} />}
           </button>
           
           <input
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder={isListening ? "Listening..." : "Ask for agricultural advice..."}
-            className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:border-forest-light transition-colors"
+            placeholder={isListening ? "Listening..." : "Ask in " + selectedLanguage + "..."}
+            className="flex-1 bg-white/5 border border-white/10 rounded-full px-5 py-3 text-sm text-white focus:outline-none focus:border-forest-light transition-colors placeholder:text-white/20"
           />
           <button
             type="submit"
             disabled={!inputText.trim() || isGeneratingAI}
-            className="w-10 h-10 rounded-full bg-forest text-wheat flex items-center justify-center hover:bg-forest-light transition-colors disabled:opacity-50"
+            className="w-12 h-12 rounded-full bg-forest text-wheat flex items-center justify-center hover:bg-forest-light transition-all active:scale-90 disabled:opacity-50 shrink-0"
           >
-            <Send size={18} />
+            <Send size={20} />
           </button>
         </form>
         {isListening && (
