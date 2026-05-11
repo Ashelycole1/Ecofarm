@@ -12,14 +12,16 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import {
+  mockCrops,
+  mockPestAlerts,
+} from '@/lib/mockData'
 import type {
   WeatherData,
   Crop,
   PestAlert,
   FarmStatus,
   ChatMessage,
-  mockCrops,
-  mockPestAlerts,
 } from '@/lib/mockData'
 
 

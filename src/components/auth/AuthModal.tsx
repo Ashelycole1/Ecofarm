@@ -187,7 +187,6 @@ export default function AuthModal({ onClose }: AuthModalProps) {
             </button>
           </div>
 
-          </div>
         </div>
 
         {/* Closing hint */}
