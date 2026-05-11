@@ -63,6 +63,7 @@ export interface FirebaseContextValue {
   analyzeCropImage: (imageFile: File, cropType: string) => Promise<any>
   submitCommunityTip: (audioTranscript: string) => Promise<any>
   setShowAuthModal: (show: boolean) => void
+  loginAsGuest: () => void
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -85,8 +86,13 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
   // ── Auth Listener ──────────────────────────────────────────────────────────
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user)
+    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      if (fbUser) {
+        setUser(fbUser)
+      } else {
+        // Only clear if we're not in guest mode
+        setUser(prev => prev && (prev as any).isGuest ? prev : null)
+      }
       setAuthLoading(false)
     })
     return () => unsubscribe()
@@ -205,7 +211,20 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const logout = async () => {
-    await signOut(auth)
+    setUser(null)
+    await signOut(auth).catch(() => {})
+  }
+
+  const loginAsGuest = () => {
+    const guestUser = {
+      uid: 'guest-123',
+      email: 'guest@ecofarm.demo',
+      displayName: 'Guest Farmer',
+      isGuest: true,
+      photoURL: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'
+    }
+    setUser(guestUser as any)
+    setShowAuthModal(false)
   }
 
   const refreshWeather = async () => {
@@ -471,7 +490,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         } finally {
           setIsGeneratingAI(false)
         }
-      }
+      },
+      loginAsGuest
     }}>
       {children}
     </FirebaseContext.Provider>

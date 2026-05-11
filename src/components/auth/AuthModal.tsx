@@ -8,7 +8,8 @@ import {
   signInWithRedirect,
   GoogleAuthProvider
 } from 'firebase/auth'
-import { Leaf, Mail, Lock, User, LogIn, ChevronRight, Grape } from 'lucide-react'
+import { Leaf, Mail, Lock, User, LogIn, ChevronRight, Grape, FlaskConical } from 'lucide-react'
+import { useFirebase } from '@/context/FirebaseContext'
 
 interface AuthModalProps {
   onClose: () => void
@@ -20,6 +21,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const { loginAsGuest } = useFirebase()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,7 +36,11 @@ export default function AuthModal({ onClose }: AuthModalProps) {
       }
       onClose()
     } catch (err: any) {
-      setError(err.message || 'An error occurred. Please check your credentials.')
+      if (err.message.includes('auth/operation-not-allowed')) {
+        setError('Email/Password sign-in is not enabled in Firebase. Please enable it in the Firebase Console under Authentication > Sign-in method.')
+      } else {
+        setError(err.message || 'An error occurred. Please check your credentials.')
+      }
     } finally {
       setLoading(false)
     }
@@ -164,6 +170,16 @@ export default function AuthModal({ onClose }: AuthModalProps) {
               className="text-xs text-white/40 hover:text-wheat transition-colors"
             >
               {isLogin ? "Don't have an account? Create one" : "Already have an account? Sign in"}
+            </button>
+          </div>
+
+          <div className="pt-2 border-t border-white/5">
+            <button
+              onClick={loginAsGuest}
+              className="w-full py-3 bg-forest/20 border border-forest-light/20 rounded-leaf-sm text-wheat text-[10px] font-black uppercase tracking-widest hover:bg-forest/30 transition-all flex items-center justify-center gap-2"
+            >
+              <FlaskConical size={14} />
+              Continue as Guest (Demo Mode)
             </button>
           </div>
         </div>
