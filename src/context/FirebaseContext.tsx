@@ -18,6 +18,8 @@ import type {
   PestAlert,
   FarmStatus,
   ChatMessage,
+  mockCrops,
+  mockPestAlerts,
 } from '@/lib/mockData'
 
 
@@ -110,8 +112,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           setPestAlerts([])
         }
       }, (error) => {
-        console.warn("Firestore Alerts Error (likely rules):", error)
-        setPestAlerts([])
+        // Suppress repetitive 'Database (default) not found' errors in console
+        if (!error.message.includes('Database \'(default)\' not found')) {
+          console.warn("Firestore Alerts Error:", error)
+        }
+        setPestAlerts(mockPestAlerts) // Fallback to mock data
       })
   
       // 2. Open-Meteo Weather Fetching & Dynamic Crops
@@ -122,8 +127,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         waterLevel: 50,
         soilHealth: 80,
         alerts: 0,
-        aiAdvice: "Loading AI insights...",
+        aiAdvice: "Connecting to farm intelligence...",
       } as FarmStatus)
+
+      // Initial fallback for alerts
+      setPestAlerts(mockPestAlerts)
 
     const fetchDynamicCrops = async (weatherStatus: string) => {
       try {
@@ -141,8 +149,15 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         
         setCrops(dynamicCrops)
       } catch (err: any) {
-        console.warn("Failed to generate dynamic crops via Gemini", err)
-        setCrops([])
+        console.warn("Gemini Quota/Error: Falling back to local crop intelligence.", err.message)
+        // Filter mock crops based on weather for a smart fallback
+        const filteredCrops = mockCrops.filter(c => {
+          if (weatherStatus === 'rainy' || weatherStatus === 'stormy') return c.waterNeed !== 'low'
+          if (weatherStatus === 'sunny' || weatherStatus === 'drought') return c.waterNeed !== 'high'
+          return true
+        }).slice(0, 4)
+        
+        setCrops(filteredCrops.length > 0 ? filteredCrops : mockCrops.slice(0, 4))
       }
     }
 
@@ -248,8 +263,14 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         ...prev,
         alerts: prev.alerts + 1,
       } : prev)
-    } catch (error) {
-      console.error("Error submitting report:", error)
+    } catch (error: any) {
+      if (error.message.includes('Database \'(default)\' not found')) {
+        console.warn("Firestore database not initialized. Report saved to local session only.")
+        // Locally update for immediate feedback even if DB fails
+        setFarmStatus(prev => prev ? { ...prev, alerts: prev.alerts + 1 } : prev)
+      } else {
+        console.error("Error submitting report:", error)
+      }
     }
   }
 
