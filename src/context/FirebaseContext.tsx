@@ -68,6 +68,7 @@ export interface FirebaseContextValue {
   submitCommunityTip: (audioTranscript: string) => Promise<any>
   setShowAuthModal: (show: boolean) => void
   loginAsGuest: () => void
+  generateOpenAIVoice: (text: string) => Promise<string | null>
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -288,6 +289,56 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       } else {
         console.error("Error submitting report:", error)
       }
+    }
+  }
+
+  // ── OpenAI Helper ────────────────────────────────────────────────────────────
+  const openAIRequest = async (endpoint: string, body: any) => {
+    const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY
+    if (!apiKey) throw new Error('OpenAI API Key missing')
+
+    const res = await fetch(`https://api.openai.com/v1/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(body)
+    })
+
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error?.message || 'OpenAI Request Failed')
+    }
+    return res.json()
+  }
+
+  const generateOpenAIVoice = async (text: string): Promise<string | null> => {
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY
+      if (!apiKey) return null
+
+      const response = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'tts-1',
+          input: text,
+          voice: 'onyx', // Deep, fatherly voice perfect for an Elder
+          speed: 0.9
+        })
+      })
+
+      if (!response.ok) return null
+      
+      const blob = await response.blob()
+      return URL.createObjectURL(blob)
+    } catch (e) {
+      console.error('OpenAI TTS Error:', e)
+      return null
     }
   }
 
@@ -529,7 +580,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           setIsGeneratingAI(false)
         }
       },
-      loginAsGuest
+      loginAsGuest,
+      generateOpenAIVoice
     }}>
       {children}
     </FirebaseContext.Provider>

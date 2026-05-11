@@ -12,7 +12,7 @@ const LANGUAGES = [
 ]
 
 export default function VillageElderChat() {
-  const { messages, sendMessage, isGeneratingAI } = useFirebase()
+  const { messages, sendMessage, isGeneratingAI, generateOpenAIVoice } = useFirebase()
   const [inputText, setInputText] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState('English')
   const [isListening, setIsListening] = useState(false)
@@ -80,20 +80,28 @@ export default function VillageElderChat() {
     }
   }
 
-  const speakMessage = (text: string) => {
+  const speakMessage = async (text: string) => {
+    // 1. Try OpenAI High-Quality Voice (Elder tone)
+    try {
+      const audioUrl = await generateOpenAIVoice(text)
+      if (audioUrl) {
+        const audio = new Audio(audioUrl)
+        audio.play()
+        return
+      }
+    } catch (e) {
+      console.warn('OpenAI Voice unavailable, falling back to browser TTS')
+    }
+
+    // 2. Fallback to Browser Speech Synthesis
     if (typeof window !== 'undefined' && window.speechSynthesis) {
-      // Cancel any ongoing speech
       window.speechSynthesis.cancel()
-      
       const utterance = new SpeechSynthesisUtterance(text)
-      utterance.rate = 0.9 // Slower for clarity
-      utterance.pitch = 0.8 // Deeper "Elder" tone
-      
-      // Try to find a warm, natural voice
+      utterance.rate = 0.9
+      utterance.pitch = 0.8
       const voices = window.speechSynthesis.getVoices()
       const preferredVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Natural'))
       if (preferredVoice) utterance.voice = preferredVoice
-
       window.speechSynthesis.speak(utterance)
     }
   }
