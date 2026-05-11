@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { 
   Truck, 
   MapPin, 
@@ -325,7 +326,7 @@ export default function EcoTrack() {
             </div>
             
             <div className="p-4 bg-white rounded-3xl shadow-2xl border-4 border-wheat">
-              <img src={qrUrl} alt="Delivery QR" className="w-48 h-48" />
+              <Image src={qrUrl} alt="Delivery QR" width={192} height={192} className="w-48 h-48" />
             </div>
 
             <div className="flex flex-col items-center gap-1">

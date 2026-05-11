@@ -44,7 +44,7 @@ export default function CropInsightEngine() {
     try {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '');
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.0-flash',
         systemInstruction: `You are an expert agronomist for Ugandan smallholder farmers.
 Analyze the farm report and return ONLY a valid JSON object with no markdown:
 { "tag": "Healthy" | "Pest Risk" | "Irrigation Needed", "advice": "string", "confidence": 0-100 }
@@ -90,7 +90,7 @@ Analyze and classify this report.`;
           </div>
           <div>
             <h3 className="text-white font-black text-sm">AI Crop Insight Engine</h3>
-            <p className="text-white/40 text-[9px] uppercase font-bold tracking-wide">Powered by Gemini 2.5</p>
+            <p className="text-white/40 text-[9px] uppercase font-bold tracking-wide">Powered by Gemini 2.0</p>
           </div>
         </div>
 

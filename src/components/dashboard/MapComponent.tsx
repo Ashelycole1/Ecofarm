@@ -14,58 +14,70 @@ import EcofarmReportForm from './EcofarmReportForm';
 // ── Icons & Markers ─────────────────────────────────────────────────────────
 
 // Pulsing marker for deliveries (SafeBoda Orange)
-const createPulsingIcon = (color: string) => L.divIcon({
-  html: `<div class="marker-pulse" style="background-color: ${color}; --pulse-color: ${color}b3"></div>`,
-  className: 'custom-div-icon',
-  iconSize: [20, 20],
-  iconAnchor: [10, 10]
-});
+const createPulsingIcon = (color: string) => {
+  if (typeof window === 'undefined') return null as any;
+  return L.divIcon({
+    html: `<div class="marker-pulse" style="background-color: ${color}; --pulse-color: ${color}b3"></div>`,
+    className: 'custom-div-icon',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+};
 
 
 // User location dot (Google Style Blue dot)
-const userIcon = L.divIcon({
-  html: `
-    <div class="user-marker-container">
-      <div class="user-marker-pulse"></div>
-      <div class="user-marker-dot"></div>
-    </div>
-  `,
-  className: 'user-marker-wrapper',
-  iconSize: [24, 24],
-  iconAnchor: [12, 12]
-});
+const getUserIcon = () => {
+  if (typeof window === 'undefined') return null as any;
+  return L.divIcon({
+    html: `
+      <div class="user-marker-container">
+        <div class="user-marker-pulse"></div>
+        <div class="user-marker-dot"></div>
+      </div>
+    `,
+    className: 'user-marker-wrapper',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+  });
+};
 
 // Generic Farm/Market dot
-const createDotIcon = (color: string) => L.divIcon({
-  html: `
-    <div style="
-      width: 16px; height: 16px; border-radius: 50%;
-      background: ${color};
-      border: 2.5px solid rgba(255,255,255,0.9);
-      box-shadow: 0 2px 8px ${color}80;
-    "></div>
-  `,
-  className: 'dot-marker',
-  iconSize: [16, 16],
-  iconAnchor: [8, 8]
-});
+const createDotIcon = (color: string) => {
+  if (typeof window === 'undefined') return null as any;
+  return L.divIcon({
+    html: `
+      <div style="
+        width: 16px; height: 16px; border-radius: 50%;
+        background: ${color};
+        border: 2.5px solid rgba(255,255,255,0.9);
+        box-shadow: 0 2px 8px ${color}80;
+      "></div>
+    `,
+    className: 'dot-marker',
+    iconSize: [16, 16],
+    iconAnchor: [8, 8]
+  });
+};
 
 // Market Pin
-const createMarketIcon = (color: string) => L.divIcon({
-  html: `
-    <div style="display: flex; flex-direction: column; align-items: center;">
-      <div style="
-        width: 20px; height: 20px; border-radius: 50% 50% 50% 0;
-        background: ${color}; transform: rotate(-45deg);
-        border: 2px solid rgba(255,255,255,0.9);
-        box-shadow: 0 3px 10px ${color}80;
-      "></div>
-    </div>
-  `,
-  className: 'market-marker',
-  iconSize: [20, 20],
-  iconAnchor: [10, 20]
-});
+const createMarketIcon = (color: string) => {
+  if (typeof window === 'undefined') return null as any;
+  return L.divIcon({
+    html: `
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div style="
+          width: 20px; height: 20px; border-radius: 50% 50% 50% 0;
+          background: ${color}; transform: rotate(-45deg);
+          border: 2px solid rgba(255,255,255,0.9);
+          box-shadow: 0 3px 10px ${color}80;
+        "></div>
+      </div>
+    `,
+    className: 'market-marker',
+    iconSize: [20, 20],
+    iconAnchor: [10, 20]
+  });
+};
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -491,7 +503,7 @@ export default function MapComponent({
 
         {/* Destination Position */}
         {destination && (
-          <Marker position={destination} icon={userIcon} />
+          <Marker position={destination} icon={getUserIcon()} />
         )}
 
         {/* Route Trail */}

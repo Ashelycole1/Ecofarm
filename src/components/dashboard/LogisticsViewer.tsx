@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Package, MapPin, Truck, RefreshCw, AlertCircle, Navigation, Star, CheckCircle2 } from 'lucide-react';
 import { getSupabase } from '@/lib/supabaseClient';
@@ -37,6 +37,70 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
       setTripCompleted(true);
     }
   }, [distance, status]);
+
+  // ── Helper: Haversine Distance ──────────────────────────────────────────
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const fetchORSStats = useCallback(async (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const orsKey = process.env.NEXT_PUBLIC_ORS_API_KEY;
+    try {
+      if (orsKey) {
+        const res = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${orsKey}&start=${lon1},${lat1}&end=${lon2},${lat2}`);
+        const data = await res.json();
+        if (data.features && data.features[0]) {
+          const props = data.features[0].properties.summary;
+          setDistance(Number((props.distance / 1000).toFixed(1)));
+          setEta(Math.round(props.duration / 60));
+          return;
+        }
+      }
+      
+      // Basic fallback if no key
+      const d = calculateDistance(lat1, lon1, lat2, lon2);
+      setDistance(Number(d.toFixed(1)));
+      setEta(Math.round(d * 4));
+    } catch (err) {
+      console.warn('ORS stats failed');
+    }
+  }, []);
+
+  const fetchAddress = useCallback(async (lat: number, lon: number) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+      const data = await res.json();
+      const addr = data.address;
+      const display = addr.suburb || addr.neighbourhood || addr.city_district || addr.town || addr.city || "Kampala District";
+      setAddress(display);
+    } catch (err) {
+      console.warn('Geocoding failed');
+    }
+  }, []);
+
+  const handleUseMySyncLocation = useCallback(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const newDest: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        setDestination(newDest);
+        setIsSelectingDest(false);
+        if (currentPosition) {
+          const d = calculateDistance(currentPosition[0], currentPosition[1], newDest[0], newDest[1]);
+          setDistance(Number(d.toFixed(1)));
+          setEta(Math.round(d * 4));
+        }
+      }, (err) => {
+        alert("Could not get your location. Please select it on the map.");
+      });
+    }
+  }, [currentPosition]);
 
   useEffect(() => {
     // Auto-locate on mount
@@ -120,71 +184,7 @@ export default function LogisticsViewer({ tripId }: LogisticsViewerProps) {
     return () => {
       if (supabase) supabase.removeChannel(channel);
     };
-  }, [tripId, destination]);
-
-  // ── Helper: Haversine Distance ──────────────────────────────────────────
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
-  const fetchORSStats = async (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const orsKey = process.env.NEXT_PUBLIC_ORS_API_KEY;
-    try {
-      if (orsKey) {
-        const res = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${orsKey}&start=${lon1},${lat1}&end=${lon2},${lat2}`);
-        const data = await res.json();
-        if (data.features && data.features[0]) {
-          const props = data.features[0].properties.summary;
-          setDistance(Number((props.distance / 1000).toFixed(1)));
-          setEta(Math.round(props.duration / 60));
-          return;
-        }
-      }
-      
-      // Basic fallback if no key
-      const d = calculateDistance(lat1, lon1, lat2, lon2);
-      setDistance(Number(d.toFixed(1)));
-      setEta(Math.round(d * 4));
-    } catch (err) {
-      console.warn('ORS stats failed');
-    }
-  };
-
-  const fetchAddress = async (lat: number, lon: number) => {
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-      const data = await res.json();
-      const addr = data.address;
-      const display = addr.suburb || addr.neighbourhood || addr.city_district || addr.town || addr.city || "Kampala District";
-      setAddress(display);
-    } catch (err) {
-      console.warn('Geocoding failed');
-    }
-  };
-
-  const handleUseMySyncLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        const newDest: [number, number] = [pos.coords.latitude, pos.coords.longitude];
-        setDestination(newDest);
-        setIsSelectingDest(false);
-        if (currentPosition) {
-          const d = calculateDistance(currentPosition[0], currentPosition[1], newDest[0], newDest[1]);
-          setDistance(Number(d.toFixed(1)));
-          setEta(Math.round(d * 4));
-        }
-      }, (err) => {
-        alert("Could not get your location. Please select it on the map.");
-      });
-    }
-  };
+  }, [tripId, destination, handleUseMySyncLocation, fetchORSStats, fetchAddress]);
 
   if (tripCompleted) {
     return (

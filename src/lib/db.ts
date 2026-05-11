@@ -15,7 +15,7 @@ export interface Coordinate {
   lat: number;
   lng: number;
   timestamp: number;
-  synced: boolean;
+  synced: 0 | 1;
 }
 
 // ── New GIS & Intelligence Types ───────────────────────────────────────────────
@@ -59,7 +59,7 @@ export interface SoilReport {
   rainfall_mm: number;
   notes: string;
   timestamp: number;
-  synced: boolean;
+  synced: 0 | 1;
   aiTag?: AIReportTag;
   aiAdvice?: string;
   language?: string;
@@ -72,7 +72,7 @@ export interface MarketPrice {
   pricePerKg: number;          // UGX
   marketName: string;
   timestamp: number;
-  synced: boolean;
+  synced: 0 | 1;
 }
 
 // ── Dexie Database ─────────────────────────────────────────────────────────────
@@ -109,8 +109,12 @@ export const db = typeof window !== 'undefined' ? new EcoFarmDB() : null;
 
 // ── Trip Operations ────────────────────────────────────────────────────────────
 export const startTrip = async (farmerId: string): Promise<Trip> => {
+  const uuid = typeof crypto !== 'undefined' && crypto.randomUUID 
+    ? crypto.randomUUID() 
+    : `trip-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
   const trip: Trip = {
-    id: crypto.randomUUID(),
+    id: uuid,
     farmerId,
     startTime: Date.now(),
     status: 'in-progress',
@@ -132,15 +136,18 @@ export const endTrip = async (tripId: string): Promise<Trip | undefined> => {
 export const addCoordinate = async (
   coord: Omit<Coordinate, 'id' | 'synced'>
 ): Promise<void> => {
-  await db?.coordinates.add({ ...coord, synced: false });
+  await db?.coordinates.add({ ...coord, synced: 0 });
 };
 
 export const getUnsyncedCoordinates = async (): Promise<Coordinate[]> => {
+  // Dexie indexes work best with numbers (0/1) instead of booleans
   return (await db?.coordinates.where('synced').equals(0).toArray()) ?? [];
 };
 
-export const markCoordinatesSynced = async (ids: number[]): Promise<void> => {
-  await db?.coordinates.where('id').anyOf(ids).modify({ synced: true });
+export const markCoordinatesSynced = async (ids: (number | undefined)[]): Promise<void> => {
+  const validIds = ids.filter((id): id is number => id !== undefined);
+  if (validIds.length === 0) return;
+  await db?.coordinates.where('id').anyOf(validIds).modify({ synced: 1 });
 };
 
 export const getTripCoordinates = async (tripId: string): Promise<Coordinate[]> => {
@@ -170,7 +177,7 @@ export const getAllMarkets = async (): Promise<EcoMarket[]> => {
 export const addSoilReport = async (
   report: Omit<SoilReport, 'id' | 'synced'>
 ): Promise<number> => {
-  return (await db?.soilReports.add({ ...report, synced: false })) as number;
+  return (await db?.soilReports.add({ ...report, synced: 0 })) as number;
 };
 
 export const updateSoilReportTag = async (
@@ -186,7 +193,7 @@ export const getUnsyncedSoilReports = async (): Promise<SoilReport[]> => {
 };
 
 export const markSoilReportsSynced = async (ids: number[]): Promise<void> => {
-  await db?.soilReports.where('id').anyOf(ids).modify({ synced: true });
+  await db?.soilReports.where('id').anyOf(ids).modify({ synced: 1 });
 };
 
 export const getRecentSoilReports = async (limit = 10): Promise<SoilReport[]> => {
@@ -196,8 +203,8 @@ export const getRecentSoilReports = async (limit = 10): Promise<SoilReport[]> =>
 
 // ── Market Price Operations ────────────────────────────────────────────────────
 export const upsertMarketPrices = async (prices: Omit<MarketPrice, 'id' | 'synced'>[]): Promise<void> => {
-  const toAdd = prices.map(p => ({ ...p, synced: true }));
-  await db?.marketPrices.bulkAdd(toAdd).catch(() => {}); // ignore duplicates
+  const toAdd = prices.map(p => ({ ...p, synced: 1 }));
+  await db?.marketPrices.bulkAdd(toAdd as MarketPrice[]).catch(() => {}); // ignore duplicates
 };
 
 export const getLatestMarketPrices = async (): Promise<MarketPrice[]> => {

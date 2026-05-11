@@ -109,7 +109,7 @@ export default function VillageSquare() {
               <h3 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">
                 {result.audio_board_caption}
               </h3>
-              <p className="text-xs text-white/60 font-medium italic">"{result.celebration_script}"</p>
+              <p className="text-xs text-white/60 font-medium italic">&quot;{result.celebration_script}&quot;</p>
             </div>
 
             <div className="flex flex-col gap-3">

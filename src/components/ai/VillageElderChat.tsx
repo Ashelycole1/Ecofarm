@@ -172,7 +172,7 @@ export default function VillageElderChat() {
                 
                 {msg.metadata?.brief && (
                   <div className="mt-2 pt-2 border-t border-white/10 text-[10px] italic text-wheat/60">
-                    "{msg.metadata.brief}"
+                    &quot;{msg.metadata.brief}&quot;
                   </div>
                 )}
 

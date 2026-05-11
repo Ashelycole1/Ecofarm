@@ -122,14 +122,15 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     const fetchDynamicCrops = async (weatherStatus: string) => {
       try {
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
         const prompt = `Return a JSON array of exactly 4 optimal farming crops for a Ugandan farmer during ${weatherStatus} weather. 
         Each object must exactly match this TypeScript interface:
         { id: string, name: string, emoji: string, status: "optimal" | "warning", plantingDate: string, tips: string }
         Return ONLY valid raw JSON array, without any markdown formatting or backticks.`
         
         const result = await model.generateContent(prompt)
-        const text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim()
+        const rawText = result.response.text()
+        const text = rawText.replace(/```json/g, '').replace(/```/g, '').replace(/\\n/g, '').trim()
         const dynamicCrops = JSON.parse(text)
         
         setCrops(dynamicCrops)
@@ -238,7 +239,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     setIsGeneratingAI(true)
     try {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
 
       const prompt = `Advisory for a Ugandan farmer. 
                      Weather: ${weatherData.status}, Temp: ${weatherData.temperature}°C. 
@@ -269,7 +270,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     try {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.5-flash",
+        model: "gemini-2.0-flash",
       })
 
       const systemPrompt = `Role: You are the "Village Elder," an expert Agronomist and Community Mentor for EcoFarm. Your purpose is to provide highly practical, empathetic, and spoken-word agricultural advice to rural farmers.
@@ -449,8 +450,21 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           Gamification: Award "Golden Harvest" only for data-driven pro-tips. Award "Sprouting Seed" for first-timers. Flag dangerous chemicals or harmful myths.`
 
           const result = await model.generateContent(prompt)
-          const text = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
-          return JSON.parse(text)
+          const rawText = result.response.text()
+          const text = rawText.replace(/```json/g, '').replace(/```/g, '').trim()
+          
+          try {
+            return JSON.parse(text)
+          } catch (e) {
+            console.warn("JSON Parse failed for Warden, using fallback", text)
+            return {
+              safety_check: "Approved",
+              summary_icon: "🌾",
+              trust_reward: "Sprouting Seed",
+              celebration_script: "Your wisdom has been shared with the village!",
+              audio_board_caption: "Village Wisdom"
+            }
+          }
         } catch (error) {
           console.error("Community Warden Error:", error)
           throw error
