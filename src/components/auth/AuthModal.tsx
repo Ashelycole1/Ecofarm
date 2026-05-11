@@ -8,7 +8,7 @@ import {
   signInWithRedirect,
   GoogleAuthProvider
 } from 'firebase/auth'
-import { Leaf, Mail, Lock, User, LogIn, ChevronRight, Grape, FlaskConical } from 'lucide-react'
+import { Leaf, Mail, Lock, User, LogIn, ChevronRight, Grape, FlaskConical, Sparkles } from 'lucide-react'
 import { useFirebase } from '@/context/FirebaseContext'
 
 interface AuthModalProps {
@@ -90,13 +90,27 @@ export default function AuthModal({ onClose }: AuthModalProps) {
         </div>
 
         {/* Form */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-5">
           {error && (
             <div className="bg-alert/10 border border-alert/20 rounded-leaf-sm p-3 flex items-start gap-2 animate-bounce">
               <span className="text-alert font-bold text-xs shrink-0">⚠️</span>
               <p className="text-[11px] text-alert/90 leading-tight">{error}</p>
             </div>
           )}
+
+          <button
+            onClick={loginAsGuest}
+            className="w-full py-3 bg-wheat/10 border border-wheat/30 rounded-leaf-sm text-wheat text-[11px] font-black uppercase tracking-widest hover:bg-wheat/20 transition-all flex items-center justify-center gap-2 group"
+          >
+            <Sparkles size={14} className="group-hover:animate-pulse" />
+            Bypass & Enter as Guest
+          </button>
+
+          <div className="relative flex items-center gap-4 py-2">
+            <div className="flex-1 h-px bg-white/5" />
+            <span className="text-[9px] text-white/20 font-bold uppercase tracking-widest">Or sign in to your account</span>
+            <div className="flex-1 h-px bg-white/5" />
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -173,14 +187,6 @@ export default function AuthModal({ onClose }: AuthModalProps) {
             </button>
           </div>
 
-          <div className="pt-2 border-t border-white/5">
-            <button
-              onClick={loginAsGuest}
-              className="w-full py-3 bg-forest/20 border border-forest-light/20 rounded-leaf-sm text-wheat text-[10px] font-black uppercase tracking-widest hover:bg-forest/30 transition-all flex items-center justify-center gap-2"
-            >
-              <FlaskConical size={14} />
-              Continue as Guest (Demo Mode)
-            </button>
           </div>
         </div>
 
