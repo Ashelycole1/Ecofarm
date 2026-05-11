@@ -90,7 +90,22 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
   // ── Auth Listener ──────────────────────────────────────────────────────────
   useEffect(() => {
+    // 1. Handle Redirect Result (Important for Google Sign-In)
+    const { getRedirectResult } = require('firebase/auth')
+    getRedirectResult(auth)
+      .then((result: any) => {
+        if (result?.user) {
+          console.log('[Firebase] Redirect login success:', result.user.email)
+          setUser(result.user)
+        }
+      })
+      .catch((error: any) => {
+        console.error('[Firebase] Redirect login error:', error)
+      })
+
+    // 2. Standard Auth State Listener
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      console.log('[Firebase] Auth State Changed:', fbUser ? fbUser.email : 'No user')
       if (fbUser) {
         setUser(fbUser)
       } else {

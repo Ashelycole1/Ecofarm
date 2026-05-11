@@ -50,11 +50,21 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     setLoading(true)
     setError(null)
     try {
+      const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth')
       const provider = new GoogleAuthProvider()
-      // Use redirect instead of popup to avoid "popup-blocked" errors on mobile/browsers
-      await signInWithRedirect(auth, provider)
+      const result = await signInWithPopup(auth, provider)
+      if (result.user) {
+        onClose()
+      }
     } catch (err: any) {
-      setError(err.message)
+      console.error('[Google Sign-In Error]', err)
+      if (err.message.includes('auth/unauthorized-domain')) {
+        setError('This domain is not authorized in your Firebase Console. Please add it to Authentication > Settings > Authorized domains.')
+      } else if (err.message.includes('auth/popup-blocked')) {
+        setError('Login popup was blocked. Please allow popups for this site or try again.')
+      } else {
+        setError(err.message || 'Google sign-in failed. Please try again.')
+      }
       setLoading(false)
     }
   }
