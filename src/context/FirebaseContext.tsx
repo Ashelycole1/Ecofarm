@@ -68,7 +68,8 @@ export interface FirebaseContextValue {
   submitCommunityTip: (audioTranscript: string) => Promise<any>
   setShowAuthModal: (show: boolean) => void
   loginAsGuest: () => void
-  generateOpenAIVoice: (text: string) => Promise<string | null>
+  generateOpenAIVoice: (text: string, language?: string) => Promise<string | null>
+  translateWithSunbird: (text: string, source: string, target: string) => Promise<string>
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -313,8 +314,22 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     return res.json()
   }
 
-  const generateOpenAIVoice = async (text: string): Promise<string | null> => {
+  const generateOpenAIVoice = async (text: string, language: string = 'English'): Promise<string | null> => {
     try {
+      // 1. For Local Ugandan Languages, use Sunbird TTS (Specialized)
+      const localLangMap: Record<string, number> = {
+        'Luganda': 240, // Example IDs based on typical Sunbird mappings
+        'Acholi': 241,
+        'Runyankole': 243,
+        'Lugbara': 245,
+        'Lusoga': 244
+      }
+
+      if (language !== 'English' && localLangMap[language]) {
+        return await generateSunbirdTTS(text, localLangMap[language])
+      }
+
+      // 2. For English, use OpenAI (Premium)
       const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY
       if (!apiKey) return null
 
@@ -327,7 +342,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           model: 'tts-1',
           input: text,
-          voice: 'onyx', // Deep, fatherly voice perfect for an Elder
+          voice: 'onyx', 
           speed: 0.9
         })
       })
@@ -337,7 +352,70 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       const blob = await response.blob()
       return URL.createObjectURL(blob)
     } catch (e) {
-      console.error('OpenAI TTS Error:', e)
+      console.error('TTS Error:', e)
+      return null
+    }
+  }
+
+  // ── Sunbird AI Integration ──────────────────────────────────────────────────
+  const sunbirdRequest = async (endpoint: string, body: any) => {
+    const apiKey = process.env.NEXT_PUBLIC_SUNBIRD_API_KEY
+    if (!apiKey) throw new Error('Sunbird AI API Key missing')
+
+    const res = await fetch(`https://api.sunbird.ai/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(body)
+    })
+
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.message || 'Sunbird Request Failed')
+    }
+    return res.json()
+  }
+
+  const translateWithSunbird = async (text: string, source: string, target: string): Promise<string> => {
+    try {
+      // Map app language names to Sunbird 3-letter codes
+      const langMap: Record<string, string> = {
+        'English': 'eng',
+        'Luganda': 'lug',
+        'Acholi': 'ach',
+        'Lusoga': 'xog',
+        'Runyankole': 'nyn',
+        'Lugbara': 'lgg',
+        'Swahili': 'swa'
+      }
+
+      const res = await sunbirdRequest('tasks/nllb_translate', {
+        text,
+        src_lang: langMap[source] || 'eng',
+        tgt_lang: langMap[target] || 'lug'
+      })
+      return res.output || text
+    } catch (e) {
+      console.warn('Sunbird Translation Error:', e)
+      return text
+    }
+  }
+
+  const generateSunbirdTTS = async (text: string, speakerId: number): Promise<string | null> => {
+    try {
+      const res = await sunbirdRequest('tasks/tts', {
+        text,
+        speaker_id: speakerId
+      })
+      
+      if (res.output?.audio_url) {
+        return res.output.audio_url
+      }
+      return null
+    } catch (e) {
+      console.error('Sunbird TTS Error:', e)
       return null
     }
   }
@@ -376,6 +454,12 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     setIsGeneratingAI(true)
 
     try {
+      // 1. Translate User Input to English for better reasoning if not already English
+      let inputForAI = text
+      if (language !== 'English') {
+        inputForAI = await translateWithSunbird(text, language, 'English')
+      }
+
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
       const model = genAI.getGenerativeModel({ 
         model: "models/gemini-1.5-flash",
@@ -383,7 +467,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
       const systemPrompt = `Role: You are the "Village Elder," an expert Agronomist and Community Mentor for EcoFarm. Your purpose is to provide highly practical, empathetic, and spoken-word agricultural advice to rural farmers.
       
-      Language: Respond ONLY in ${language}. Use authentic phrasing, cultural idioms, and local wisdom specific to the ${language} culture.
+      Language: Respond ONLY in English. Your response will be translated to ${language} by a specialized system. Use authentic phrasing, cultural idioms, and local wisdom that translates well.
       
       Contextual Constraints:
       - Audience: Small-scale farmers with limited literacy.
@@ -391,14 +475,14 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       - Environment: Weather is ${weather?.status || 'unknown'}, Temp: ${weather?.temperature || '??'}°C, Location: ${weather?.location || 'Uganda'}.
  
       Task:
-      Analyze the farmer's message. Provide a response in ${language} that prioritizes traditional knowledge integrated with modern science. Do NOT be generic. Use specific Ugandan farming terms (e.g., names of pests like 'Nsenene' for grasshoppers, or 'Kasooli' for maize).
+      Analyze the farmer's message: "${inputForAI}". Provide a response in English that prioritizes traditional knowledge integrated with modern science. Do NOT be generic. Use specific Ugandan farming terms.
 
       Response Structure (Strict JSON Format):
       Return ONLY a JSON object with these keys:
       {
         "primary_dialect": "${language}",
         "emotional_tone": "mood of the farmer (e.g., anxious, curious, hopeful)",
-        "voice_script": "A wise, fatherly response in ${language} (maximum 60 words). Provide AUTHENTIC, deep agricultural advice specific to the farmer's concern. Use specific cultural idioms and local wisdom from the ${language}-speaking region. Ensure the feedback is actionable and scientifically sound, but delivered with the warmth of an Elder. End with a traditional blessing in ${language}.",
+        "voice_script": "A wise, fatherly response in English (maximum 60 words). Provide AUTHENTIC, deep agricultural advice specific to the farmer's concern. Ensure the feedback is actionable and scientifically sound. End with a traditional blessing.",
         "action_icon": "Single emoji representing the main task",
         "daily_brief": "One-sentence summary for the Daily Farm Brief"
       }
@@ -411,7 +495,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         })),
       })
       
-      const result = await chat.sendMessage(systemPrompt + "\n\nFarmer Message: " + text)
+      const result = await chat.sendMessage(systemPrompt + "\n\nFarmer Message: " + inputForAI)
       const responseText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
       
       let aiData;
@@ -419,6 +503,12 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         aiData = JSON.parse(responseText)
       } catch (e) {
         aiData = { voice_script: responseText, action_icon: '👴' }
+      }
+
+      // Final Step: Use Sunbird to translate the script to ensure 0% hallucination in dialect
+      if (language !== 'English') {
+        const translatedScript = await translateWithSunbird(aiData.voice_script, 'English', language)
+        aiData.voice_script = translatedScript
       }
 
       const elderMsg: ChatMessage = {

@@ -30,7 +30,7 @@ export default function VillageElderChat() {
     // Auto-speak the last message if it's from the elder and hasn't been spoken
     const lastMsg = messages[messages.length - 1]
     if (lastMsg && lastMsg.sender === 'elder' && lastMsg.id !== lastMsgIdRef.current) {
-      speakMessage(lastMsg.text)
+      speakMessage(lastMsg.text, selectedLanguage)
       lastMsgIdRef.current = lastMsg.id
     }
   }, [messages])
@@ -80,10 +80,10 @@ export default function VillageElderChat() {
     }
   }
 
-  const speakMessage = async (text: string) => {
-    // 1. Try OpenAI High-Quality Voice (Elder tone)
+  const speakMessage = async (text: string, language: string = 'English') => {
+    // 1. Try OpenAI/Sunbird High-Quality Voice
     try {
-      const audioUrl = await generateOpenAIVoice(text)
+      const audioUrl = await generateOpenAIVoice(text, language)
       if (audioUrl) {
         const audio = new Audio(audioUrl)
         audio.play()
@@ -172,7 +172,7 @@ export default function VillageElderChat() {
                     {msg.metadata?.icon || '👴'}
                   </div>
                   <button 
-                    onClick={() => speakMessage(msg.text)}
+                    onClick={() => speakMessage(msg.text, selectedLanguage)}
                     className="p-1.5 rounded-full bg-wheat/10 text-wheat hover:bg-wheat/20 transition-all shadow-sm"
                     title="Listen to Elder"
                   >
