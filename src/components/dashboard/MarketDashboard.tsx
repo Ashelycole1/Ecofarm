@@ -267,7 +267,7 @@ export default function MarketDashboard() {
           <ShoppingCart className="text-white/20" size={20} />
         </div>
         <p className="text-[10px] text-white/20 font-black uppercase tracking-widest leading-relaxed">
-          Prices are current regional averages updated daily. Click "Contact via WhatsApp" to connect with farmers directly.
+          Prices are current regional averages updated daily. Click &quot;Contact via WhatsApp&quot; to connect with farmers directly.
         </p>
       </div>
     </div>

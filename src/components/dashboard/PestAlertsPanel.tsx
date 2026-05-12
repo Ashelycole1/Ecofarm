@@ -34,7 +34,7 @@ function AlertCard({ alert }: { alert: PestAlert }) {
 
       <div className="rounded-2xl px-4 py-3 bg-black/40 border border-white/5">
         <p className="text-[9px] text-white/20 font-black uppercase tracking-widest mb-1.5">Recovery Action</p>
-        <p className="text-xs text-white/80 leading-relaxed font-medium italic">"{alert.action}"</p>
+        <p className="text-xs text-white/80 leading-relaxed font-medium italic">&quot;{alert.action}&quot;</p>
       </div>
 
       <div className="flex flex-wrap gap-2 pt-1">

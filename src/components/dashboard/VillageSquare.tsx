@@ -115,7 +115,7 @@ export default function VillageSquare() {
                 {result.audio_board_caption}
               </h3>
               <div className="bg-black/40 p-6 rounded-[24px] border border-white/5">
-                <p className="text-[14px] text-white/70 font-medium leading-relaxed italic">"{result.celebration_script}"</p>
+                <p className="text-[14px] text-white/70 font-medium leading-relaxed italic">&quot;{result.celebration_script}&quot;</p>
               </div>
             </div>
 

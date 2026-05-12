@@ -44,7 +44,7 @@ function CropCard({ crop }: { crop: Crop }) {
               {cfg.label}
             </span>
           </div>
-          <p className="text-[10px] text-white/40 mt-1 uppercase font-black tracking-widest">"{crop.localName || 'Local Seed'}" · {crop.region ? crop.region.join(', ') : 'Uganda'}</p>
+          <p className="text-[10px] text-white/40 mt-1 uppercase font-black tracking-widest">&quot;{crop.localName || 'Local Seed'}&quot; · {crop.region ? crop.region.join(', ') : 'Uganda'}</p>
         </div>
 
         <span className={`${cfg.text} shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
