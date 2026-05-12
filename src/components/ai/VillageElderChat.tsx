@@ -33,6 +33,7 @@ export default function VillageElderChat() {
       speakMessage(lastMsg.text, selectedLanguage)
       lastMsgIdRef.current = lastMsg.id
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages])
 
   // Initialize Speech Recognition

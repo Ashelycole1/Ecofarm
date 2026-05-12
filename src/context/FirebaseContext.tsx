@@ -67,7 +67,7 @@ export interface FirebaseContextValue {
   sendMessage: (text: string, language?: string) => Promise<void>
   analyzeCropImage: (imageFile: File, cropType: string) => Promise<any>
   submitCommunityTip: (audioTranscript: string) => Promise<any>
-  transcribeAudio: (audioBlob: Blob) => Promise<string | null>
+
   generatePlantingSchedule: (crop: string, region: string) => Promise<any>
   setShowAuthModal: (show: boolean) => void
   loginAsGuest: () => void
@@ -569,6 +569,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       getClimateAdvice,
       sendMessage,
       setShowAuthModal,
+      translateWithSunbird,
 
       analyzeCropImage: async (imageFile: File, cropType: string) => {
         setIsGeneratingAI(true)
@@ -734,7 +735,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         }
       },
       loginAsGuest,
-      generateOpenAIVoice
+
     }}>
       {children}
     </FirebaseContext.Provider>

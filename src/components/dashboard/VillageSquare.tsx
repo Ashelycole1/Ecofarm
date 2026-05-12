@@ -6,7 +6,7 @@ import { Mic, Trophy, Play, CheckCircle2, AlertCircle, Share2, Sparkles, Loader2
 import confetti from 'canvas-confetti'
 
 export default function VillageSquare() {
-  const { submitCommunityTip, isGeneratingAI, user, generateOpenAIVoice } = useFirebase()
+  const { submitCommunityTip, isGeneratingAI, user } = useFirebase()
   const [tipText, setTipText] = useState('')
   const [result, setResult] = useState<any>(null)
   const [badges, setBadges] = useState<string[]>([])
@@ -31,24 +31,12 @@ export default function VillageSquare() {
     }
   }
 
-  const speakText = async (text: string) => {
-    // 1. Try OpenAI High-Quality Voice (Elder tone)
-    try {
-      const audioUrl = await generateOpenAIVoice(text)
-      if (audioUrl) {
-        const audio = new Audio(audioUrl)
-        audio.play()
-        return
-      }
-    } catch (e) {
-      console.warn('OpenAI Voice unavailable, falling back to browser TTS')
-    }
-
-    // 2. Fallback to Browser Speech Synthesis
+  const speakText = (text: string) => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.rate = 0.95
+      utterance.pitch = 0.85
       window.speechSynthesis.speak(utterance)
     }
   }

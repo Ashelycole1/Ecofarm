@@ -168,13 +168,7 @@ export default function PlantingCalendar() {
            {isGeneratingAI ? <><Clock className="animate-spin" size={14} /> Generating...</> : 'Generate AI Schedule'}
          </button>
       </div>
-      <button 
-        onClick={generateSchedule}
-        disabled={isGenerating}
-        className="sm:hidden w-full py-2.5 rounded-leaf bg-forest/40 border border-white/10 text-wheat font-bold text-xs uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-forest transition-colors"
-      >
-        {isGenerating ? <><Clock className="animate-spin" size={14} /> Generating...</> : "Generate AI Schedule"}
-      </button>
+
 
       {/* Filter tabs */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide pt-2">
