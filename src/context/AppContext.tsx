@@ -102,7 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       setAuthLoading(false)
     }
-  }, [isLoaded, isSignedIn, clerkUser])
+  }, [isLoaded, isSignedIn, clerkUser, user?.isGuest])
 
   // ── AI Diagnostic ──────────────────────────────────────────────────────────
   useEffect(() => {
