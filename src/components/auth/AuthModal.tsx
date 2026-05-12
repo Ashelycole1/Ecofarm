@@ -325,7 +325,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
 
       <div className="space-y-6">
         <p className="text-white/20 text-sm font-bold">
-          Didn't receive the code? <button className="text-white/40 hover:text-white" type="button">(00:29)</button>
+          Didn&apos;t receive the code? <button className="text-white/40 hover:text-white" type="button">(00:29)</button>
         </p>
         
         <button
