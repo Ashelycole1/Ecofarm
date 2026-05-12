@@ -10,13 +10,13 @@ import VillageElderChat from '@/components/ai/VillageElderChat'
 import AIVisionModule from '@/components/ai/AIVisionModule'
 import AuthModal from '@/components/auth/AuthModal'
 import { useFirebase } from '@/context/FirebaseContext'
-import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation, Map as MapIcon, FlaskConical, Globe, Menu, X, Users, ClipboardList, MapPin } from 'lucide-react'
+import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation, FlaskConical, Globe, Menu, X, Users, ClipboardList, MapPin } from 'lucide-react'
 import VillageSquare from '@/components/dashboard/VillageSquare'
 import MarketDashboard from '@/components/dashboard/MarketDashboard'
 import EcoTrack from '@/components/dashboard/EcoTrack'
 import LogisticsViewer from '@/components/dashboard/LogisticsViewer'
 import LogisticTrackingView from '@/components/dashboard/LogisticTrackingView'
-import FarmIntelMap from '@/components/dashboard/FarmIntelMap'
+
 import SoilLogger from '@/components/dashboard/SoilLogger'
 import MarketPriceBoard from '@/components/dashboard/MarketPriceBoard'
 import CropInsightEngine from '@/components/ai/CropInsightEngine'
@@ -24,7 +24,7 @@ import CropInsightEngine from '@/components/ai/CropInsightEngine'
 // ─── Sidebar nav items ────────────────────────────────────────────────────────
 const navTabs = [
   { id: 'home',     label: 'Home',     Icon: Home },
-  { id: 'map',      label: 'Farm Map', Icon: MapIcon },
+
   { id: 'market',   label: 'Market',   Icon: TrendingUp },
   { id: 'calendar', label: 'Planting', Icon: Leaf },
   { id: 'chat',     label: 'Chat',     Icon: MessageCircle },
@@ -36,7 +36,7 @@ const navTabs = [
 
 const tabTitles: Record<string, string> = {
   home:     'EcoFarm',
-  map:      'Farm Intelligence Map',
+
   market:   'Market',
   calendar: 'Planting',
   chat:     'Village Elder',
@@ -253,7 +253,7 @@ function TabContent({ tab }: { tab: string }) {
   const { user } = useFirebase()
 
   if (tab === 'home') return <HomeTab />
-  if (tab === 'map') return <div className="animate-fade-in"><FarmIntelMap /></div>
+
   if (tab === 'market') return <MarketDashboard />
   if (tab === 'track') return <TrackTab />
 
