@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useFirebase } from '@/context/FirebaseContext'
+import { useApp } from '@/context/AppContext'
 import { Camera, Upload, X, AlertCircle, Play, CheckCircle2, ChevronRight, Loader2, Info, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 
 export default function AIVisionModule() {
-  const { analyzeCropImage, isGeneratingAI } = useFirebase()
+  const { analyzeCropImage, isGeneratingAI } = useApp()
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [analysisResult, setAnalysisResult] = useState<any>(null)

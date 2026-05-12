@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useFirebase } from '@/context/FirebaseContext'
+import { useApp } from '@/context/AppContext'
 import { Mic, Trophy, Play, CheckCircle2, AlertCircle, Share2, Sparkles, Loader2, Hammer, Sprout, Bug, CloudRain } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
 export default function VillageSquare() {
-  const { submitCommunityTip, isGeneratingAI, user } = useFirebase()
+  const { submitCommunityTip, isGeneratingAI, user } = useApp()
   const [tipText, setTipText] = useState('')
   const [result, setResult] = useState<any>(null)
   const [badges, setBadges] = useState<string[]>([])

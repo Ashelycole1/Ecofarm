@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useFirebase } from '@/context/FirebaseContext'
+import { useApp } from '@/context/AppContext'
 import { pestTypes } from '@/lib/mockData'
 import { Send, CheckCircle, MapPin, AlertTriangle, Bug, Ghost, Microscope, CloudRain, Wind, Sprout, Info, AlertCircle } from 'lucide-react'
 
@@ -25,7 +25,7 @@ const pestIcons: Record<string, any> = {
 type Severity = 'low' | 'medium' | 'high'
 
 export default function PestAlertForm() {
-  const { crops, submitPestReport, pestReports } = useFirebase()
+  const { crops, submitPestReport, pestReports } = useApp()
   const [selectedPest, setSelectedPest] = useState<string | null>(null)
   const [selectedCrop, setSelectedCrop] = useState<string>('')
   const [severity, setSeverity] = useState<Severity>('medium')

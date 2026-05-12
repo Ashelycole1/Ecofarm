@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useFirebase } from '@/context/FirebaseContext'
+import { useApp } from '@/context/AppContext'
 import { ChevronDown, ChevronUp, Calendar, Droplets, Clock, Sprout } from 'lucide-react'
 import type { Crop } from '@/lib/mockData'
 
@@ -106,7 +106,7 @@ function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 export default function PlantingCalendar() {
-  const { crops, generatePlantingSchedule, isGeneratingAI } = useFirebase()
+  const { crops, generatePlantingSchedule, isGeneratingAI } = useApp()
   const [filter, setFilter] = useState<'all' | 'optimal' | 'good' | 'caution'>('all')
   
   const [selectedRegion, setSelectedRegion] = useState('Central (Kampala)')

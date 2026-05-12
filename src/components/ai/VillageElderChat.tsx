@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useFirebase } from '@/context/FirebaseContext'
+import { useApp } from '@/context/AppContext'
 import { Send, TreePine, Mic, MicOff, Volume2, Globe, Sparkles } from 'lucide-react'
 
 const LANGUAGES = [
@@ -14,7 +14,7 @@ const LANGUAGES = [
 ]
 
 export default function VillageElderChat() {
-  const { messages, sendMessage, isGeneratingAI } = useFirebase()
+  const { messages, sendMessage, isGeneratingAI } = useApp()
   const [inputText, setInputText] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState('English')
   const [isListening, setIsListening] = useState(false)

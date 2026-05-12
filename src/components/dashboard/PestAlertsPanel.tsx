@@ -1,6 +1,6 @@
 'use client'
 
-import { useFirebase } from '@/context/FirebaseContext'
+import { useApp } from '@/context/AppContext'
 import { Bug, AlertTriangle, Info, AlertCircle, Sparkles } from 'lucide-react'
 import type { PestAlert } from '@/lib/mockData'
 
@@ -49,7 +49,7 @@ function AlertCard({ alert }: { alert: PestAlert }) {
 }
 
 export default function PestAlertsPanel() {
-  const { pestAlerts, isLoading } = useFirebase()
+  const { pestAlerts, isLoading } = useApp()
 
   const high   = pestAlerts.filter(a => a.severity === 'high')
   const medium = pestAlerts.filter(a => a.severity === 'medium')

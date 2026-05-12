@@ -9,7 +9,7 @@ import PestAlertsPanel from '@/components/dashboard/PestAlertsPanel'
 import VillageElderChat from '@/components/ai/VillageElderChat'
 import AIVisionModule from '@/components/ai/AIVisionModule'
 import AuthModal from '@/components/auth/AuthModal'
-import { useFirebase } from '@/context/FirebaseContext'
+import { useApp } from '@/context/AppContext'
 import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation, FlaskConical, Globe, Menu, X, Users, ClipboardList, MapPin } from 'lucide-react'
 import VillageSquare from '@/components/dashboard/VillageSquare'
 import MarketDashboard from '@/components/dashboard/MarketDashboard'
@@ -48,7 +48,7 @@ const tabTitles: Record<string, string> = {
 
 // ─── Top app bar ──────────────────────────────────────────────────────────────
 function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSidebar: () => void }) {
-  const { isConnected, user, logout } = useFirebase()
+  const { isConnected, user, logout } = useApp()
 
   return (
     <header
@@ -111,7 +111,7 @@ function Sidebar({
   isOpen: boolean; 
   onClose: () => void 
 }) {
-  const { user, setShowAuthModal } = useFirebase()
+  const { user, setShowAuthModal } = useApp()
 
   return (
     <>
@@ -187,7 +187,7 @@ function Sidebar({
 
 // ─── Home tab ─────────────────────────────────────────────────────────────────
 function HomeTab() {
-  const { weather, user } = useFirebase()
+  const { weather, user } = useApp()
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -250,7 +250,7 @@ function CommunityStat({ value, label, Icon, color }: { value: string; label: st
 
 // ─── Tab content router ───────────────────────────────────────────────────────
 function TabContent({ tab }: { tab: string }) {
-  const { user } = useFirebase()
+  const { user } = useApp()
 
   if (tab === 'home') return <HomeTab />
 
@@ -367,7 +367,7 @@ function TrackTab() {
 }
 
 function AuthGate({ tabName }: { tabName: string }) {
-  const { setShowAuthModal } = useFirebase()
+  const { setShowAuthModal } = useApp()
   return (
     <div className="p-12 text-center animate-fade-in mt-10 rounded-[32px] bg-white/[0.02] border border-white/5 shadow-2xl">
       <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 bg-white/5 border border-white/10">
@@ -391,7 +391,7 @@ function AuthGate({ tabName }: { tabName: string }) {
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('home')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { authLoading, showAuthModal, setShowAuthModal } = useFirebase()
+  const { authLoading, showAuthModal, setShowAuthModal } = useApp()
 
   if (authLoading) {
     return (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useFirebase } from '@/context/FirebaseContext'
+import { useApp } from '@/context/AppContext'
 import { AlertTriangle, Droplets, Wind, Thermometer, RefreshCw, Sun, Cloud, CloudRain, Zap, CloudSun } from 'lucide-react'
 
 const statusColors: Record<string, string> = {
@@ -23,7 +23,7 @@ function WeatherIcon({ status, size = 24, className = "" }: { status: string; si
 }
 
 export default function WeatherWidget() {
-  const { weather, isLoading, refreshWeather } = useFirebase()
+  const { weather, isLoading, refreshWeather } = useApp()
 
   if (isLoading || !weather) {
     return (

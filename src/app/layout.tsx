@@ -2,7 +2,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import './globals.css'
-import { FirebaseProvider } from '@/context/FirebaseContext'
+import { ClerkProvider } from '@clerk/nextjs'
+import { AppProvider } from '@/context/AppContext'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 const inter = Inter({ 
@@ -39,20 +40,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#06260a" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-      </head>
-      <body className="font-sans antialiased">
-        <ErrorBoundary>
-          <FirebaseProvider>
-            {children}
-          </FirebaseProvider>
-        </ErrorBoundary>
+    <ClerkProvider>
+      <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
+        <head>
+          <link rel="manifest" href="/manifest.json" />
+          <meta name="theme-color" content="#06260a" />
+          <meta name="mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        </head>
+        <body className="font-sans antialiased">
+          <ErrorBoundary>
+            <AppProvider>
+              {children}
+            </AppProvider>
+          </ErrorBoundary>
         <script dangerouslySetInnerHTML={{
           __html: `
             if ('serviceWorker' in navigator) {
@@ -66,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           `
         }} />
       </body>
-    </html>
+      </html>
+    </ClerkProvider>
   )
 }
