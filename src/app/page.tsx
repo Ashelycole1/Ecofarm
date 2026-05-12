@@ -15,7 +15,7 @@ import VillageSquare from '@/components/dashboard/VillageSquare'
 import MarketDashboard from '@/components/dashboard/MarketDashboard'
 import EcoTrack from '@/components/dashboard/EcoTrack'
 import LogisticsViewer from '@/components/dashboard/LogisticsViewer'
-import RequestRider from '@/components/dashboard/RequestRider'
+import LogisticTrackingView from '@/components/dashboard/LogisticTrackingView'
 import FarmIntelMap from '@/components/dashboard/FarmIntelMap'
 import SoilLogger from '@/components/dashboard/SoilLogger'
 import MarketPriceBoard from '@/components/dashboard/MarketPriceBoard'
@@ -320,11 +320,7 @@ function TrackTab() {
       </div>
 
       {view === 'request' ? (
-        <RequestRider onRiderFound={(tripId) => {
-          setTrackId(tripId)
-          setActiveId(tripId)
-          setView('buyer')
-        }} />
+        <LogisticTrackingView />
       ) : view === 'driver' ? (
         <EcoTrack />
       ) : (
