@@ -8,7 +8,7 @@ import {
   signInWithRedirect,
   GoogleAuthProvider
 } from 'firebase/auth'
-import { Leaf, Mail, Lock, User, LogIn, ChevronRight, Grape, FlaskConical, Sparkles } from 'lucide-react'
+import { Leaf, Mail, Lock, User, LogIn, ChevronRight, Grape, FlaskConical, Sparkles, AlertTriangle } from 'lucide-react'
 import { useFirebase } from '@/context/FirebaseContext'
 
 interface AuthModalProps {
@@ -102,9 +102,9 @@ export default function AuthModal({ onClose }: AuthModalProps) {
         {/* Form */}
         <div className="p-6 space-y-5">
           {error && (
-            <div className="bg-alert/10 border border-alert/20 rounded-leaf-sm p-3 flex items-start gap-2 animate-bounce">
-              <span className="text-alert font-bold text-xs shrink-0">⚠️</span>
-              <p className="text-[11px] text-alert/90 leading-tight">{error}</p>
+            <div className="bg-alert/10 border border-alert/20 rounded-2xl p-4 flex items-start gap-3 animate-bounce">
+              <AlertTriangle className="text-alert shrink-0" size={16} />
+              <p className="text-[10px] text-alert font-black uppercase tracking-widest leading-tight">{error}</p>
             </div>
           )}
 
