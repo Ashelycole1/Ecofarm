@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { auth, db } from '@/lib/firebase'
-import { onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth'
+import { onAuthStateChanged, getRedirectResult, User as FirebaseUser, signOut } from 'firebase/auth'
 import { 
   collection, 
   onSnapshot, 
@@ -94,8 +94,10 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
   // ── Auth Listener ──────────────────────────────────────────────────────────
   useEffect(() => {
-    // 1. Handle Redirect Result (Important for Google Sign-In)
-    const { getRedirectResult } = require('firebase/auth')
+    // Run AI Diagnostic (non-blocking)
+    diagnosticTestGemini().catch(() => {})
+
+    // 1. Handle Redirect Result (for Google Sign-In redirect flow)
     getRedirectResult(auth)
       .then((result: any) => {
         if (result?.user) {
@@ -104,12 +106,14 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch((error: any) => {
-        console.error('[Firebase] Redirect login error:', error)
+        // Ignore expected errors on initial load
+        if (!error?.code?.includes('auth/')) {
+          console.error('[Firebase] Redirect login error:', error)
+        }
       })
 
     // 2. Standard Auth State Listener
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
-      console.log('[Firebase] Auth State Changed:', fbUser ? fbUser.email : 'No user')
       if (fbUser) {
         setUser(fbUser)
       } else {
@@ -119,8 +123,6 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       setAuthLoading(false)
     })
     return () => unsubscribe()
-    // Run AI Diagnostic
-    diagnosticTestGemini()
   }, [])
 
   // ── Firestore Listeners ────────────────────────────────────────────────────

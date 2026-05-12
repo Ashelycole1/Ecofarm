@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import './globals.css'
 import { FirebaseProvider } from '@/context/FirebaseContext'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -47,9 +48,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className="font-sans antialiased">
-        <FirebaseProvider>
-          {children}
-        </FirebaseProvider>
+        <ErrorBoundary>
+          <FirebaseProvider>
+            {children}
+          </FirebaseProvider>
+        </ErrorBoundary>
         <script dangerouslySetInnerHTML={{
           __html: `
             if ('serviceWorker' in navigator) {
