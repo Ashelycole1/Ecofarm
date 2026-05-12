@@ -44,11 +44,11 @@ export default function CropInsightEngine() {
     try {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '');
       const model = genAI.getGenerativeModel({
-        model: 'models/gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         systemInstruction: `You are an expert agronomist for Ugandan smallholder farmers.
 Analyze the farm report and return ONLY a valid JSON object with no markdown:
 { "tag": "Healthy" | "Pest Risk" | "Irrigation Needed", "advice": "string", "confidence": 0-100 }
-The advice must be in ${language}. Keep advice under 80 words, practical and actionable.`,
+The advice must be in ${language}. Keep advice under 80 words, practical and actionable. No emojis.`,
       });
 
       const prompt = `Farm Report:
@@ -90,7 +90,7 @@ Analyze and classify this report.`;
           </div>
           <div>
             <h3 className="text-white font-black text-sm uppercase tracking-tight">AI Crop Insight Engine</h3>
-            <p className="text-white/40 text-[9px] uppercase font-black tracking-widest">Powered by Gemini 1.5 Flash</p>
+            <p className="text-white/40 text-[9px] uppercase font-black tracking-widest">Powered by Gemini 2.5 Flash</p>
           </div>
         </div>
 

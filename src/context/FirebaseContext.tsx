@@ -166,7 +166,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     const fetchDynamicCrops = async (weatherStatus: string) => {
       try {
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-        const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro"]
+        const modelNames = ["gemini-2.5-flash", "gemini-1.5-flash"]
         let dynamicCrops = []
         
         for (const name of modelNames) {
@@ -397,7 +397,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
       
       // Fallback model list
-      const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro"]
+      const modelNames = ["gemini-2.5-flash", "gemini-1.5-flash"]
       let advice = ""
       
       for (const name of modelNames) {
@@ -471,8 +471,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
       // Fallback model list for maximum resilience
       const modelNames = [
-        "gemini-1.5-flash",
-        "gemini-1.5-pro"
+        "gemini-2.5-flash",
+        "gemini-1.5-flash"
       ]
       let responseText = ""
       
@@ -655,8 +655,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           // 1. Try Gemini
           const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
           try {
-            console.log(`[Planner] Attempting Gemini with model: gemini-1.5-flash...`)
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+            console.log(`[Planner] Attempting Gemini with model: gemini-2.5-flash...`)
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
             const result = await model.generateContent(prompt)
             responseText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
             if (responseText) console.log('[Planner] Gemini Success')
@@ -699,7 +699,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           }
           Gamification: Award "Golden Harvest" only for expert-level pro-tips. Award "Sprouting Seed" for simple but helpful ones. Flag dangerous practices. No emojis.`
 
-          const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro"]
+          const modelNames = ["gemini-2.5-flash", "gemini-1.5-flash"]
           for (const name of modelNames) {
             try {
               const model = genAI.getGenerativeModel({ model: name })
