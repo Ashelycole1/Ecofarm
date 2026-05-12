@@ -89,8 +89,8 @@ Analyze and classify this report.`;
             <Sparkles className="text-wheat" size={18} />
           </div>
           <div>
-            <h3 className="text-white font-black text-sm">AI Crop Insight Engine</h3>
-            <p className="text-white/40 text-[9px] uppercase font-bold tracking-wide">Powered by Gemini 2.0</p>
+            <h3 className="text-white font-black text-sm uppercase tracking-tight">AI Crop Insight Engine</h3>
+            <p className="text-white/40 text-[9px] uppercase font-black tracking-widest">Powered by Gemini 1.5 Flash</p>
           </div>
         </div>
 

@@ -166,7 +166,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     const fetchDynamicCrops = async (weatherStatus: string) => {
       try {
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-        const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+        const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro"]
         let dynamicCrops = []
         
         for (const name of modelNames) {
@@ -174,8 +174,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
             const model = genAI.getGenerativeModel({ model: name })
             const prompt = `Return a JSON array of exactly 4 optimal farming crops for a Ugandan farmer during ${weatherStatus} weather. 
             Each object must exactly match this TypeScript interface:
-            { id: string, name: string, emoji: string, status: "optimal" | "warning", plantingDate: string, tips: string }
-            Return ONLY valid raw JSON array, without any markdown formatting or backticks.`
+            { id: string, name: string, localName: string, status: "optimal" | "warning", plantingDate: string, tips: string }
+            Return ONLY valid raw JSON array, without any markdown formatting or backticks. No emojis.`
             
             const result = await model.generateContent(prompt)
             const rawText = result.response.text()
@@ -397,7 +397,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
       
       // Fallback model list
-      const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+      const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro"]
       let advice = ""
       
       for (const name of modelNames) {
@@ -464,16 +464,15 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         "primary_dialect": "${language}",
         "emotional_tone": "mood of the farmer (e.g., anxious, curious, hopeful)",
         "voice_script": "A wise, fatherly response in English (maximum 60 words). Provide AUTHENTIC, deep agricultural advice specific to the farmer's concern. Ensure the feedback is actionable and scientifically sound. End with a traditional blessing.",
-        "action_icon": "Single emoji representing the main task",
+        "action_icon_meta": "description of the main task",
         "daily_brief": "One-sentence summary for the Daily Farm Brief"
       }
       Return ONLY the raw JSON object, no markdown.`
 
       // Fallback model list for maximum resilience
       const modelNames = [
-        "gemini-2.5-flash",
-        "gemini-2.5-pro",
-        "gemini-1.5-flash"
+        "gemini-1.5-flash",
+        "gemini-1.5-pro"
       ]
       let responseText = ""
       
@@ -502,10 +501,10 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       if (!responseText) throw new Error("All AI models failed to respond.")
       
       let aiData;
-      try {
+      if (responseText) {
         aiData = JSON.parse(responseText)
-      } catch (e) {
-        aiData = { voice_script: responseText, action_icon: '👴' }
+      } else {
+        aiData = { voice_script: responseText, action_icon_meta: 'advice' }
       }
 
       // Final Step: Use Sunbird to translate the script to ensure 0% hallucination in dialect
@@ -522,7 +521,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         metadata: {
           dialect: aiData.primary_dialect,
           emotion: aiData.emotional_tone,
-          icon: aiData.action_icon,
+          icon: aiData.action_icon_meta,
           brief: aiData.daily_brief
         }
       }
@@ -606,15 +605,15 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
             "audio_explanation": "A 30-word script in simple, fatherly/motherly language",
             "visual_steps": [
               {
-                "step_icon": "emoji",
+                "step_icon_meta": "description of task",
                 "step_description": "5-word caption",
                 "media_search_query": "keyword for instructional GIF"
               }
             ]
           }
-          Instructions: No scientific names. Use local/descriptive names. Suggest tools rural farmers already have (soapy water, ash, manual removal).`
+          Instructions: No scientific names. Use local/descriptive names. Suggest tools rural farmers already have (soapy water, ash, manual removal). No emojis.`
 
-          const modelNames = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash"]
+          const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro"]
           let visionResponse = ""
           for (const name of modelNames) {
             try {
@@ -648,16 +647,16 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         try {
           const prompt = `Generate a highly specific planting calendar JSON array of 3 distinct varieties or complementary options for growing ${crop} in the ${region} region of Uganda. 
           Each object must strictly match this exact JSON schema:
-          { "id": "string", "name": "string", "localName": "string", "region": ["string"], "status": "optimal" | "good" | "caution" | "avoid", "tip": "string", "waterNeed": "low" | "medium" | "high", "harvestWeeks": number, "plantingMonths": number[], "emoji": "string", "plantingDate": "string", "tips": "string" }
-          Return ONLY valid raw JSON array, without markdown.`
+          { "id": "string", "name": "string", "localName": "string", "region": ["string"], "status": "optimal" | "good" | "caution" | "avoid", "tip": "string", "waterNeed": "low" | "medium" | "high", "harvestWeeks": number, "plantingMonths": number[], "plantingDate": "string", "tips": "string" }
+          Return ONLY valid raw JSON array, without markdown. No emojis.`
 
           let responseText = ""
           
           // 1. Try Gemini
           const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
           try {
-            console.log(`[Planner] Attempting Gemini with model: gemini-2.5-flash...`)
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+            console.log(`[Planner] Attempting Gemini with model: gemini-1.5-flash...`)
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
             const result = await model.generateContent(prompt)
             responseText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '')
             if (responseText) console.log('[Planner] Gemini Success')
@@ -693,14 +692,14 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           Return ONLY a JSON object with these keys:
           {
             "safety_check": "Approved" | "Flagged",
-            "summary_icon": "emoji related to the topic",
+            "summary_icon_meta": "description of topic",
             "trust_reward": "Sprouting Seed" | "Iron Hoe" | "Golden Harvest",
             "celebration_script": "A 20-30 word wise response from the Village Elder giving actual feedback on the tip. Be specific about the agricultural practice mentioned.",
             "audio_board_caption": "A 3-word title for the tip"
           }
-          Gamification: Award "Golden Harvest" only for expert-level pro-tips. Award "Sprouting Seed" for simple but helpful ones. Flag dangerous practices.`
+          Gamification: Award "Golden Harvest" only for expert-level pro-tips. Award "Sprouting Seed" for simple but helpful ones. Flag dangerous practices. No emojis.`
 
-          const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+          const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro"]
           for (const name of modelNames) {
             try {
               const model = genAI.getGenerativeModel({ model: name })
@@ -716,7 +715,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           
           return {
             safety_check: "Approved",
-            summary_icon: "🌾",
+            summary_icon_meta: "crops",
             trust_reward: "Sprouting Seed",
             celebration_script: "Your wisdom on agricultural practices is valued! Every piece of traditional knowledge helps our community grow stronger.",
             audio_board_caption: "Village Wisdom"
@@ -725,7 +724,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           console.error("Village Elder Feedback Error:", error)
           return {
             safety_check: "Approved",
-            summary_icon: "🌾",
+            summary_icon_meta: "crops",
             trust_reward: "Sprouting Seed",
             celebration_script: "Your wisdom has been shared with the village!",
             audio_board_caption: "Village Wisdom"

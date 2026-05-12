@@ -14,8 +14,7 @@ export async function diagnosticTestGemini() {
     // otherwise we try a hardcoded list and report results
     const genAI = new GoogleGenerativeAI(apiKey);
     const testModels = [
-      "gemini-2.5-flash",
-      "gemini-2.5-pro",
+      "gemini-2.0-flash",
       "gemini-1.5-flash",
       "gemini-1.5-pro",
       "gemini-pro"
