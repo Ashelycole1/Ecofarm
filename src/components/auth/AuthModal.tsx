@@ -54,6 +54,12 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     setError(null)
     setLoading(true)
 
+    if (!auth) {
+      setError('Authentication service is unavailable. Please check your Firebase configuration.')
+      setLoading(false)
+      return
+    }
+
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password)
@@ -63,7 +69,19 @@ export default function AuthModal({ onClose }: AuthModalProps) {
         setStep('role')
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred.')
+      // Provide friendly error messages
+      const code = err?.code || ''
+      if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+        setError('Invalid email or password. Please try again.')
+      } else if (code === 'auth/email-already-in-use') {
+        setError('This email is already registered. Please sign in instead.')
+      } else if (code === 'auth/weak-password') {
+        setError('Password must be at least 6 characters.')
+      } else if (code === 'auth/operation-not-allowed') {
+        setError('Email/Password sign-in is not enabled. Please use Google sign-in or contact support.')
+      } else {
+        setError(err.message || 'An error occurred. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -72,16 +90,30 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   const handleGoogleSignIn = async () => {
     setLoading(true)
     setError(null)
+
+    if (!auth) {
+      setError('Authentication service is unavailable. Please check your Firebase configuration.')
+      setLoading(false)
+      return
+    }
+
     try {
       const provider = new GoogleAuthProvider()
       const result = await signInWithPopup(auth, provider)
       if (result.user) {
-        // If it's a new user, show role selection
-        // For simplicity in this demo, always show role selection on signup-like interaction
         setStep('role')
       }
     } catch (err: any) {
-      setError(err.message || 'Google sign-in failed.')
+      const code = err?.code || ''
+      if (code === 'auth/popup-blocked') {
+        setError('Popup was blocked. Please allow popups for this site.')
+      } else if (code === 'auth/unauthorized-domain') {
+        setError('This domain is not authorized. Please add it to Firebase Console > Authentication > Authorized Domains.')
+      } else if (code === 'auth/cancelled-popup-request' || code === 'auth/popup-closed-by-user') {
+        setError('') // User closed popup, not an error
+      } else {
+        setError(err.message || 'Google sign-in failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
