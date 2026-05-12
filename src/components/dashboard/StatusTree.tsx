@@ -69,7 +69,7 @@ export default function StatusTree({ compact = false }: StatusTreeProps) {
           isRed ? 'bg-alert' : isYellow ? 'bg-warning' : 'bg-safe'
         }`} />
         
-        <div className={`p-8 rounded-full bg-white/5 border border-white/10 relative transition-transform duration-700 ${isRed ? 'scale-90' : 'scale-110'}`}>
+          <div className={`p-8 rounded-full bg-white/5 border border-white/10 relative transition-transform duration-700 ${isRed ? 'scale-90' : 'scale-110'}`}>
           {isRed ? (
             <Droplets size={64} className="text-alert drop-shadow-[0_0_15px_rgba(255,112,67,0.4)] animate-bounce" />
           ) : isYellow ? (
@@ -77,10 +77,6 @@ export default function StatusTree({ compact = false }: StatusTreeProps) {
           ) : (
             <TreePine size={64} className="text-safe drop-shadow-[0_0_15px_rgba(102,187,106,0.4)] tree-sway" />
           )}
-          
-          <div className="absolute -top-1 -right-1 text-2xl">
-            {isRed ? '🚨' : isYellow ? '⚠️' : '🌻'}
-          </div>
         </div>
       </div>
 
@@ -97,9 +93,9 @@ export default function StatusTree({ compact = false }: StatusTreeProps) {
 
         {!compact && (
           <div className="grid grid-cols-3 gap-3 pt-2">
-            <BigStat label="💧 WATER" value={farmStatus.waterLevel} status={farmStatus.waterLevel < 30 ? 'red' : 'green'} />
-            <BigStat label="🌱 SOIL" value={farmStatus.soilHealth} status={farmStatus.soilHealth < 50 ? 'yellow' : 'green'} />
-            <BigStat label="☀️ SUN" value={85} status="green" />
+            <BigStat label="WATER" value={farmStatus.waterLevel} status={farmStatus.waterLevel < 30 ? 'red' : 'green'} />
+            <BigStat label="SOIL" value={farmStatus.soilHealth} status={farmStatus.soilHealth < 50 ? 'yellow' : 'green'} />
+            <BigStat label="SUN" value={85} status="green" />
           </div>
         )}
       </div>

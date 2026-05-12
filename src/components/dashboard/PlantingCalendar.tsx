@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useFirebase } from '@/context/FirebaseContext'
-import { ChevronDown, ChevronUp, Calendar, Droplets, Clock } from 'lucide-react'
+import { ChevronDown, ChevronUp, Calendar, Droplets, Clock, Sprout } from 'lucide-react'
 import type { Crop } from '@/lib/mockData'
 
 // ... same status, icons, and CropCard components ...
@@ -13,7 +13,7 @@ const statusConfig = {
   avoid:   { label: 'Avoid Now',     bg: 'bg-alert/10', border: 'border-alert/30', text: 'text-alert', dot: 'bg-alert' },
 }
 
-const waterIcons = { low: '💧', medium: '💧💧', high: '💧💧💧' }
+const waterIcons = { low: 'LOW', medium: 'MED', high: 'HIGH' }
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
@@ -26,24 +26,25 @@ function CropCard({ crop }: { crop: Crop }) {
   const currentMonth = new Date().getMonth() + 1
 
   return (
-    <div className={`crop-row rounded-leaf border ${cfg.border} ${cfg.bg} transition-all duration-300 overflow-hidden`}>
+    <div className={`crop-row rounded-leaf border ${cfg.border} ${cfg.bg} transition-all duration-300 overflow-hidden shadow-lg`}>
       <button
-        className="w-full flex items-center gap-3 p-4 text-left"
+        className="w-full flex items-center gap-4 p-5 text-left"
         onClick={() => setExpanded(e => !e)}
         id={`crop-card-${crop.id}`}
         aria-expanded={expanded}
       >
-        <span className="text-3xl shrink-0">{crop.emoji || '🌱'}</span>
+        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 text-wheat shrink-0">
+          <Sprout size={24} />
+        </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-semibold text-white text-sm leading-tight">{crop.name}</p>
-            <span className={`badge ${cfg.bg} ${cfg.border} border ${cfg.text} leading-none`}>
-              <span className={`status-dot ${cfg.dot} mr-1`} />
+            <p className="font-black text-white text-sm leading-tight uppercase tracking-tight">{crop.name}</p>
+            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${cfg.bg} ${cfg.border} border ${cfg.text} leading-none`}>
               {cfg.label}
             </span>
           </div>
-          <p className="text-xs text-white/50 mt-0.5 italic">&ldquo;{crop.localName || 'Local Seed'}&rdquo; · {crop.region ? crop.region.join(', ') : 'Uganda'}</p>
+          <p className="text-[10px] text-white/40 mt-1 uppercase font-black tracking-widest">"{crop.localName || 'Local Seed'}" · {crop.region ? crop.region.join(', ') : 'Uganda'}</p>
         </div>
 
         <span className={`${cfg.text} shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
@@ -52,15 +53,15 @@ function CropCard({ crop }: { crop: Crop }) {
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 space-y-3 border-t border-white/5 pt-3">
-          <div className="bg-forest-dark/40 rounded-leaf-sm p-3">
-            <p className="text-xs text-white/80 leading-relaxed">💡 {crop.tip}</p>
+        <div className="px-5 pb-5 space-y-4 border-t border-white/5 pt-5">
+          <div className="bg-white/[0.03] rounded-2xl p-4 border border-white/5">
+            <p className="text-[11px] text-white/70 leading-relaxed font-medium">{crop.tip}</p>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            <MiniStat icon={<Droplets size={11} />} label="Water" value={waterIcons[crop.waterNeed as keyof typeof waterIcons] || '💧💧'} />
-            <MiniStat icon={<Clock size={11} />} label="Harvest" value={`${crop.harvestWeeks || 12}w`} />
-            <MiniStat icon={<Calendar size={11} />} label="Season" value={`${crop.plantingMonths?.length || 2} windows`} />
+          <div className="grid grid-cols-3 gap-3">
+            <MiniStat icon={<Droplets size={12} />} label="Water" value={waterIcons[crop.waterNeed as keyof typeof waterIcons] || 'MED'} />
+            <MiniStat icon={<Clock size={12} />} label="Harvest" value={`${crop.harvestWeeks || 12}W`} />
+            <MiniStat icon={<Calendar size={12} />} label="Season" value={`${crop.plantingMonths?.length || 2} WINDOWS`} />
           </div>
 
           <div>

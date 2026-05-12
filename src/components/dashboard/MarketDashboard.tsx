@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, TrendingDown, ShoppingCart, Phone, RefreshCcw, MapPin, Navigation } from 'lucide-react'
+import { TrendingUp, TrendingDown, ShoppingCart, Phone, RefreshCcw, MapPin, Navigation, Info, Store, Wheat, Coffee, Cherry, Leaf, Box } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 
@@ -15,7 +15,7 @@ const FARMER_WHATSAPP = '+256700000000'
 interface Product {
   id: string
   name: string
-  emoji: string
+  Icon: any
   description: string
   price: number
   unit: string
@@ -29,7 +29,7 @@ const products: Product[] = [
   {
     id: 'p1',
     name: 'White Maize',
-    emoji: '🌽',
+    Icon: Wheat,
     description: 'Grade A Ugandan white maize, sun-dried and sorted. Ready for posho milling.',
     price: 1200,
     unit: 'per kg',
@@ -41,7 +41,7 @@ const products: Product[] = [
   {
     id: 'p2',
     name: 'Nambale Beans',
-    emoji: '🫘',
+    Icon: Box,
     description: 'High-protein Nambale beans from Busoga region. Clean & hand-sorted.',
     price: 3500,
     unit: 'per kg',
@@ -53,7 +53,7 @@ const products: Product[] = [
   {
     id: 'p3',
     name: 'Matooke',
-    emoji: '🍌',
+    Icon: Leaf,
     description: 'Fresh green matooke bunches from Mbarara. Harvested within 24 hours.',
     price: 15000,
     unit: 'per bunch',
@@ -96,65 +96,67 @@ export default function MarketDashboard() {
     return () => clearTimeout(timer)
   }, [])
 
-  const categories = ['All', 'Leafy / Vegetables', 'Grains', 'Root Crops', 'Cash Crops', 'Legumes', 'Fruits']
+  const categories = [
+    { name: 'All', Icon: Store },
+    { name: 'Vegetables', Icon: Leaf },
+    { name: 'Grains', Icon: Wheat },
+    { name: 'Root Crops', Icon: Box },
+    { name: 'Cash Crops', Icon: Coffee },
+    { name: 'Fruits', Icon: Cherry },
+  ]
 
   return (
-    <div className="space-y-5 animate-fade-in pb-10">
-      {/* Premium Header from Image */}
+    <div className="space-y-6 animate-fade-in pb-10">
+      {/* Premium Header */}
       <div 
-        className="p-5 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, rgba(6,20,18,0.95) 0%, rgba(13,36,34,0.98) 100%)',
-        }}
+        className="p-8 rounded-[32px] border border-white/5 shadow-2xl relative overflow-hidden bg-white/[0.02]"
       >
         <div className="flex justify-between items-start relative z-10">
-          <div>
-            <h2 className="font-display font-black text-2xl text-white tracking-tight">Farm Intelligence Map</h2>
-            <div className="flex gap-3 mt-1.5">
-              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">10 FARMS</span>
-              <span className="text-white/20 text-[10px]">•</span>
-              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">5 ECO MARKETS</span>
+          <div className="space-y-2">
+            <h2 className="font-display font-black text-3xl text-white tracking-tight uppercase">Farm Intel</h2>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-safe" />
+                <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">10 FARMS</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-wheat" />
+                <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">5 ECO MARKETS</span>
+              </div>
             </div>
           </div>
-          <button className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <button className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/20 hover:text-white transition-all">
+            <Info size={20} />
           </button>
         </div>
       </div>
 
       {/* Find Nearest Button */}
       <button 
-        className="w-full py-5 rounded-3xl font-display font-black text-white text-base flex items-center justify-center gap-3 shadow-2xl shadow-forest/20 active:scale-[0.98] transition-all border border-white/20"
-        style={{ background: 'linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%)' }}
+        className="w-full py-6 rounded-[32px] font-display font-black text-white text-base flex items-center justify-center gap-3 shadow-2xl active:scale-[0.98] transition-all border border-white/10 bg-forest hover:bg-forest-light"
       >
-        <MapPin size={22} />
-        🌿 FIND NEAREST ECO-BUYER
+        <MapPin size={22} className="text-wheat" />
+        FIND NEAREST ECO-BUYER
       </button>
 
       {/* Live Map with Category Chips Overlay */}
       <div 
-        className="h-[450px] rounded-3xl overflow-hidden relative border border-white/10 shadow-2xl"
-        style={{ background: 'rgba(13,36,34,0.80)' }}
+        className="h-[500px] rounded-[40px] overflow-hidden relative border border-white/5 shadow-2xl bg-black/40"
       >
         {/* Category Chips Over Map */}
-        <div className="absolute top-4 left-4 right-4 z-[1000] flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
+        <div className="absolute top-6 left-6 right-6 z-[1000] flex gap-2 overflow-x-auto pb-4 no-scrollbar">
           {categories.map((cat) => (
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`flex-shrink-0 px-4 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border ${
-                activeCategory === cat 
-                ? 'bg-white text-forest border-white shadow-xl scale-105' 
-                : 'bg-black/40 text-white/60 border-white/10 backdrop-blur-md hover:bg-black/60'
+              key={cat.name}
+              onClick={() => setActiveCategory(cat.name)}
+              className={`flex-shrink-0 px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border flex items-center gap-2.5 ${
+                activeCategory === cat.name 
+                ? 'bg-white text-black border-white shadow-2xl scale-105' 
+                : 'bg-black/60 text-white/40 border-white/5 backdrop-blur-xl hover:bg-black/80'
               }`}
             >
-              {cat === 'Leafy / Vegetables' && '🥬 '}
-              {cat === 'Grains' && '🌾 '}
-              {cat === 'Root Crops' && '🥔 '}
-              {cat === 'Cash Crops' && '☕ '}
-              {cat === 'Legumes' && '🫘 '}
-              {cat === 'Fruits' && '🍎 '}
-              {cat}
+              <cat.Icon size={14} />
+              {cat.name}
             </button>
           ))}
         </div>
@@ -164,9 +166,9 @@ export default function MarketDashboard() {
           routeCoordinates={[]} 
         />
         
-        <div className="absolute bottom-6 right-6 z-[1000]">
+        <div className="absolute bottom-8 right-8 z-[1000]">
            <button 
-            className="w-12 h-12 rounded-2xl bg-white text-forest shadow-2xl flex items-center justify-center active:scale-90 transition-all"
+            className="w-14 h-14 rounded-2xl bg-white text-black shadow-2xl flex items-center justify-center active:scale-90 transition-all"
             onClick={() => {
                if (navigator.geolocation) {
                  navigator.geolocation.getCurrentPosition((pos) => {
@@ -175,78 +177,70 @@ export default function MarketDashboard() {
                }
             }}
            >
-             <Navigation size={20} fill="currentColor" />
+             <Navigation size={22} fill="currentColor" />
            </button>
         </div>
       </div>
 
       {/* Product Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-64 rounded-2xl skeleton" />
+            <div key={i} className="h-80 rounded-[32px] skeleton" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map(product => (
             <div
               key={product.id}
-              className="flex flex-col rounded-2xl overflow-hidden transition-all hover:scale-[1.02] duration-200"
-              style={{
-                background: 'linear-gradient(160deg, rgba(46,125,50,0.22) 0%, rgba(6,38,10,0.80) 100%)',
-                border: '1px solid rgba(67,160,71,0.25)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
-              }}
+              className="flex flex-col rounded-[32px] overflow-hidden transition-all hover:translate-y-[-8px] duration-300 border border-white/5 bg-white/[0.02] shadow-2xl"
             >
-              {/* Product Image / Emoji Hero */}
+              {/* Product Icon Hero */}
               <div
-                className="flex items-center justify-center py-8 text-6xl"
-                style={{ background: 'rgba(46,125,50,0.15)' }}
+                className="flex items-center justify-center py-12 bg-white/[0.02] border-b border-white/5"
               >
-                {product.emoji}
+                <product.Icon size={64} className="text-wheat/40" />
               </div>
 
               {/* Product Details */}
-              <div className="p-4 flex flex-col flex-1 gap-3">
+              <div className="p-6 flex flex-col flex-1 gap-5">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-display font-bold text-white text-base">{product.name}</h3>
-                    <span className={`text-xs font-bold flex items-center gap-0.5 ${
-                      product.trend === 'up' ? 'text-safe' : product.trend === 'down' ? 'text-alert' : 'text-wheat'
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-display font-black text-lg text-white uppercase tracking-tight">{product.name}</h3>
+                    <span className={`text-[10px] font-black flex items-center gap-1 ${
+                      product.trend === 'up' ? 'text-safe' : 'text-alert'
                     }`}>
-                      {product.trend === 'up' && <TrendingUp size={12} />}
-                      {product.trend === 'down' && <TrendingDown size={12} />}
+                      {product.trend === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                       {product.percentage}
                     </span>
                   </div>
-                  <p className="text-white/50 text-xs leading-relaxed">{product.description}</p>
+                  <p className="text-white/30 text-xs leading-relaxed font-medium line-clamp-2">{product.description}</p>
                 </div>
 
                 {/* Price & Availability */}
-                <div
-                  className="rounded-xl p-3"
-                  style={{ background: 'rgba(0,0,0,0.30)' }}
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/40 text-[10px] uppercase tracking-widest">Price</span>
-                    <span className="text-white/40 text-[10px] uppercase tracking-widest">In Stock</span>
+                <div className="rounded-2xl p-5 bg-black/40 border border-white/5">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-white/20 text-[9px] font-black uppercase tracking-[0.2em]">Regional Price</span>
+                    <span className="text-white/20 text-[9px] font-black uppercase tracking-[0.2em]">In Stock</span>
                   </div>
-                  <div className="flex justify-between items-center mt-0.5">
-                    <span className="font-display font-black text-wheat text-lg">
-                      UGX {product.price.toLocaleString()}
-                    </span>
-                    <span className="text-safe text-xs font-semibold">{product.available}</span>
+                  <div className="flex justify-between items-end">
+                    <div className="flex flex-col">
+                      <span className="font-display font-black text-wheat text-2xl leading-none">
+                        {product.price.toLocaleString()}
+                      </span>
+                      <span className="text-[9px] text-white/20 font-black uppercase tracking-widest mt-1.5">UGX {product.unit}</span>
+                    </div>
+                    <span className="text-safe text-xs font-black uppercase tracking-widest bg-safe/10 px-2 py-1 rounded-lg border border-safe/20">{product.available}</span>
                   </div>
-                  <p className="text-[10px] text-white/30 mt-0.5">{product.unit}</p>
                 </div>
 
                 {/* Farmer Info */}
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-forest/50 flex items-center justify-center text-xs">
-                    👨‍🌾
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
+                    <Store size={14} className="text-white/40" />
                   </div>
-                  <span className="text-white/50 text-xs">{product.farmerName}</span>
+                  <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">{product.farmerName}</span>
                 </div>
 
                 {/* Buy Now Button */}
@@ -254,14 +248,10 @@ export default function MarketDashboard() {
                   href={buildWhatsappUrl(product)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-auto w-full py-3.5 rounded-xl font-display font-bold text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
-                  style={{
-                    background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
-                    boxShadow: '0 4px 16px rgba(37,211,102,0.30)',
-                  }}
+                  className="mt-2 w-full py-5 rounded-2xl font-black text-white text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all bg-[#25D366] hover:bg-[#128C7E] shadow-2xl active:scale-95"
                 >
                   <Phone size={16} />
-                  Buy via WhatsApp
+                  Contact via WhatsApp
                 </a>
               </div>
             </div>
@@ -271,15 +261,13 @@ export default function MarketDashboard() {
 
       {/* Cart CTA */}
       <div
-        className="flex items-center gap-3 p-4 rounded-2xl"
-        style={{
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.07)',
-        }}
+        className="flex items-center gap-4 p-6 rounded-[32px] bg-white/[0.02] border border-white/5 shadow-xl"
       >
-        <ShoppingCart className="text-white/30 shrink-0" size={18} />
-        <p className="text-[11px] text-white/35 leading-relaxed">
-          Prices are current regional averages updated daily. Click &quot;Buy via WhatsApp&quot; to contact the farmer directly and arrange delivery.
+        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
+          <ShoppingCart className="text-white/20" size={20} />
+        </div>
+        <p className="text-[10px] text-white/20 font-black uppercase tracking-widest leading-relaxed">
+          Prices are current regional averages updated daily. Click "Contact via WhatsApp" to connect with farmers directly.
         </p>
       </div>
     </div>
