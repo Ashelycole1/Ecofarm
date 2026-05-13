@@ -99,6 +99,54 @@ body {
 }
 
 /* ─── Status Dot ─────────────────────────────────────────────────────────── */
+/* ─── Modern Theme ───────────────────────────────────────────────────────── */
+.modern-card {
+  background: #FFFFFF;
+  border-radius: 32px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+.modern-tile {
+  background: #DFF1ED;
+  border-radius: 16px;
+  padding: 16px;
+  transition: transform 0.2s ease;
+}
+
+.modern-tile:hover {
+  transform: translateY(-2px);
+}
+
+.modern-pill {
+  background: #E0EAE8;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #2D665F;
+  text-transform: uppercase;
+}
+
+.modern-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2D3436;
+  transition: all 0.2s ease;
+}
+
+.modern-sidebar-item.active {
+  background: #FFFFFF;
+  color: #C6A552;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
 .status-dot {
   width: 8px;
   height: 8px;

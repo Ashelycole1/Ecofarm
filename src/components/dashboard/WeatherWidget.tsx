@@ -22,91 +22,63 @@ export default function WeatherWidget() {
 
   if (isLoading || !weather) {
     return (
-      <div className="nature-card p-5 space-y-3">
-        <div className="skeleton h-3 w-1/3 mb-1" />
-        <div className="skeleton h-12 w-1/2" />
-        <div className="grid grid-cols-3 gap-2 pt-2">
-          {[0,1,2].map(i => <div key={i} className="skeleton h-14 rounded-xl" />)}
+      <div className="modern-card p-10 space-y-4">
+        <div className="skeleton h-6 w-1/3" />
+        <div className="skeleton h-20 w-1/2" />
+        <div className="grid grid-cols-3 gap-3">
+          {[0,1,2].map(i => <div key={i} className="skeleton h-16 rounded-2xl" />)}
         </div>
       </div>
     )
   }
 
-  const status = statusColors[weather.status] || 'safe'
-  const isAlert = status === 'alert'
-  const isWarning = status === 'warning'
-
   return (
-    <div className={`relative overflow-hidden rounded-3xl p-6 shadow-2xl transition-all duration-700 border-2 ${
-      isAlert ? 'bg-alert/10 border-alert/30' : isWarning ? 'bg-warning/10 border-warning/30' : 'bg-forest/40 border-safe/20'
-    }`}>
-      {/* Massive Visual Glow for Zero-Reading */}
-      <div className={`absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[100px] opacity-20 pointer-events-none transition-colors duration-1000 ${
-        isAlert ? 'bg-alert' : isWarning ? 'bg-warning' : 'bg-safe'
-      }`} />
-
-      {/* Header with Traffic Light Badge */}
-      <div className="flex items-start justify-between mb-8 relative z-10">
-        <div className={`px-4 py-1.5 rounded-full border flex items-center gap-2 ${
-          isAlert ? 'bg-alert text-white border-white/20' : isWarning ? 'bg-warning text-black border-black/10' : 'bg-safe text-white border-white/10'
-        }`}>
-          <span className={`w-2 h-2 rounded-full animate-pulse ${isAlert ? 'bg-white' : isWarning ? 'bg-black' : 'bg-white'}`} />
-          <span className="text-[10px] font-black uppercase tracking-widest">
-            {isAlert ? 'STAY HOME' : isWarning ? 'WEAR BOOTS' : 'GOOD HARVEST'}
-          </span>
+    <div className="modern-card p-8 flex flex-col relative overflow-hidden h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between w-full mb-10">
+        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-black/5 bg-white text-[10px] font-black uppercase tracking-widest text-eco-dark">
+          <span className="w-1.5 h-1.5 rounded-full bg-safe animate-pulse" />
+          GOOD HARVEST
         </div>
         <button
           onClick={refreshWeather}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/40 hover:text-white transition-all"
+          className="w-10 h-10 rounded-full flex items-center justify-center border border-black/5 bg-white text-black/20 hover:text-eco-gold transition-all"
         >
           <RefreshCw size={16} />
         </button>
       </div>
 
-      {/* Main Impact Symbols */}
-      <div className="flex items-center gap-6 mb-8 relative z-10">
-        <div className={`text-7xl drop-shadow-2xl transition-transform duration-700 hover:scale-110 ${isAlert ? 'animate-pulse' : 'float-anim'}`}>
-          {weatherIcons[weather.status] || '🌤️'}
+      {/* Main Weather Display */}
+      <div className="flex items-center gap-8 mb-12">
+        <div className="w-24 h-24 rounded-[32px] bg-white border border-black/5 shadow-sm flex items-center justify-center">
+          <Sun size={44} className="text-eco-gold" />
         </div>
         <div>
-          <div className="text-6xl font-black text-white tracking-tighter leading-none mb-1">
+          <div className="text-7xl font-display font-black text-eco-dark leading-none">
             {weather.temperature}°
           </div>
-          <p className="text-[10px] text-white/30 uppercase font-black tracking-widest ml-1">
-            📍 {weather.location}
-          </p>
+          <div className="flex items-center gap-1.5 mt-2">
+            <span className="text-eco-gold text-xs">●</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-black/30">YOUR FARM</span>
+          </div>
         </div>
       </div>
 
-      {/* Large-Scale Iconic Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6 relative z-10">
-        <IconicPill icon={<CloudRain size={24} />} value={`${weather.rainfall}mm`} label="RAIN" status={weather.rainfall > 5 ? 'warning' : 'green'} />
-        <IconicPill icon={<Wind size={24} />} value={`${weather.windSpeed}k`} label="WIND" status={weather.windSpeed > 20 ? 'red' : 'green'} />
-        <IconicPill icon={<Thermometer size={24} />} value={`${weather.humidity}%`} label="HUMID" status="green" />
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-3 gap-3 w-full mt-auto">
+        <ModernStat label="RAIN" value={`${weather.rainfall}mm`} />
+        <ModernStat label="WIND" value={`${weather.windSpeed}k`} />
+        <ModernStat label="HUMID" value={`${weather.humidity}%`} />
       </div>
+    </div>
+  )
+}
 
-      {/* Traffic Light 5-Day Forecast */}
-      <div className="grid grid-cols-5 gap-2 relative z-10 pt-4 border-t border-white/5">
-        {weather.forecast.map((day, i) => {
-          const dayStatus = statusColors[day.status] || 'safe'
-          return (
-            <div
-              key={i}
-              className={`flex flex-col items-center gap-1 rounded-2xl py-3 border transition-all ${
-                dayStatus === 'alert' ? 'bg-alert/20 border-alert/30' : 
-                dayStatus === 'warning' ? 'bg-warning/20 border-warning/30' : 
-                'bg-white/5 border-white/5'
-              }`}
-            >
-              <span className="text-[8px] text-white/40 font-black uppercase">{day.day}</span>
-              <span className="text-xl leading-none my-1">{weatherIcons[day.status] ?? '🌤️'}</span>
-              <div className={`w-1.5 h-1.5 rounded-full ${
-                dayStatus === 'alert' ? 'bg-alert' : dayStatus === 'warning' ? 'bg-warning' : 'bg-safe'
-              }`} />
-            </div>
-          )
-        })}
-      </div>
+function ModernStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="modern-tile flex flex-col items-center justify-center gap-1">
+      <span className="text-[8px] font-black text-black/30 uppercase tracking-[0.2em]">{label}</span>
+      <span className="text-sm font-black text-eco-dark">{value}</span>
     </div>
   )
 }

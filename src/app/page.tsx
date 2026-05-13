@@ -25,13 +25,10 @@ import CropInsightEngine from '@/components/ai/CropInsightEngine'
 // ─── Sidebar nav items ────────────────────────────────────────────────────────
 const navTabs = [
   { id: 'home',     label: 'Home',     Icon: Home },
-  { id: 'map',      label: 'Farm Map', Icon: MapIcon },
   { id: 'market',   label: 'Market',   Icon: TrendingUp },
   { id: 'calendar', label: 'Planting', Icon: Leaf },
   { id: 'chat',     label: 'Chat',     Icon: MessageCircle },
   { id: 'alerts',   label: 'Alerts',   Icon: Bell },
-  { id: 'community', label: 'Village',  Icon: Globe },
-  { id: 'soil',     label: 'Soil',     Icon: FlaskConical },
   { id: 'track',    label: 'Track',    Icon: Navigation },
 ]
 
@@ -53,38 +50,34 @@ function AppBar({ activeTab }: { activeTab: string }) {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.08]"
-      style={{
-        background: 'rgba(6,20,18,0.85)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-      }}
+      className="fixed top-0 left-0 right-0 z-50 md:left-56 lg:left-64"
     >
-      <div className="flex items-center justify-between w-full px-4 py-3 md:px-6 lg:px-8">
-        {/* Brand logo — always visible */}
-        <span className="font-display font-black text-xl tracking-tight text-white">
+      <div className="flex items-center justify-between w-full px-4 py-4 md:px-8">
+        {/* Brand logo — mobile only */}
+        <span className="md:hidden font-display font-black text-xl tracking-tight text-eco-dark">
           🌿 EcoFarm
         </span>
 
         {/* Active tab title — mobile only */}
-        <span className="md:hidden font-display font-semibold text-sm text-white/70 tracking-wide">
+        <span className="md:hidden font-display font-semibold text-sm text-black/40 tracking-wide">
           {tabTitles[activeTab] || '🌿 EcoFarm'}
         </span>
 
+        <div className="hidden md:block" />
+
         {/* Right side controls */}
-        <div className="flex items-center gap-2.5">
-          <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-            isConnected ? 'bg-safe/15' : 'bg-alert/15'
-          }`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors bg-eco-pill`}>
             {isConnected
-              ? <Wifi className="text-safe" size={13} />
-              : <WifiOff className="text-alert" size={13} />}
+              ? <Wifi className="text-eco-dark" size={16} />
+              : <WifiOff className="text-alert" size={16} />}
           </div>
+
 
           {user && (
             <button
               onClick={() => logout()}
-              className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/50 transition-all active:scale-90"
+              className="w-7 h-7 rounded-full flex items-center justify-center bg-black/5 hover:bg-black/10 text-black/40 transition-all active:scale-90"
               title="Logout"
             >
               <LogOut size={14} />
@@ -102,14 +95,14 @@ function Sidebar({ activeTab, onTabChange }: { activeTab: string; onTabChange: (
 
   return (
     <aside
-      className="hidden md:flex flex-col w-56 lg:w-64 fixed left-0 top-[57px] bottom-0 z-40 border-r border-white/[0.08] py-5 px-3"
-      style={{
-        background: 'linear-gradient(180deg, rgba(6,20,18,0.94) 0%, rgba(6,20,18,0.98) 100%)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-      }}
+      className="hidden md:flex flex-col w-56 lg:w-64 fixed left-0 top-0 bottom-0 z-40 border-r border-black/5 py-8 px-4 bg-eco-sidebar"
     >
-      <nav className="flex flex-col gap-1 flex-1">
+      <div className="mb-10 px-4 flex items-center gap-2">
+        <span className="text-xl">🌿</span>
+        <span className="font-display font-black text-lg text-eco-dark uppercase tracking-tight">EcoFarm</span>
+      </div>
+
+      <nav className="flex flex-col gap-2 flex-1">
         {navTabs.map(({ id, label, Icon }) => {
           const isActive = activeTab === id
           return (
@@ -117,19 +110,10 @@ function Sidebar({ activeTab, onTabChange }: { activeTab: string; onTabChange: (
               key={id}
               onClick={() => onTabChange(id)}
               id={`sidebar-tab-${id}`}
-              className={`
-                flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 text-left
-                ${isActive
-                  ? 'bg-forest/40 text-wheat border border-forest-light/30 shadow-nature'
-                  : 'text-white/50 hover:text-white/80 hover:bg-white/5 border border-transparent'
-                }
-              `}
+              className={`modern-sidebar-item ${isActive ? 'active' : ''}`}
             >
-              <Icon size={18} strokeWidth={isActive ? 2.2 : 1.7} />
-              <span>{label}</span>
-              {id === 'alerts' && (
-                <span className="ml-auto w-2 h-2 bg-alert rounded-full ring-1 ring-forest-deep animate-pulse" />
-              )}
+              <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+              <span className="uppercase tracking-widest text-[11px] font-extrabold">{label}</span>
             </button>
           )
         })}
@@ -138,7 +122,7 @@ function Sidebar({ activeTab, onTabChange }: { activeTab: string; onTabChange: (
       {!user && (
         <button
           onClick={() => setShowAuthModal(true)}
-          className="mt-4 w-full py-3 rounded-xl border border-forest-light/30 bg-forest/20 text-wheat text-xs font-bold uppercase tracking-widest hover:bg-forest/40 transition-colors"
+          className="mt-4 w-full py-3 rounded-xl border border-eco-gold/20 bg-eco-gold/10 text-eco-gold text-[10px] font-black uppercase tracking-widest hover:bg-eco-gold/20 transition-colors"
         >
           Sign In
         </button>
@@ -147,60 +131,48 @@ function Sidebar({ activeTab, onTabChange }: { activeTab: string; onTabChange: (
   )
 }
 
+
 // ─── Home tab ─────────────────────────────────────────────────────────────────
 function HomeTab() {
   const { weather, user } = useFirebase()
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       {/* Greeting hero banner */}
       <div
-        className="relative overflow-hidden rounded-2xl p-5"
+        className="relative overflow-hidden rounded-[32px] p-10 md:p-14 modern-card min-h-[220px] flex flex-col justify-center"
         style={{
-          background: 'linear-gradient(135deg, rgba(45,102,95,0.55) 0%, rgba(13,36,34,0.80) 100%)',
-          border: '1px solid rgba(61,138,129,0.25)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.40), inset 0 0 40px rgba(45,102,95,0.12)',
+          background: 'linear-gradient(135deg, #F9F1E2 0%, #F3E8D3 100%)',
         }}
       >
-        <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full blur-3xl opacity-30 pointer-events-none"
-          style={{ background: 'radial-gradient(circle, #3D8A81, transparent)' }} />
-        <div className="absolute -bottom-10 -left-10 w-44 h-44 rounded-full blur-3xl opacity-15 pointer-events-none"
-          style={{ background: 'radial-gradient(circle, #2D665F, transparent)' }} />
+        {/* Soil/Track pattern overlay placeholder */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
+          backgroundImage: 'radial-gradient(#C6A552 1px, transparent 1px)',
+          backgroundSize: '20px 20px'
+        }} />
 
         <div className="relative z-10">
-          <p className="text-[11px] text-forest-light/80 uppercase tracking-widest font-semibold">Good day</p>
-          <h2 className="font-display font-bold text-white text-2xl mt-1 high-contrast-text">
-            {user ? (user.displayName || 'Farmer') : 'EcoFarmer'} 👋
+          <p className="text-[12px] text-black/30 uppercase tracking-[0.2em] font-extrabold mb-2">Good day</p>
+          <h2 className="font-display font-black text-eco-dark text-4xl md:text-5xl tracking-tight">
+            {user ? (user.displayName || 'Farmer') : 'Evans Rwothomio'}
           </h2>
-          <p className="text-white/50 text-sm mt-1.5">
-            {weather ? `📍 ${weather.location} · ${weather.temperature}°C` : 'Connecting to farm...'}
-          </p>
+          <div className="flex items-center gap-2 mt-4 text-black/40 font-bold">
+            <span className="text-eco-gold">📍</span>
+            <p className="text-sm">
+              {weather ? `${weather.location} · ${weather.temperature}°C` : 'Your Farm - 23°C'}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Two-column grid on large screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-        <div className="space-y-4">
-          <StatusTree compact={false} />
-          <AIVisionModule />
-        </div>
-        <div className="space-y-4">
-          <WeatherWidget />
-          <div
-            className="p-4 rounded-2xl"
-            style={{
-              background: 'linear-gradient(145deg, rgba(45,102,95,0.18) 0%, rgba(13,36,34,0.55) 100%)',
-              border: '1px solid rgba(61,138,129,0.15)',
-            }}
-          >
-            <p className="text-[11px] text-white/35 uppercase tracking-widest mb-3 font-semibold">Community This Week</p>
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <CommunityStat value="247" label="Farmers" emoji="👨‍🌾" />
-              <CommunityStat value="93"  label="Reports" emoji="📋" />
-              <CommunityStat value="12"  label="Districts" emoji="📍" />
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+        <StatusTree compact={false} />
+        <WeatherWidget />
+      </div>
+
+      <div className="pt-4">
+        <AIVisionModule />
       </div>
     </div>
   )
@@ -399,7 +371,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen min-h-dvh flex flex-col" style={{ background: '#061412' }}>
+    <div className="min-h-screen min-h-dvh flex flex-col" style={{ background: '#FDF8F4' }}>
       <AppBar activeTab={activeTab} />
 
       {/* Desktop sidebar */}
@@ -407,7 +379,7 @@ export default function HomePage() {
 
       {/* Main content — left-padded on md+ to clear the sidebar */}
       <main className="flex-1 overflow-y-auto pb-28 md:pb-8 pt-16 md:ml-56 lg:ml-64">
-        <div className="w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-5">
+        <div className="w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8">
           <TabContent tab={activeTab} />
 
           {!user && (
