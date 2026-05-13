@@ -84,32 +84,59 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     setLoading(true)
     setError('')
     try {
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code,
-      })
+      let completeSignUp = signUp
+
+      // Only attempt verification if not already complete
+      if (signUp.status !== 'complete') {
+        completeSignUp = await signUp.attemptEmailAddressVerification({
+          code,
+        })
+      }
+
       if (completeSignUp.status === 'complete') {
-        // Sync profile data to Supabase
-        const supabase = getSupabase()
-        if (supabase && completeSignUp.createdUserId) {
-           const { error: dbError } = await supabase.from('profiles').insert([{
-             id: completeSignUp.createdUserId,
-             email,
-             full_name: fullName,
-             phone_number: phone,
-             role: role
-           }])
-           if (dbError) {
-             console.error("Failed to create user profile in Supabase:", dbError)
-           }
+        try {
+          const supabase = getSupabase()
+          if (supabase && completeSignUp.createdUserId) {
+             const { error: dbError } = await supabase.from('profiles').insert([{
+               id: completeSignUp.createdUserId,
+               email,
+               full_name: fullName,
+               phone_number: phone,
+               role: role
+             }])
+             if (dbError) {
+               console.warn("Failed to create profile in Supabase. User can still log in:", dbError)
+             }
+          }
+        } catch (dbErr) {
+          console.warn("Supabase client error:", dbErr)
         }
 
-        await setSignUpActive({ session: completeSignUp.createdSessionId })
-        onClose()
+        if (completeSignUp.createdSessionId) {
+          await setSignUpActive({ session: completeSignUp.createdSessionId })
+          onClose()
+        } else {
+          setMode('signin')
+          setError('Account created! Please sign in.')
+        }
       } else {
         setError('Verification incomplete. Please try again.')
       }
     } catch (err: any) {
-      setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Invalid verification code.')
+      const errorMessage = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Invalid verification code.'
+      
+      // Handle case where code was clicked twice or already verified
+      if (errorMessage.toLowerCase().includes('already been verified') || err.errors?.[0]?.code === 'form_verification_already_verified') {
+        if (signUp.status === 'complete' && signUp.createdSessionId) {
+          await setSignUpActive({ session: signUp.createdSessionId })
+          onClose()
+        } else {
+          setMode('signin')
+          setError('Email verified successfully! Please sign in.')
+        }
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setLoading(false)
     }
