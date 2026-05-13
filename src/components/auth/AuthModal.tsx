@@ -60,9 +60,13 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     try {
       const [firstName, ...lastNames] = fullName.split(' ')
       const lastName = lastNames.join(' ')
+      
+      // Auto-generate a username to satisfy Clerk's requirement if it's enabled in their dashboard
+      const generatedUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + Math.floor(Math.random() * 10000);
 
       await signUp.create({
         emailAddress: email,
+        username: generatedUsername,
         password,
         firstName: firstName || fullName,
         lastName: lastName || undefined,
