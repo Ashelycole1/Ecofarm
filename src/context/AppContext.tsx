@@ -64,6 +64,7 @@ export interface AppContextValue {
   setShowAuthModal: (show: boolean) => void
   loginAsGuest: () => void
   translateWithSunbird: (text: string, source: string, target: string) => Promise<string>
+  systemStats: { farmersCount: number; reportsCount: number; districtsCount: number }
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -86,6 +87,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [favoriteCropIds, setFavoriteCropIds] = useState<string[]>(['matooke', 'maize', 'beans'])
+  const [systemStats, setSystemStats] = useState({ farmersCount: 0, reportsCount: 0, districtsCount: 0 })
 
   // ── Auth Sync ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -164,35 +166,65 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabase()
     if (!supabase) return
 
+    const fetchStats = async () => {
+      const { count: farmersCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
+      const { data: reportsData } = await supabase.from('pest_reports').select('location')
+      
+      const reportsList = reportsData || []
+      const uniqueDistricts = new Set(reportsList.map(r => r.location).filter(Boolean)).size || 0
+
+      setSystemStats({
+        farmersCount: farmersCount || 0,
+        reportsCount: reportsList.length,
+        districtsCount: uniqueDistricts
+      })
+    }
+
     // 1. Pest Alerts (Supabase Realtime)
     const fetchAlerts = async () => {
-      const { data, error } = await supabase
-        .from('pest_alerts')
+      // Fetch actual pest reports posted by registered farms
+      const { data: reportsData } = await supabase
+        .from('pest_reports')
         .select('*')
-        .order('report_count', { ascending: false })
-      
-      if (data && data.length > 0) {
-        const mappedAlerts: PestAlert[] = data.map((row: any) => {
+        .order('timestamp', { ascending: false })
+
+      // Fetch profiles to get actual farmer names
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+
+      const profileMap: Record<string, string> = {}
+      if (profilesData) {
+        profilesData.forEach((p: any) => {
+          profileMap[p.id] = p.full_name || 'Registered Farmer'
+        })
+      }
+
+      if (reportsData && reportsData.length > 0) {
+        const mappedAlerts: PestAlert[] = reportsData.map((row: any) => {
           const pt = pestTypes.find(p => p.id === row.pest_type_id)
+          const farmerName = profileMap[row.user_id] || 'Registered Farmer'
           return {
             id: row.id,
             pestName: pt ? pt.label : row.pest_type_id,
             emoji: '',
             affectedCrops: [row.crop_id],
             severity: row.severity || 'medium',
-            description: `Active sighting reported in ${row.location}. ${pt?.description || ''}`,
+            description: `Reported by ${farmerName} in ${row.location}. ${row.notes ? `"${row.notes}"` : pt?.description || ''}`,
             action: 'Apply recommended organic/chemical treatment and notify local agricultural officers.',
-            reportCount: row.report_count || 1,
-            lastReported: new Date(row.last_reported).toLocaleDateString()
+            reportCount: 1,
+            lastReported: new Date(row.timestamp || Date.now()).toLocaleDateString(),
+            reporterName: farmerName
           }
         })
         setPestAlerts(mappedAlerts)
       } else {
-        setPestAlerts(mockPestAlerts)
+        setPestAlerts([])
       }
     }
 
     fetchAlerts()
+    fetchStats()
 
     // Fetch existing pest reports to populate community counter
     const fetchReports = async () => {
@@ -213,8 +245,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     fetchReports()
 
     const alertsChannel = supabase
-      .channel('pest_alerts_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pest_alerts' }, fetchAlerts)
+      .channel('realtime_system_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pest_reports' }, () => {
+        fetchAlerts()
+        fetchStats()
+        fetchReports()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        fetchStats()
+      })
       .subscribe()
 
     // 2. Weather & Crops (Same logic as before)
@@ -513,7 +552,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider value={{
       user, authLoading, weather, crops, pestAlerts, farmStatus, pestReports, messages,
-      isLoading, isGeneratingAI, isConnected: !!user, showAuthModal,
+      isLoading, isGeneratingAI, isConnected: !!user, showAuthModal, systemStats,
       logout, submitPestReport, refreshWeather,
       getFavoriteCrops: () => crops.filter(c => favoriteCropIds.includes(c.id)),
       setFavoriteCrops: (cropIds: string[]) => setFavoriteCropIds(cropIds),

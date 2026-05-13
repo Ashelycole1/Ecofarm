@@ -49,6 +49,7 @@ export interface PestAlert {
   action: string
   reportCount: number
   lastReported: string
+  reporterName?: string
 }
 
 export interface FarmStatus {

@@ -23,7 +23,14 @@ function AlertCard({ alert }: { alert: PestAlert }) {
              <Bug className={`${s.text}`} size={24} />
           </div>
           <div>
-            <p className="font-black text-white text-base uppercase tracking-tight">{alert.pestName}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-black text-white text-base uppercase tracking-tight">{alert.pestName}</p>
+              {alert.reporterName && (
+                <span className="px-2 py-0.5 rounded bg-forest/40 text-wheat border border-forest/50 text-[9px] font-black tracking-wider">
+                  {alert.reporterName}
+                </span>
+              )}
+            </div>
             <p className="text-[10px] text-white/30 font-black uppercase tracking-widest mt-1">{alert.lastReported} · {alert.reportCount} reports</p>
           </div>
         </div>

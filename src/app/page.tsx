@@ -10,16 +10,11 @@ import VillageElderChat from '@/components/ai/VillageElderChat'
 import AIVisionModule from '@/components/ai/AIVisionModule'
 import AuthModal from '@/components/auth/AuthModal'
 import { useApp } from '@/context/AppContext'
-import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation, FlaskConical, Globe, Menu, X, Users, ClipboardList, MapPin } from 'lucide-react'
-import VillageSquare from '@/components/dashboard/VillageSquare'
+import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation, Menu, X, Users, ClipboardList, MapPin } from 'lucide-react'
 import MarketDashboard from '@/components/dashboard/MarketDashboard'
 import EcoTrack from '@/components/dashboard/EcoTrack'
 import LogisticsViewer from '@/components/dashboard/LogisticsViewer'
 import LogisticTrackingView from '@/components/dashboard/LogisticTrackingView'
-
-import SoilLogger from '@/components/dashboard/SoilLogger'
-import MarketPriceBoard from '@/components/dashboard/MarketPriceBoard'
-import CropInsightEngine from '@/components/ai/CropInsightEngine'
 
 // ─── Sidebar nav items ────────────────────────────────────────────────────────
 const navTabs = [
@@ -29,8 +24,6 @@ const navTabs = [
   { id: 'calendar', label: 'Planting', Icon: Leaf },
   { id: 'chat',     label: 'Chat',     Icon: MessageCircle },
   { id: 'alerts',   label: 'Alerts',   Icon: Bell },
-  { id: 'community', label: 'Village',  Icon: Globe },
-  { id: 'soil',     label: 'Soil',     Icon: FlaskConical },
   { id: 'track',    label: 'Track',    Icon: Navigation },
 ]
 
@@ -41,8 +34,6 @@ const tabTitles: Record<string, string> = {
   calendar: 'Planting',
   chat:     'Village Elder',
   alerts:   'Pest Alerts',
-  community: 'Digital Village Square',
-  soil:     'Soil Logger',
   track:    'Eco-Track',
 }
 
@@ -187,7 +178,7 @@ function Sidebar({
 
 // ─── Home tab ─────────────────────────────────────────────────────────────────
 function HomeTab() {
-  const { weather, user } = useApp()
+  const { weather, user, systemStats } = useApp()
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -225,9 +216,9 @@ function HomeTab() {
           <div className="p-8 rounded-[32px] bg-white/[0.02] border border-white/5 shadow-xl">
             <p className="text-[10px] text-white/20 uppercase tracking-[0.2em] mb-6 font-black">Community This Week</p>
             <div className="grid grid-cols-3 gap-6 text-center">
-              <CommunityStat value="247" label="Farmers" Icon={Users} color="text-safe" />
-              <CommunityStat value="93"  label="Reports" Icon={ClipboardList} color="text-wheat" />
-              <CommunityStat value="12"  label="Districts" Icon={MapPin} color="text-alert" />
+              <CommunityStat value={String(systemStats?.farmersCount || 0)} label="Farmers" Icon={Users} color="text-safe" />
+              <CommunityStat value={String(systemStats?.reportsCount || 0)}  label="Reports" Icon={ClipboardList} color="text-wheat" />
+              <CommunityStat value={String(systemStats?.districtsCount || 0)}  label="Districts" Icon={MapPin} color="text-alert" />
             </div>
           </div>
         </div>
@@ -261,13 +252,6 @@ function TabContent({ tab }: { tab: string }) {
 
   switch (tab) {
     case 'calendar': return <PlantingCalendar />
-    case 'soil': return (
-      <div className="space-y-5 animate-fade-in">
-        <SoilLogger />
-        <CropInsightEngine />
-        <MarketPriceBoard />
-      </div>
-    )
     case 'chat': return <VillageElderChat />
     case 'alerts': return (
       <div className="space-y-8 animate-fade-in">
@@ -279,7 +263,6 @@ function TabContent({ tab }: { tab: string }) {
         </div>
       </div>
     )
-    case 'community': return <VillageSquare />
     default: return <HomeTab />
   }
 }
