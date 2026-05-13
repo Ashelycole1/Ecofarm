@@ -30,7 +30,7 @@ export default function AIVisionModule() {
       const result = await analyzeCropImage(selectedImage, 'General')
       setAnalysisResult(result)
     } catch (err) {
-      setError('Could not analyze image. Please try again.')
+      setError('Could not complete image analysis. Please try again.')
       console.error(err)
     }
   }
@@ -46,20 +46,20 @@ export default function AIVisionModule() {
   }
 
   return (
-    <div className="modern-card overflow-hidden">
+    <div className="mh-card bg-white overflow-hidden border border-border-soft">
       {/* Header */}
-      <div className={`p-6 transition-colors duration-500 ${
+      <div className={`p-6 transition-colors duration-500 border-b border-border-soft ${
         analysisResult?.visual_status === 'Red' ? 'bg-alert/10' : 
         analysisResult?.visual_status === 'Yellow' ? 'bg-warning/10' : 
-        'bg-eco-sidebar'
+        'bg-bone-low'
       }`}>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center">
-            <Camera className="text-eco-gold" size={24} />
+          <div className="w-12 h-12 rounded-2xl bg-white shadow-inner border border-border-soft flex items-center justify-center">
+            <Camera className="text-ochre" size={24} />
           </div>
           <div>
-            <h3 className="text-lg font-display font-black text-eco-dark uppercase tracking-tight">Visual Pathologist</h3>
-            <p className="text-[10px] text-black/40 font-black uppercase tracking-[0.2em]">
+            <h3 className="text-xl font-display font-bold text-ink tracking-tight leading-tight">Visual Pathologist</h3>
+            <p className="font-body text-[10px] text-ink-muted font-bold uppercase tracking-[0.2em] mt-0.5">
               {analysisResult ? analysisResult.identification : 'Identify Pests & Disease'}
             </p>
           </div>
@@ -70,24 +70,25 @@ export default function AIVisionModule() {
         {!analysisResult ? (
           <div className="space-y-4">
             {previewUrl ? (
-              <div className="relative aspect-video w-full rounded-3xl overflow-hidden border border-black/5 group shadow-inner">
+              <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-border-soft group shadow-inner bg-bone-low">
                 <Image src={previewUrl} alt="Preview" fill className="object-cover" />
                 <button 
                   onClick={() => { setSelectedImage(null); setPreviewUrl(null); }}
-                  className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-eco-dark shadow-lg active:scale-90 transition-transform"
+                  className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-md border border-border-soft flex items-center justify-center text-ink shadow-sm hover:bg-white transition-all active:scale-95"
+                  title="Remove Image"
                 >
-                  <X size={20} />
+                  <X size={16} />
                 </button>
               </div>
             ) : (
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="aspect-video w-full rounded-[32px] border-2 border-dashed border-black/5 bg-eco-bg flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-white transition-all shadow-inner"
+                className="aspect-video w-full rounded-2xl border-2 border-dashed border-border-strong bg-bone-low flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white transition-all shadow-inner"
               >
-                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-eco-gold shadow-sm">
-                  <Upload size={28} />
+                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-ochre border border-border-soft shadow-sm">
+                  <Upload size={24} />
                 </div>
-                <p className="text-[11px] text-black/30 font-black uppercase tracking-[0.15em]">Tap to upload plant photo</p>
+                <p className="font-body text-[11px] text-ink-muted font-bold uppercase tracking-[0.15em]">Tap to upload plant photo</p>
               </div>
             )}
 
@@ -100,21 +101,21 @@ export default function AIVisionModule() {
             />
 
             {error && (
-              <div className="flex items-center gap-2 p-4 bg-alert/10 border border-alert/20 rounded-2xl text-alert text-[11px] font-bold">
-                <AlertCircle size={16} />
-                {error}
+              <div className="flex items-center gap-2 p-3.5 bg-alert/10 border border-alert/20 rounded-xl font-body text-alert text-xs font-semibold">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{error}</span>
               </div>
             )}
 
             <button
               onClick={handleAnalyze}
               disabled={!selectedImage || isGeneratingAI}
-              className="w-full py-5 bg-eco-dark text-white rounded-[24px] font-black uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 disabled:opacity-50 transition-all active:scale-[0.98] shadow-lg hover:brightness-110"
+              className="btn-primary w-full py-4 text-xs font-bold uppercase tracking-widest justify-center shadow-md disabled:opacity-40 transition-all active:scale-[0.98]"
             >
-              {isGeneratingAI ? <Loader2 className="animate-spin" size={20} /> : (
+              {isGeneratingAI ? <Loader2 className="animate-spin" size={18} /> : (
                 <>
-                  <Camera size={18} />
-                  Analyze Plant Health
+                  <Camera size={16} />
+                  <span>Analyze Plant Health</span>
                 </>
               )}
             </button>
@@ -122,39 +123,39 @@ export default function AIVisionModule() {
         ) : (
           <div className="space-y-6 animate-fade-in">
             {/* Status & Audio */}
-            <div className={`p-8 rounded-[40px] text-center space-y-5 shadow-sm transition-colors duration-500 ${
+            <div className={`p-8 rounded-2xl text-center space-y-4 border border-border-soft shadow-inner transition-colors duration-500 ${
               analysisResult.visual_status === 'Red' ? 'bg-alert/10' : 
               analysisResult.visual_status === 'Yellow' ? 'bg-warning/10' : 
-              'bg-eco-sidebar'
+              'bg-bone-low'
             }`}>
-              <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center mx-auto shadow-sm">
-                <span className="text-5xl">{analysisResult.visual_status === 'Red' ? '⚠️' : analysisResult.visual_status === 'Yellow' ? '🔍' : '✅'}</span>
+              <div className="w-20 h-20 rounded-2xl bg-white border border-border-soft flex items-center justify-center mx-auto shadow-sm">
+                <span className="text-4xl">{analysisResult.visual_status === 'Red' ? '⚠️' : analysisResult.visual_status === 'Yellow' ? '🔍' : '✅'}</span>
               </div>
-              <h4 className="text-2xl font-display font-black text-eco-dark uppercase tracking-tight leading-none">
+              <h4 className="text-2xl font-display font-bold text-ink tracking-tight leading-tight">
                 {analysisResult.identification}
               </h4>
               <button 
-                onClick={() => speakText(analysisResult.audio_explanation)}
-                className="inline-flex items-center gap-3 px-8 py-4 bg-white border border-black/5 rounded-full text-eco-dark text-[11px] font-black uppercase tracking-widest hover:bg-eco-sidebar transition-all shadow-sm active:scale-95"
+                onClick={() => speakText(analysisResult.audio_explanation || "Follow the recovery steps below.")}
+                className="inline-flex items-center gap-2.5 px-6 py-3 bg-white border border-border-soft rounded-xl font-body text-ink font-bold text-xs shadow-sm hover:bg-bone-low transition-all active:scale-95"
               >
-                <Play size={18} fill="currentColor" className="text-eco-gold" />
-                Listen to Recovery Plan
+                <Play size={14} fill="currentColor" className="text-ochre" />
+                <span>Listen to Recovery Plan</span>
               </button>
             </div>
 
             {/* Visual Steps */}
-            <div className="space-y-4">
-              <p className="text-[10px] font-black text-black/30 uppercase tracking-widest ml-1">Expert Recovery Steps</p>
+            <div className="space-y-3">
+              <p className="font-body text-[10px] font-bold text-ink-muted uppercase tracking-widest ml-1">Expert Recovery Steps</p>
               <div className="grid grid-cols-3 gap-3">
-                {analysisResult.visual_steps.map((step: any, idx: number) => (
+                {Array.isArray(analysisResult.visual_steps) && analysisResult.visual_steps.map((step: any, idx: number) => (
                   <button 
                     key={idx}
-                    onClick={() => speakText(step.step_description)}
-                    className="flex flex-col items-center gap-3 p-5 modern-tile hover:scale-[1.02] transition-transform"
+                    onClick={() => speakText(step.step_description || '')}
+                    className="flex flex-col items-center gap-2.5 p-4 bg-bone-low border border-border-soft rounded-xl hover:bg-white hover:border-border-strong transition-all shadow-sm group"
                   >
-                    <span className="text-5xl">{step.step_icon}</span>
-                    <span className="text-[9px] font-black text-eco-dark/60 uppercase text-center leading-tight tracking-tight">
-                      {step.step_description}
+                    <span className="text-3xl group-hover:scale-110 transition-transform">{step.step_icon || '🌱'}</span>
+                    <span className="font-body text-[10px] font-semibold text-ink text-center leading-tight tracking-tight">
+                      {step.step_description || 'Care step'}
                     </span>
                   </button>
                 ))}
@@ -163,7 +164,7 @@ export default function AIVisionModule() {
 
             <button 
               onClick={() => { setAnalysisResult(null); setSelectedImage(null); setPreviewUrl(null); }}
-              className="w-full py-4 bg-black/5 border border-black/5 rounded-[20px] text-black/40 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black/10 transition-colors"
+              className="w-full py-3.5 bg-bone-low border border-border-soft rounded-xl font-body text-ink-muted text-xs font-bold uppercase tracking-wider hover:bg-white hover:text-ink transition-colors shadow-sm"
             >
               Scan Another Image
             </button>
