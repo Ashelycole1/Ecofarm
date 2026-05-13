@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useApp } from '@/context/AppContext'
-import { Camera, Upload, X, AlertCircle, Play, CheckCircle2, ChevronRight, Loader2, Info, Sparkles } from 'lucide-react'
+import { Camera, Upload, X, AlertCircle, Play, CheckCircle2, ChevronRight, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 
 export default function AIVisionModule() {
@@ -46,35 +46,35 @@ export default function AIVisionModule() {
   }
 
   return (
-    <div className="nature-card overflow-hidden rounded-[32px] border border-white/5 bg-white/[0.02] shadow-2xl">
+    <div className="modern-card overflow-hidden">
       {/* Header */}
-      <div className={`p-6 transition-colors duration-500 border-b border-white/5 ${
+      <div className={`p-6 transition-colors duration-500 ${
         analysisResult?.visual_status === 'Red' ? 'bg-alert/10' : 
         analysisResult?.visual_status === 'Yellow' ? 'bg-warning/10' : 
-        'bg-white/[0.03]'
+        'bg-eco-sidebar'
       }`}>
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 shadow-xl">
-            <Camera className="text-wheat" size={24} />
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center">
+            <Camera className="text-eco-gold" size={24} />
           </div>
           <div>
-            <h3 className="text-sm font-black text-white uppercase tracking-tight">Visual Pathologist</h3>
-            <p className="text-[10px] text-white/30 font-black uppercase tracking-widest mt-1">
+            <h3 className="text-lg font-display font-black text-eco-dark uppercase tracking-tight">Visual Pathologist</h3>
+            <p className="text-[10px] text-black/40 font-black uppercase tracking-[0.2em]">
               {analysisResult ? analysisResult.identification : 'Identify Pests & Disease'}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="p-8 space-y-8">
+      <div className="p-6 space-y-6">
         {!analysisResult ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {previewUrl ? (
-              <div className="relative aspect-video w-full rounded-[24px] overflow-hidden border border-white/10 shadow-2xl group">
+              <div className="relative aspect-video w-full rounded-3xl overflow-hidden border border-black/5 group shadow-inner">
                 <Image src={previewUrl} alt="Preview" fill className="object-cover" />
                 <button 
                   onClick={() => { setSelectedImage(null); setPreviewUrl(null); }}
-                  className="absolute top-4 right-4 w-10 h-10 rounded-2xl bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-black transition-all"
+                  className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-eco-dark shadow-lg active:scale-90 transition-transform"
                 >
                   <X size={20} />
                 </button>
@@ -82,12 +82,12 @@ export default function AIVisionModule() {
             ) : (
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="aspect-video w-full rounded-[24px] border border-dashed border-white/10 flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-white/5 transition-all bg-white/[0.01]"
+                className="aspect-video w-full rounded-[32px] border-2 border-dashed border-black/5 bg-eco-bg flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-white transition-all shadow-inner"
               >
-                <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-white/20 border border-white/10">
+                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-eco-gold shadow-sm">
                   <Upload size={28} />
                 </div>
-                <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.2em]">Tap to upload photo</p>
+                <p className="text-[11px] text-black/30 font-black uppercase tracking-[0.15em]">Tap to upload plant photo</p>
               </div>
             )}
 
@@ -100,7 +100,7 @@ export default function AIVisionModule() {
             />
 
             {error && (
-              <div className="flex items-center gap-3 p-4 bg-alert/5 border border-alert/20 rounded-2xl text-alert text-[10px] font-black uppercase tracking-widest">
+              <div className="flex items-center gap-2 p-4 bg-alert/10 border border-alert/20 rounded-2xl text-alert text-[11px] font-bold">
                 <AlertCircle size={16} />
                 {error}
               </div>
@@ -109,56 +109,51 @@ export default function AIVisionModule() {
             <button
               onClick={handleAnalyze}
               disabled={!selectedImage || isGeneratingAI}
-              className="w-full py-5 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-2xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-10"
+              className="w-full py-5 bg-eco-dark text-white rounded-[24px] font-black uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 disabled:opacity-50 transition-all active:scale-[0.98] shadow-lg hover:brightness-110"
             >
               {isGeneratingAI ? <Loader2 className="animate-spin" size={20} /> : (
                 <>
-                  <Sparkles size={18} />
+                  <Camera size={18} />
                   Analyze Plant Health
                 </>
               )}
             </button>
           </div>
         ) : (
-          <div className="space-y-8 animate-fade-in">
+          <div className="space-y-6 animate-fade-in">
             {/* Status & Audio */}
-            <div className={`p-8 rounded-[32px] text-center space-y-6 shadow-2xl transition-colors duration-500 border border-white/10 ${
+            <div className={`p-8 rounded-[40px] text-center space-y-5 shadow-sm transition-colors duration-500 ${
               analysisResult.visual_status === 'Red' ? 'bg-alert/10' : 
               analysisResult.visual_status === 'Yellow' ? 'bg-warning/10' : 
-              'bg-safe/10'
+              'bg-eco-sidebar'
             }`}>
-              <div className="w-20 h-20 rounded-[24px] bg-white/5 flex items-center justify-center mx-auto mb-2 border border-white/10 shadow-2xl">
-                 {analysisResult.visual_status === 'Red' ? <AlertCircle size={40} className="text-alert" /> : analysisResult.visual_status === 'Yellow' ? <Info size={40} className="text-warning" /> : <CheckCircle2 size={40} className="text-safe" />}
+              <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center mx-auto shadow-sm">
+                <span className="text-5xl">{analysisResult.visual_status === 'Red' ? '⚠️' : analysisResult.visual_status === 'Yellow' ? '🔍' : '✅'}</span>
               </div>
-              <div className="space-y-2">
-                <h4 className="text-2xl font-black text-white uppercase tracking-tight">
-                  {analysisResult.identification}
-                </h4>
-                <p className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em]">Condition Identified</p>
-              </div>
+              <h4 className="text-2xl font-display font-black text-eco-dark uppercase tracking-tight leading-none">
+                {analysisResult.identification}
+              </h4>
               <button 
                 onClick={() => speakText(analysisResult.audio_explanation)}
-                className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-3 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-white border border-black/5 rounded-full text-eco-dark text-[11px] font-black uppercase tracking-widest hover:bg-eco-sidebar transition-all shadow-sm active:scale-95"
               >
-                <Play size={16} fill="currentColor" />
+                <Play size={18} fill="currentColor" className="text-eco-gold" />
                 Listen to Recovery Plan
               </button>
             </div>
 
             {/* Visual Steps */}
             <div className="space-y-4">
-              <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-2">Recovery Protocol</p>
+              <p className="text-[10px] font-black text-black/30 uppercase tracking-widest ml-1">Expert Recovery Steps</p>
               <div className="grid grid-cols-3 gap-3">
                 {analysisResult.visual_steps.map((step: any, idx: number) => (
                   <button 
                     key={idx}
                     onClick={() => speakText(step.step_description)}
-                    className="flex flex-col items-center gap-4 p-5 bg-white/[0.02] rounded-[24px] border border-white/5 hover:bg-white/5 transition-all group"
+                    className="flex flex-col items-center gap-3 p-5 modern-tile hover:scale-[1.02] transition-transform"
                   >
-                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 shadow-xl group-hover:scale-110 transition-transform">
-                       <Sparkles size={20} className="text-wheat/40" />
-                    </div>
-                    <span className="text-[9px] font-black text-white/40 uppercase text-center leading-tight tracking-widest">
+                    <span className="text-5xl">{step.step_icon}</span>
+                    <span className="text-[9px] font-black text-eco-dark/60 uppercase text-center leading-tight tracking-tight">
                       {step.step_description}
                     </span>
                   </button>
@@ -168,7 +163,7 @@ export default function AIVisionModule() {
 
             <button 
               onClick={() => { setAnalysisResult(null); setSelectedImage(null); setPreviewUrl(null); }}
-              className="w-full py-4 bg-white/5 border border-white/5 rounded-2xl text-white/20 text-[10px] font-black uppercase tracking-[0.2em] hover:text-white transition-colors"
+              className="w-full py-4 bg-black/5 border border-black/5 rounded-[20px] text-black/40 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black/10 transition-colors"
             >
               Scan Another Image
             </button>

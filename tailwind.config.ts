@@ -43,6 +43,15 @@ const config: Config = {
           light:   'rgba(61, 138, 129, 0.22)',
           dark:    'rgba(13, 36, 34,  0.60)',
         },
+        // EcoModern Palette
+        'eco': {
+          'sidebar': '#E7F2F0',
+          'bg':      '#FDF8F4',
+          'gold':    '#C6A552',
+          'tile':    '#DFF1ED',
+          'dark':    '#2D3436',
+          'pill':    '#E0EAE8',
+        }
       },
       borderRadius: {
         'leaf':    '20px 4px 20px 4px',
