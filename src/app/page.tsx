@@ -19,21 +19,23 @@ import CommunityFeed from '@/components/dashboard/CommunityFeed'
 
 // ─── Sidebar nav items ────────────────────────────────────────────────────────
 const navTabs = [
-  { id: 'home',     label: 'Home',     Icon: Home },
-  { id: 'market',   label: 'Market',   Icon: TrendingUp },
-  { id: 'calendar', label: 'Planting', Icon: Leaf },
-  { id: 'chat',     label: 'Chat',     Icon: MessageCircle },
-  { id: 'alerts',   label: 'Alerts',   Icon: Bell },
-  { id: 'track',    label: 'Track',    Icon: Navigation },
+  { id: 'home',      label: 'Home',      Icon: Home },
+  { id: 'market',    label: 'Market',    Icon: TrendingUp },
+  { id: 'calendar',  label: 'Planting',  Icon: Leaf },
+  { id: 'community', label: 'Community', Icon: Users },
+  { id: 'chat',      label: 'Chat',      Icon: MessageCircle },
+  { id: 'alerts',    label: 'Alerts',    Icon: Bell },
+  { id: 'track',     label: 'Track',     Icon: Navigation },
 ]
 
 const tabTitles: Record<string, string> = {
-  home:     'EcoFarm',
-  market:   'Market',
-  calendar: 'Planting',
-  chat:     'Village Elder',
-  alerts:   'Pest Alerts',
-  track:    'Eco-Track',
+  home:      'EcoFarm',
+  market:    'Market',
+  calendar:  'Planting',
+  community: 'Farmer Community',
+  chat:      'Village Elder',
+  alerts:    'Pest Alerts',
+  track:     'Eco-Track',
 }
 
 // ─── Top app bar ──────────────────────────────────────────────────────────────
