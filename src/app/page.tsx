@@ -278,27 +278,27 @@ function TrackTab() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
-      <div className="flex p-1 bg-black/5 rounded-2xl border border-black/5 max-w-md mx-auto shadow-inner">
+      <div className="flex p-1.5 bg-bone-low rounded-2xl border border-border-soft max-w-md mx-auto shadow-inner">
         <button
           onClick={() => setView('request')}
-          className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-            view === 'request' ? 'bg-eco-sidebar text-eco-dark shadow-sm' : 'text-black/30'
+          className={`flex-1 py-3 rounded-xl font-body text-[10px] font-bold uppercase tracking-widest transition-all ${
+            view === 'request' ? 'bg-white text-ink shadow-sm' : 'text-ink-faint hover:text-ink'
           }`}
         >
           Book Truck
         </button>
         <button
           onClick={() => setView('buyer')}
-          className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-            view === 'buyer' ? 'bg-eco-sidebar text-eco-dark shadow-sm' : 'text-black/30'
+          className={`flex-1 py-3 rounded-xl font-body text-[10px] font-bold uppercase tracking-widest transition-all ${
+            view === 'buyer' ? 'bg-white text-ink shadow-sm' : 'text-ink-faint hover:text-ink'
           }`}
         >
           Track Load
         </button>
         <button
           onClick={() => setView('driver')}
-          className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-            view === 'driver' ? 'bg-eco-sidebar text-eco-dark shadow-sm' : 'text-black/30'
+          className={`flex-1 py-3 rounded-xl font-body text-[10px] font-bold uppercase tracking-widest transition-all ${
+            view === 'driver' ? 'bg-white text-ink shadow-sm' : 'text-ink-faint hover:text-ink'
           }`}
         >
           Driver Mode
@@ -312,24 +312,24 @@ function TrackTab() {
       ) : (
         <div className="space-y-4">
           {!activeId ? (
-            <div className="p-12 rounded-[40px] text-center space-y-6 modern-card">
-              <div className="w-20 h-20 bg-eco-sidebar rounded-3xl flex items-center justify-center mx-auto mb-2 border border-black/5">
-                <Navigation className="text-eco-gold" size={40} />
+            <div className="p-10 md:p-12 text-center space-y-6 mh-card bg-white">
+              <div className="w-20 h-20 bg-bone-low rounded-3xl flex items-center justify-center mx-auto mb-2 border border-border-soft shadow-inner">
+                <Navigation className="text-ochre-light animate-pulse" size={40} />
               </div>
               <div className="space-y-2">
-                <h3 className="text-eco-dark font-black text-xl uppercase tracking-tight">Enter Delivery ID</h3>
-                <p className="text-black/30 text-xs font-medium">Track your agricultural logistics in real-time.</p>
+                <h3 className="font-display font-bold text-ink text-2xl tracking-tight leading-tight">Enter Delivery ID</h3>
+                <p className="font-body text-ink-muted text-xs font-medium">Track your agricultural logistics in real-time.</p>
               </div>
               <input
                 type="text"
                 placeholder="TRK-XXXX-XXXX"
-                className="w-full bg-eco-bg border border-black/5 rounded-2xl px-6 py-4 text-eco-dark text-center focus:border-eco-gold/30 outline-none text-sm font-mono tracking-widest shadow-inner"
+                className="w-full bg-bone-low border border-border-soft rounded-xl px-6 py-4 text-ink text-center focus:border-forest outline-none font-body text-sm font-semibold tracking-widest shadow-inner transition-colors"
                 value={trackId}
                 onChange={(e) => setTrackId(e.target.value)}
               />
               <button
                 onClick={() => setActiveId(trackId)}
-                className="w-full py-4 rounded-2xl bg-eco-dark text-white font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 disabled:opacity-20"
+                className="btn-primary w-full py-4 text-xs font-bold uppercase tracking-widest justify-center shadow-md transition-all active:scale-95 disabled:opacity-40"
                 disabled={!trackId}
               >
                 Track Live Movement
@@ -340,7 +340,7 @@ function TrackTab() {
               <LogisticsViewer tripId={activeId} />
               <button
                 onClick={() => setActiveId('')}
-                className="w-full py-2 text-black/30 text-[10px] font-black uppercase tracking-widest hover:text-black transition-colors"
+                className="w-full py-2 font-body text-ink-faint text-[10px] font-bold uppercase tracking-widest hover:text-ink transition-colors"
               >
                 ← Change Trip ID
               </button>
@@ -355,17 +355,17 @@ function TrackTab() {
 function AuthGate({ tabName }: { tabName: string }) {
   const { setShowAuthModal } = useApp()
   return (
-    <div className="p-12 text-center animate-fade-in mt-10 rounded-[40px] modern-card">
-      <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 bg-eco-sidebar border border-black/5">
-        <Lock className="text-eco-gold" size={32} />
+    <div className="p-10 md:p-12 text-center animate-fade-in mt-10 mh-card bg-white">
+      <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 bg-bone-low border border-border-soft shadow-inner">
+        <Lock className="text-ochre-light" size={32} />
       </div>
-      <h3 className="font-display font-black text-eco-dark text-2xl mb-2 uppercase tracking-tight">Protected Feature</h3>
-      <p className="text-xs text-black/30 mb-8 leading-relaxed max-w-[240px] mx-auto font-medium">
+      <h3 className="font-display font-bold text-ink text-3xl mb-2 tracking-tight leading-tight">Protected Feature</h3>
+      <p className="font-body text-xs text-ink-muted mb-8 leading-relaxed max-w-[260px] mx-auto font-medium">
         Please sign in to access your personalized {tabName} data and AI advice.
       </p>
       <button
         onClick={() => setShowAuthModal(true)}
-        className="w-full py-4 rounded-2xl bg-eco-dark text-white font-black text-xs uppercase tracking-widest shadow-lg hover:scale-[1.02] transition-all active:scale-95"
+        className="btn-primary w-full py-3.5 text-xs font-bold uppercase tracking-widest justify-center shadow-md hover:scale-[1.02] transition-all active:scale-95"
       >
         Sign In to Continue
       </button>
