@@ -9,7 +9,7 @@ interface AuthModalProps {
   onClose: () => void
 }
 
-type AuthMode = 'signin' | 'signup' | 'verify'
+type AuthMode = 'signin' | 'signup' | 'verify' | 'verify_signin'
 type UserRole = 'farmer' | 'buyer' | 'delivery'
 
 export default function AuthModal({ onClose }: AuthModalProps) {
@@ -28,6 +28,8 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [signInFactorType, setSignInFactorType] = useState<'first' | 'second' | null>(null)
+  const [signInStrategy, setSignInStrategy] = useState<string>('email_code')
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -146,6 +148,33 @@ export default function AuthModal({ onClose }: AuthModalProps) {
       } else {
         setError(errorMessage)
       }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerifySignIn = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isSignInLoaded) return
+    setLoading(true)
+    setError('')
+    try {
+      let result;
+      if (signInFactorType === 'second') {
+        result = await signIn.attemptSecondFactor({ strategy: signInStrategy as any, code })
+      } else {
+        result = await signIn.attemptFirstFactor({ strategy: signInStrategy as any, code })
+      }
+
+      if (result.status === 'complete' || result.createdSessionId) {
+        await setSignInActive({ session: result.createdSessionId })
+        onClose()
+        window.location.reload()
+      } else {
+        setError(`Verification incomplete (Status: ${result.status}).`)
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Invalid verification code.')
     } finally {
       setLoading(false)
     }
@@ -372,6 +401,38 @@ export default function AuthModal({ onClose }: AuthModalProps) {
                 className="w-full bg-forest hover:bg-forest-light disabled:opacity-50 disabled:hover:bg-forest text-white font-black uppercase tracking-widest rounded-2xl py-4 transition-all shadow-[0_0_20px_rgba(25,116,59,0.3)] mt-6 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify Account'}
+              </button>
+            </form>
+          )}
+
+          {mode === 'verify_signin' && (
+            <form onSubmit={handleVerifySignIn} className="space-y-4">
+              <div className="text-center mb-6 space-y-2">
+                <p className="text-white/80 text-sm font-medium">
+                  Two-Factor / Extra Security Verification
+                </p>
+                <p className="text-white/50 text-xs">
+                  Please enter the authorization code sent to your registered contact.
+                </p>
+              </div>
+
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="Code"
+                  className="w-full bg-white/5 border border-white/10 text-white rounded-2xl py-4 px-4 outline-none focus:border-forest/50 focus:bg-white/10 transition-all placeholder:text-white/20 text-center tracking-[0.5em] font-mono text-lg"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !code}
+                className="w-full bg-forest hover:bg-forest-light disabled:opacity-50 disabled:hover:bg-forest text-white font-black uppercase tracking-widest rounded-2xl py-4 transition-all shadow-[0_0_20px_rgba(25,116,59,0.3)] mt-6 flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirm Sign In'}
               </button>
             </form>
           )}
