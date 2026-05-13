@@ -1,43 +1,52 @@
 'use client'
 
-import { useFirebase } from '@/context/FirebaseContext'
+import { useApp } from '@/context/AppContext'
+import { Bug, AlertTriangle, Info, AlertCircle, Sparkles } from 'lucide-react'
 import type { PestAlert } from '@/lib/mockData'
 
 const severityStyles = {
-  low:    { border: 'border-safe/30',  bg: 'bg-safe/10',   text: 'text-safe',   label: 'LOW'    },
-  medium: { border: 'border-wheat/40', bg: 'bg-wheat/10',  text: 'text-wheat',  label: 'MEDIUM' },
-  high:   { border: 'border-alert/40', bg: 'bg-alert/10',  text: 'text-alert',  label: 'HIGH'   },
+  low:    { border: 'border-safe/30',  bg: 'bg-safe/10',   text: 'text-safe',   label: 'LOW',    Icon: Info },
+  medium: { border: 'border-wheat/40', bg: 'bg-wheat/10',  text: 'text-wheat',  label: 'MEDIUM', Icon: AlertTriangle },
+  high:   { border: 'border-alert/40', bg: 'bg-alert/10',  text: 'text-alert',  label: 'HIGH',   Icon: AlertCircle },
 }
 
 function AlertCard({ alert }: { alert: PestAlert }) {
   const s = severityStyles[alert.severity]
   return (
     <div
-      className={`rounded-2xl p-4 space-y-2.5 border ${s.border} ${s.bg}`}
-      style={{ backdropFilter: 'blur(12px)', background: undefined }}
+      className={`rounded-[24px] p-6 space-y-4 border ${s.border} ${s.bg} shadow-xl hover:translate-y-[-4px] transition-all duration-300`}
+      style={{ backdropFilter: 'blur(12px)' }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <span className="text-2xl">{alert.emoji}</span>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl">
+             <Bug className={`${s.text}`} size={24} />
+          </div>
           <div>
-            <p className="font-bold text-white text-sm leading-tight">{alert.pestName}</p>
-            <p className="text-[10px] text-white/35 mt-0.5">{alert.lastReported} · {alert.reportCount} reports</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-black text-white text-base uppercase tracking-tight">{alert.pestName}</p>
+              {alert.reporterName && (
+                <span className="px-2 py-0.5 rounded bg-forest/40 text-wheat border border-forest/50 text-[9px] font-black tracking-wider">
+                  {alert.reporterName}
+                </span>
+              )}
+            </div>
+            <p className="text-[10px] text-white/30 font-black uppercase tracking-widest mt-1">{alert.lastReported} · {alert.reportCount} reports</p>
           </div>
         </div>
-        <span className={`badge ${s.bg} border ${s.border} ${s.text} shrink-0`}>{s.label}</span>
+        <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${s.bg} border ${s.border} ${s.text} shrink-0`}>{s.label}</span>
       </div>
 
-      <p className="text-xs text-white/65 leading-relaxed">{alert.description}</p>
+      <p className="text-xs text-white/60 leading-relaxed font-medium">{alert.description}</p>
 
-      <div className="rounded-xl px-3 py-2" style={{ background: 'rgba(0,0,0,0.25)' }}>
-        <p className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Recommended Action</p>
-        <p className="text-xs text-white/80 leading-relaxed">{alert.action}</p>
+      <div className="rounded-2xl px-4 py-3 bg-black/40 border border-white/5">
+        <p className="text-[9px] text-white/20 font-black uppercase tracking-widest mb-1.5">Recovery Action</p>
+        <p className="text-xs text-white/80 leading-relaxed font-medium italic">&quot;{alert.action}&quot;</p>
       </div>
 
-      <div className="flex flex-wrap gap-1 pt-0.5">
+      <div className="flex flex-wrap gap-2 pt-1">
         {alert.affectedCrops.map(crop => (
-          <span key={crop} className="text-[10px] rounded-full px-2 py-0.5 text-white/45"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
+          <span key={crop} className="text-[9px] font-black uppercase tracking-[0.15em] rounded-full px-3 py-1 text-white/30 bg-white/5 border border-white/5">
             {crop}
           </span>
         ))}
@@ -47,7 +56,7 @@ function AlertCard({ alert }: { alert: PestAlert }) {
 }
 
 export default function PestAlertsPanel() {
-  const { pestAlerts, isLoading } = useFirebase()
+  const { pestAlerts, isLoading } = useApp()
 
   const high   = pestAlerts.filter(a => a.severity === 'high')
   const medium = pestAlerts.filter(a => a.severity === 'medium')
@@ -55,44 +64,52 @@ export default function PestAlertsPanel() {
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
-        {[1,2,3].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}
+      <div className="space-y-4">
+        {[1,2,3].map(i => <div key={i} className="skeleton h-32 rounded-[24px]" />)}
       </div>
     )
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="font-display font-bold text-white text-lg high-contrast-text">Pest Alerts</h2>
-          <p className="text-xs text-white/40">Active in Uganda · Updated hourly</p>
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex items-end justify-between px-2">
+        <div className="space-y-1">
+          <h2 className="font-display font-black text-2xl text-white uppercase tracking-tight">Active Alerts</h2>
+          <p className="text-[10px] text-white/30 font-black uppercase tracking-widest">Regional Intelligence · Updated hourly</p>
         </div>
-        <div className="flex items-center gap-1.5">
-          {high.length > 0 && (
-            <span className="badge bg-alert/15 border border-alert/40 text-alert">🔴 {high.length} high</span>
-          )}
-        </div>
+        {high.length > 0 && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-alert/10 border border-alert/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-alert animate-pulse" />
+            <span className="text-[9px] font-black text-alert uppercase tracking-widest">{high.length} CRITICAL</span>
+          </div>
+        )}
       </div>
 
-      {high.length > 0 && (
-        <Section title="⚡ Urgent" alerts={high} />
-      )}
-      {medium.length > 0 && (
-        <Section title="⚠️ Watch" alerts={medium} />
-      )}
-      {low.length > 0 && (
-        <Section title="ℹ️ Monitor" alerts={low} />
-      )}
+      <div className="space-y-10">
+        {high.length > 0 && (
+          <Section Icon={AlertCircle} color="text-alert" title="Urgent Protocol" alerts={high} />
+        )}
+        {medium.length > 0 && (
+          <Section Icon={AlertTriangle} color="text-warning" title="Observation" alerts={medium} />
+        )}
+        {low.length > 0 && (
+          <Section Icon={Info} color="text-safe" title="Monitoring" alerts={low} />
+        )}
+      </div>
     </div>
   )
 }
 
-function Section({ title, alerts }: { title: string; alerts: PestAlert[] }) {
+function Section({ title, alerts, Icon, color }: { title: string; alerts: PestAlert[]; Icon: any; color: string }) {
   return (
-    <div className="space-y-2">
-      <p className="text-[11px] font-bold text-white/35 uppercase tracking-widest pl-1">{title}</p>
-      {alerts.map(a => <AlertCard key={a.id} alert={a} />)}
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 px-2">
+        <Icon size={14} className={color} />
+        <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">{title}</p>
+      </div>
+      <div className="space-y-4">
+        {alerts.map(a => <AlertCard key={a.id} alert={a} />)}
+      </div>
     </div>
   )
 }

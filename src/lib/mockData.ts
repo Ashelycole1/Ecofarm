@@ -49,12 +49,13 @@ export interface PestAlert {
   action: string
   reportCount: number
   lastReported: string
+  reporterName?: string
 }
 
 export interface FarmStatus {
   overall: 'green' | 'yellow' | 'red'
   message: string
-  aiAdvice?: string          // AI-generated stoic advice
+  aiAdvice?: string          // AI-generated advice
   treeHealth: number         // 0-100
   alerts: number
   waterLevel: number        // 0-100
@@ -121,7 +122,7 @@ export const mockCrops: Crop[] = [
     id: 'matooke',
     name: 'Matooke (Plantain)',
     localName: 'Matooke',
-    emoji: '🍌',
+    emoji: '',
     plantingMonths: [3, 4, 9, 10],
     harvestWeeks: 36,
     waterNeed: 'high',
@@ -133,7 +134,7 @@ export const mockCrops: Crop[] = [
     id: 'maize',
     name: 'Maize (Corn)',
     localName: 'Kasooli',
-    emoji: '🌽',
+    emoji: '',
     plantingMonths: [3, 4, 8, 9],
     harvestWeeks: 16,
     waterNeed: 'medium',
@@ -145,7 +146,7 @@ export const mockCrops: Crop[] = [
     id: 'beans',
     name: 'Climbing Beans',
     localName: 'Bijaanjalo',
-    emoji: '🫘',
+    emoji: '',
     plantingMonths: [3, 4, 9, 10],
     harvestWeeks: 12,
     waterNeed: 'medium',
@@ -157,7 +158,7 @@ export const mockCrops: Crop[] = [
     id: 'cassava',
     name: 'Cassava',
     localName: 'Muwogo',
-    emoji: '🌿',
+    emoji: '',
     plantingMonths: [3, 4, 5, 9, 10, 11],
     harvestWeeks: 52,
     waterNeed: 'low',
@@ -169,7 +170,7 @@ export const mockCrops: Crop[] = [
     id: 'sorghum',
     name: 'Sorghum',
     localName: 'Otoole',
-    emoji: '🌾',
+    emoji: '',
     plantingMonths: [4, 5, 9],
     harvestWeeks: 20,
     waterNeed: 'low',
@@ -181,7 +182,7 @@ export const mockCrops: Crop[] = [
     id: 'simsim',
     name: 'Simsim (Sesame)',
     localName: 'Simsim',
-    emoji: '🌱',
+    emoji: '',
     plantingMonths: [4, 5],
     harvestWeeks: 14,
     waterNeed: 'low',
@@ -193,7 +194,7 @@ export const mockCrops: Crop[] = [
     id: 'coffee',
     name: 'Arabica Coffee',
     localName: 'Emmwanyi',
-    emoji: '☕',
+    emoji: '',
     plantingMonths: [3, 9],
     harvestWeeks: 200,
     waterNeed: 'medium',
@@ -205,7 +206,7 @@ export const mockCrops: Crop[] = [
     id: 'sweetpotato',
     name: 'Sweet Potato',
     localName: 'Lumonde',
-    emoji: '🍠',
+    emoji: '',
     plantingMonths: [3, 4, 5, 8, 9, 10],
     harvestWeeks: 16,
     waterNeed: 'medium',
@@ -221,7 +222,7 @@ export const mockPestAlerts: PestAlert[] = [
   {
     id: 'faw',
     pestName: 'Fall Armyworm',
-    emoji: '🐛',
+    emoji: '',
     affectedCrops: ['Maize', 'Sorghum'],
     severity: 'high',
     description: 'Active outbreak near Mbale and Jinja regions. Worms visible in leaf whorls.',
@@ -232,7 +233,7 @@ export const mockPestAlerts: PestAlert[] = [
   {
     id: 'banana-weevil',
     pestName: 'Banana Weevil',
-    emoji: '🪲',
+    emoji: '',
     affectedCrops: ['Matooke'],
     severity: 'medium',
     description: 'Larvae boring into Matooke corms in Central region. Watch for yellowing leaves.',
@@ -243,7 +244,7 @@ export const mockPestAlerts: PestAlert[] = [
   {
     id: 'cassava-mosaic',
     pestName: 'Cassava Mosaic Disease',
-    emoji: '🍃',
+    emoji: '',
     affectedCrops: ['Cassava'],
     severity: 'medium',
     description: 'Whitefly-transmitted virus causing yellow mosaic on leaves. Reducing yields.',
@@ -254,7 +255,7 @@ export const mockPestAlerts: PestAlert[] = [
   {
     id: 'locust',
     pestName: 'Desert Locust',
-    emoji: '🦗',
+    emoji: '',
     affectedCrops: ['Maize', 'Sorghum', 'Beans', 'Cassava'],
     severity: 'low',
     description: 'Small swarm spotted in Moroto. Monitoring underway by Ministry of Agriculture.',
@@ -279,12 +280,12 @@ export const mockFarmStatus: FarmStatus = {
 // ─── Pest Type Icons for Form ─────────────────────────────────────────────────
 
 export const pestTypes = [
-  { id: 'worm',    label: 'Worms',      emoji: '🐛', description: 'Caterpillars, armyworms' },
-  { id: 'beetle',  label: 'Beetles',    emoji: '🪲', description: 'Weevils, borers' },
-  { id: 'fly',     label: 'Flies',      emoji: '🪰', description: 'Whiteflies, fruit flies' },
-  { id: 'fungus',  label: 'Fungus',     emoji: '🍄', description: 'Blight, mildew, rust' },
-  { id: 'locust',  label: 'Locusts',    emoji: '🦗', description: 'Swarms, hoppers' },
-  { id: 'mite',    label: 'Mites',      emoji: '🔬', description: 'Spider mites, red mites' },
-  { id: 'rodent',  label: 'Rodents',    emoji: '🐀', description: 'Rats, moles' },
-  { id: 'disease', label: 'Disease',    emoji: '🍂', description: 'Mosaic, leaf curl' },
+  { id: 'worm',    label: 'Worms',      emoji: '', description: 'Caterpillars, armyworms' },
+  { id: 'beetle',  label: 'Beetles',    emoji: '', description: 'Weevils, borers' },
+  { id: 'fly',     label: 'Flies',      emoji: '', description: 'Whiteflies, fruit flies' },
+  { id: 'fungus',  label: 'Fungus',     emoji: '', description: 'Blight, mildew, rust' },
+  { id: 'locust',  label: 'Locusts',    emoji: '', description: 'Swarms, hoppers' },
+  { id: 'mite',    label: 'Mites',      emoji: '', description: 'Spider mites, red mites' },
+  { id: 'rodent',  label: 'Rodents',    emoji: '', description: 'Rats, moles' },
+  { id: 'disease', label: 'Disease',    emoji: '', description: 'Mosaic, leaf curl' },
 ]

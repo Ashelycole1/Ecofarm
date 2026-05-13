@@ -1,24 +1,10 @@
-import { useFirebase } from '@/context/FirebaseContext'
-import { AlertTriangle, Droplets, Wind, Thermometer, RefreshCw, Sun, Cloud, CloudRain, Zap } from 'lucide-react'
+'use client'
 
-const weatherIcons: Record<string, string> = {
-  sunny:  '☀️',
-  cloudy: '⛅',
-  rainy:  '🌧️',
-  stormy: '⛈️',
-  drought:'🌵',
-}
-
-const statusColors: Record<string, string> = {
-  sunny:  'safe',
-  cloudy: 'safe',
-  rainy:  'warning',
-  stormy: 'alert',
-  drought:'alert',
-}
+import { useApp } from '@/context/AppContext'
+import { AlertTriangle, Droplets, Wind, Thermometer, RefreshCw, Sun, Cloud, CloudRain, Zap, CloudSun } from 'lucide-react'
 
 export default function WeatherWidget() {
-  const { weather, isLoading, refreshWeather } = useFirebase()
+  const { weather, isLoading, refreshWeather } = useApp()
 
   if (isLoading || !weather) {
     return (
@@ -79,17 +65,6 @@ function ModernStat({ label, value }: { label: string; value: string }) {
     <div className="modern-tile flex flex-col items-center justify-center gap-1">
       <span className="text-[8px] font-black text-black/30 uppercase tracking-[0.2em]">{label}</span>
       <span className="text-sm font-black text-eco-dark">{value}</span>
-    </div>
-  )
-}
-
-function IconicPill({ icon, value, label, status }: { icon: React.ReactNode; value: string; label: string; status: 'red' | 'warning' | 'green' }) {
-  const color = status === 'red' ? 'text-alert' : status === 'warning' ? 'text-warning' : 'text-safe'
-  return (
-    <div className="flex flex-col items-center p-4 bg-white/5 rounded-2xl border border-white/5 group hover:bg-white/10 transition-all">
-      <span className={`${color} mb-3 transition-transform group-hover:scale-125`}>{icon}</span>
-      <span className="text-sm font-black text-white">{value}</span>
-      <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] mt-1">{label}</span>
     </div>
   )
 }

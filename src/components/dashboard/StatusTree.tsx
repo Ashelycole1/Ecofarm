@@ -1,4 +1,4 @@
-import { useFirebase } from '@/context/FirebaseContext'
+import { useApp } from '@/context/AppContext'
 import { Sprout, TreePine, Droplets, Leaf, AlertTriangle, CheckCircle2, Info, CloudRain, Sun, Thermometer } from 'lucide-react'
 
 interface StatusTreeProps {
@@ -6,7 +6,7 @@ interface StatusTreeProps {
 }
 
 export default function StatusTree({ compact = false }: StatusTreeProps) {
-  const { farmStatus, isLoading } = useFirebase()
+  const { farmStatus, isLoading } = useApp()
 
   if (isLoading || !farmStatus) {
     return (
