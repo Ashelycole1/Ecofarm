@@ -39,13 +39,16 @@ export default function AuthModal({ onClose }: AuthModalProps) {
         identifier: email,
         password,
       })
-      if (result.status === 'complete') {
+      if (result.status === 'complete' || result.createdSessionId) {
         await setSignInActive({ session: result.createdSessionId })
         onClose()
+        window.location.reload()
       } else {
-        setError('Additional verification steps required. Please contact support.')
+        console.log('[SignIn Result Status]:', result.status)
+        setError(`Extra verification step needed (${result.status}). Please verify your email code or reset password.`)
       }
     } catch (err: any) {
+      console.error('[SignIn Error]:', err)
       setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Sign in failed. Check your credentials.')
     } finally {
       setLoading(false)
@@ -119,6 +122,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
         if (completeSignUp.createdSessionId) {
           await setSignUpActive({ session: completeSignUp.createdSessionId })
           onClose()
+          window.location.reload()
         } else {
           setMode('signin')
           setError('Account created! Please sign in.')
@@ -134,6 +138,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
         if (signUp.status === 'complete' && signUp.createdSessionId) {
           await setSignUpActive({ session: signUp.createdSessionId })
           onClose()
+          window.location.reload()
         } else {
           setMode('signin')
           setError('Email verified successfully! Please sign in.')
@@ -337,9 +342,12 @@ export default function AuthModal({ onClose }: AuthModalProps) {
 
           {mode === 'verify' && (
             <form onSubmit={handleVerify} className="space-y-4">
-              <div className="text-center mb-6">
-                <p className="text-white/60 text-sm">
-                  We sent a code to <span className="text-white font-bold">{email}</span>. Please enter it below.
+              <div className="text-center mb-6 space-y-2">
+                <p className="text-white/80 text-sm font-medium">
+                  We sent a code to <span className="text-wheat font-bold">{email}</span>. Please enter it below.
+                </p>
+                <p className="text-safe/80 text-xs bg-safe/10 border border-safe/20 py-2 px-3 rounded-xl inline-block mt-2">
+                  ⏱️ Verification emails usually arrive instantly, but can take up to 1-2 minutes depending on mail routing.
                 </p>
               </div>
 

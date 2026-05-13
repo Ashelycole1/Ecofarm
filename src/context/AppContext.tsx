@@ -321,6 +321,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setUser(null)
     await signOut()
+    window.location.reload()
   }
 
   const loginAsGuest = () => {
