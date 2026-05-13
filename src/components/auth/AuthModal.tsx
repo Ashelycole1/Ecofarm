@@ -219,19 +219,19 @@ export default function AuthModal({ onClose }: AuthModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-ink/40 backdrop-blur-sm animate-fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-[#0A1A18] w-full max-w-md max-h-[92dvh] overflow-y-auto animate-slide-up rounded-t-[40px] sm:rounded-[32px] relative border border-forest/20 shadow-[0_0_50px_rgba(25,116,59,0.1)]">
-        
-        {/* Header decoration */}
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-forest/20 to-transparent pointer-events-none rounded-t-[40px] sm:rounded-t-[32px]" />
+      <div className="bg-white w-full max-w-md max-h-[92dvh] overflow-y-auto animate-slide-up rounded-t-2xl sm:rounded-2xl relative shadow-modal border border-border-soft">
+
+        {/* Forest top accent strip */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-forest via-forest-medium to-sienna rounded-t-2xl sm:rounded-t-2xl" />
 
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 z-[110] w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md"
+          className="absolute top-5 right-5 z-[110] w-9 h-9 rounded-lg bg-bone-low border border-border-soft flex items-center justify-center text-ink-muted hover:text-ink hover:bg-bone-card transition-all"
         >
-          <X size={20} />
+          <X size={16} />
         </button>
 
         {mode === 'verify' && (

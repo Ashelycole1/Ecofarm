@@ -44,41 +44,37 @@ function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSid
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 md:left-56 lg:left-64"
+      className="fixed top-0 left-0 right-0 z-50 md:left-56 lg:left-64 bg-bone/90 backdrop-blur-md border-b border-border-soft"
     >
-      <div className="flex items-center justify-between w-full px-4 py-4 md:px-8">
+      <div className="flex items-center justify-between w-full px-4 py-3 md:px-8">
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={onToggleSidebar}
-            className="md:hidden p-2 -ml-2 text-eco-dark/50 hover:text-eco-dark transition-colors"
+            className="md:hidden p-2 -ml-1 text-ink-muted hover:text-ink transition-colors rounded-lg"
           >
             <Menu size={20} />
           </button>
-          {/* Brand logo — mobile only */}
-          <span className="md:hidden font-display font-black text-xl tracking-tight text-eco-dark">
-            🌿 EcoFarm
+          <span className="md:hidden font-display font-semibold text-lg text-ink tracking-tight">
+            EcoFarm
           </span>
         </div>
 
-        {/* Active tab title — mobile only */}
-        <span className="md:hidden font-display font-semibold text-sm text-black/40 tracking-wide">
-          {tabTitles[activeTab] || '🌿 EcoFarm'}
+        <span className="md:hidden font-body text-xs font-semibold text-ink-muted uppercase tracking-widest">
+          {tabTitles[activeTab] || 'EcoFarm'}
         </span>
 
         <div className="hidden md:block" />
 
-        {/* Right side controls */}
-        <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors bg-eco-pill`}>
+        <div className="flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-bone-card border border-border-soft`}>
             {isConnected
-              ? <Wifi className="text-eco-dark" size={16} />
-              : <WifiOff className="text-alert" size={16} />}
+              ? <Wifi className="text-safe" size={14} />
+              : <WifiOff className="text-alert" size={14} />}
           </div>
-
           {user && (
             <button
               onClick={() => logout()}
-              className="w-9 h-9 rounded-full flex items-center justify-center bg-black/5 hover:bg-black/10 text-black/40 transition-all active:scale-90"
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-bone-card border border-border-soft text-ink-muted hover:text-sienna hover:border-sienna/30 transition-all"
               title="Logout"
             >
               <LogOut size={14} />
@@ -107,59 +103,72 @@ function Sidebar({
   return (
     <>
       {/* Mobile Overlay */}
-      <div 
-        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-[60] transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      <div
+        className={`fixed inset-0 bg-ink/30 backdrop-blur-sm z-[60] transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
 
       <aside
         className={`
-          fixed left-0 top-0 bottom-0 z-[70] border-r border-black/5 py-8 px-4 transition-transform duration-500 ease-in-out
-          w-72 md:w-56 lg:w-64 bg-eco-sidebar
+          mh-sidebar fixed left-0 top-0 bottom-0 z-[70] py-8 px-4 transition-transform duration-500 ease-in-out
+          w-72 md:w-56 lg:w-64
           ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
-        <div className="flex items-center justify-between mb-10 px-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🌿</span>
-            <span className="font-display font-black text-lg text-eco-dark uppercase tracking-tight">EcoFarm</span>
+        {/* Brand */}
+        <div className="flex items-center justify-between mb-10 px-2">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-sienna flex items-center justify-center shadow-btn">
+              <Leaf size={16} className="text-white" />
+            </div>
+            <span className="font-display font-semibold text-lg text-forest-light tracking-tight">EcoFarm</span>
           </div>
-          <button onClick={onClose} className="md:hidden text-black/40 hover:text-black">
-            <X size={20} />
+          <button onClick={onClose} className="md:hidden text-forest-light/50 hover:text-forest-light transition-colors">
+            <X size={18} />
           </button>
         </div>
 
-        <nav className="flex flex-col gap-2 flex-1">
+        {/* Bogolan divider */}
+        <div className="bogolan-divider mb-6 mx-2" />
+
+        <nav className="flex flex-col gap-1">
           {navTabs.map(({ id, label, Icon }) => {
             const isActive = activeTab === id
             return (
               <button
                 key={id}
-                onClick={() => {
-                  onTabChange(id)
-                  onClose()
-                }}
+                onClick={() => { onTabChange(id); onClose() }}
                 id={`sidebar-tab-${id}`}
-                className={`modern-sidebar-item ${isActive ? 'active' : ''}`}
+                className={`mh-sidebar-item ${isActive ? 'active' : ''}`}
               >
-                <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                <span className="uppercase tracking-widest text-[11px] font-extrabold">{label}</span>
+                <Icon size={17} strokeWidth={isActive ? 2.5 : 1.75} />
+                <span className="text-[12px] font-semibold tracking-wide">{label}</span>
               </button>
             )
           })}
         </nav>
 
-        {!user && (
-          <button
-            onClick={() => {
-              setShowAuthModal(true)
-              onClose()
-            }}
-            className="mt-4 w-full py-3 rounded-xl border border-eco-gold/20 bg-eco-gold/10 text-eco-gold text-[10px] font-black uppercase tracking-widest hover:bg-eco-gold/20 transition-colors"
-          >
-            Sign In
-          </button>
-        )}
+        <div className="mt-auto pt-8">
+          <div className="bogolan-divider mb-6 mx-2" />
+          {!user ? (
+            <button
+              onClick={() => { setShowAuthModal(true); onClose() }}
+              className="w-full py-3 rounded-lg bg-sienna text-white text-xs font-semibold tracking-wide shadow-btn hover:bg-sienna-dark transition-all"
+            >
+              Sign In to EcoFarm
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 px-2">
+              <div className="w-8 h-8 rounded-full bg-forest-medium flex items-center justify-center">
+                <span className="text-forest-light text-xs font-bold">{(user.displayName || 'F')[0].toUpperCase()}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-forest-light text-xs font-semibold truncate">{user.displayName || 'Farmer'}</p>
+                <p className="text-forest-light/40 text-[10px] uppercase tracking-wider">Registered</p>
+              </div>
+            </div>
+          )}
+        </div>
       </aside>
     </>
   )
@@ -171,50 +180,49 @@ function HomeTab() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Greeting hero banner */}
+      {/* Hero greeting card */}
       <div
-        className="relative overflow-hidden rounded-[32px] p-10 md:p-14 modern-card min-h-[220px] flex flex-col justify-center"
-        style={{
-          background: 'linear-gradient(135deg, #F9F1E2 0%, #F3E8D3 100%)',
-        }}
+        className="mh-card bogolan-border relative overflow-hidden p-10 md:p-14 min-h-[220px] flex flex-col justify-center"
+        style={{ background: 'linear-gradient(135deg, #f4f4ee 0%, #eeeee9 100%)' }}
       >
-        {/* Soil/Track pattern overlay placeholder */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
-          backgroundImage: 'radial-gradient(#C6A552 1px, transparent 1px)',
-          backgroundSize: '20px 20px'
-        }} />
-
+        {/* Bogolanfini watermark */}
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%232d4b37' stroke-width='1'%3E%3Crect x='6' y='6' width='36' height='36'/%3E%3Crect x='12' y='12' width='24' height='24'/%3E%3Cline x1='6' y1='6' x2='42' y2='42'/%3E%3Cline x1='42' y1='6' x2='6' y2='42'/%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundSize: '48px 48px'
+          }}
+        />
         <div className="relative z-10">
-          <p className="text-[12px] text-black/30 uppercase tracking-[0.2em] font-extrabold mb-2">Good day</p>
-          <h2 className="font-display font-black text-eco-dark text-4xl md:text-5xl tracking-tight">
-            {user ? (user.displayName || 'Farmer') : 'Evans Rwothomio'}
-          </h2>
-          <div className="flex items-center gap-2 mt-4 text-black/40 font-bold">
-            <span className="text-eco-gold">📍</span>
-            <p className="text-sm">
-              {weather ? `${weather.location} · ${weather.temperature}°C` : 'Your Farm - 23°C'}
+          <p className="font-body text-[11px] text-ink-muted uppercase tracking-[0.25em] font-semibold mb-3">Good day</p>
+          <h1 className="font-display font-semibold text-ink text-4xl md:text-5xl leading-tight">
+            {user ? (user.displayName || 'Farmer') : 'Welcome'}
+          </h1>
+          <div className="flex items-center gap-2 mt-4">
+            <MapPin size={14} className="text-sienna" />
+            <p className="font-body text-sm text-ink-muted font-medium">
+              {weather ? `${weather.location} · ${weather.temperature}°C` : 'Connecting to farm...'}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Two-column grid on large screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+      {/* Two-column grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <StatusTree compact={false} />
         <WeatherWidget />
       </div>
 
-      {/* Community Stats Section - Merged from remote but with modern styling */}
-      <div className="p-10 rounded-[40px] modern-card bg-eco-sidebar/30 border-black/5 shadow-sm">
-        <p className="text-[10px] text-black/20 uppercase tracking-[0.2em] mb-10 font-black">Community This Week</p>
-        <div className="grid grid-cols-3 gap-8 text-center">
-          <CommunityStat value={String(systemStats?.farmersCount || 247)} label="Farmers" Icon={Users} color="text-eco-dark" />
-          <CommunityStat value={String(systemStats?.reportsCount || 93)}  label="Reports" Icon={ClipboardList} color="text-eco-gold" />
-          <CommunityStat value={String(systemStats?.districtsCount || 12)}  label="Districts" Icon={MapPin} color="text-forest" />
+      {/* Community Stats */}
+      <div className="mh-card p-8 bogolan-border">
+        <p className="font-body text-[10px] text-ink-muted uppercase tracking-[0.2em] font-bold mb-8">Platform Activity</p>
+        <div className="grid grid-cols-3 gap-6 text-center">
+          <CommunityStat value={String(systemStats?.farmersCount || 0)} label="Farmers" Icon={Users} color="text-forest-medium" />
+          <CommunityStat value={String(systemStats?.reportsCount || 0)} label="Reports" Icon={ClipboardList} color="text-sienna" />
+          <CommunityStat value={String(systemStats?.districtsCount || 0)} label="Districts" Icon={MapPin} color="text-ochre-light" />
         </div>
       </div>
 
-      <div className="pt-4">
+      <div>
         <AIVisionModule />
       </div>
     </div>
@@ -224,11 +232,11 @@ function HomeTab() {
 function CommunityStat({ value, label, Icon, color }: { value: string; label: string; Icon: any; color: string }) {
   return (
     <div className="flex flex-col items-center group">
-      <div className={`w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-4 transition-transform group-hover:scale-110 ${color}`}>
-        <Icon size={24} />
+      <div className={`w-11 h-11 rounded-xl bg-bone-low border border-border-soft flex items-center justify-center mb-3 transition-transform group-hover:scale-110 shadow-card-sm ${color}`}>
+        <Icon size={20} />
       </div>
-      <div className="font-display font-black text-eco-dark text-3xl tracking-tight">{value}</div>
-      <div className="text-[10px] text-black/30 uppercase tracking-widest font-black mt-1">{label}</div>
+      <div className="font-display font-semibold text-ink text-2xl leading-tight">{value}</div>
+      <div className="font-body text-[10px] text-ink-muted uppercase tracking-widest font-semibold mt-1">{label}</div>
     </div>
   )
 }
@@ -373,30 +381,25 @@ export default function HomePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ background: '#FDF8F4' }}>
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-eco-sidebar rounded-full border-t-eco-gold animate-spin" />
-          <Sparkles className="absolute inset-0 m-auto text-eco-gold/40" size={24} />
-        </div>
-        <p className="text-black/20 text-[10px] font-black uppercase tracking-[0.3em]">Loading EcoFarm</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-bone">
+        <div className="w-12 h-12 rounded-full border-2 border-forest-light/30 border-t-sienna animate-spin" />
+        <p className="font-body text-ink-muted text-[11px] font-semibold uppercase tracking-[0.3em]">Loading EcoFarm</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen min-h-dvh flex flex-col" style={{ background: '#FDF8F4' }}>
+    <div className="min-h-screen min-h-dvh flex flex-col bg-bone">
       <AppBar activeTab={activeTab} onToggleSidebar={() => setSidebarOpen(true)} />
 
-      {/* Primary Navigation Sidebar */}
-      <Sidebar 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
-        isOpen={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Main content — left-padded on md+ to clear the sidebar */}
-      <main className="flex-1 overflow-y-auto pb-28 md:pb-8 pt-16 md:ml-56 lg:ml-64">
+      <main className="flex-1 overflow-y-auto pb-28 md:pb-10 pt-14 md:ml-56 lg:ml-64">
         <div className="w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8">
           <TabContent tab={activeTab} />
         </div>
