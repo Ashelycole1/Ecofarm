@@ -90,44 +90,44 @@ export default function VillageElderChat() {
   }
 
   return (
-    <div className="flex flex-col h-full max-h-[700px]">
+    <div className="flex flex-col h-full max-h-[700px] pb-12">
       {/* Outer Title */}
-      <div className="flex items-center gap-2 mb-4 px-2">
-        <Sparkles size={18} className="text-leaf animate-pulse" />
-        <h2 className="text-lg font-bold text-white tracking-tight">Agricultural Expert</h2>
+      <div className="flex items-center gap-2 mb-3 px-1 border-b border-border-soft pb-4">
+        <Sparkles size={20} className="text-forest animate-pulse" />
+        <h2 className="font-display font-bold text-4xl text-ink tracking-tight">Agricultural Expert</h2>
       </div>
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col bg-[#051410]/80 backdrop-blur-xl rounded-[32px] border border-white/5 overflow-hidden shadow-2xl relative">
+      <div className="flex-1 flex flex-col bg-white rounded-2xl border border-border-soft overflow-hidden shadow-card-sm relative mt-2">
         
         {/* Inner Header */}
-        <div className="p-5 flex items-center justify-between border-b border-white/5 bg-white/[0.02]">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-forest/20 flex items-center justify-center border border-forest/30 text-wheat shadow-inner">
-              <TreePine size={24} />
+        <div className="p-4 flex items-center justify-between border-b border-border-soft bg-bone-low">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-forest/10 flex items-center justify-center border border-forest/20 text-forest shadow-inner">
+              <TreePine size={20} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Agricultural Expert</h3>
-              <p className="text-[10px] text-leaf font-medium flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-leaf animate-pulse" />
-                Online · Professional Advice
+              <h3 className="font-display font-bold text-base text-ink leading-tight">Agricultural Expert</h3>
+              <p className="font-body text-[10px] text-forest font-bold flex items-center gap-1.5 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-safe animate-pulse" />
+                <span>Online · Professional Advice</span>
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <div className="relative group/lang">
-              <button className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/10 text-wheat text-[10px] font-bold hover:bg-white/10 transition-all">
+              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full border border-border-soft text-ink-muted text-[10px] font-bold hover:text-ink shadow-sm transition-all">
                 <Globe size={12} />
-                {selectedLanguage}
+                <span>{selectedLanguage}</span>
               </button>
-              <div className="absolute top-full right-0 mt-2 w-40 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl opacity-0 invisible group-hover/lang:opacity-100 group-hover/lang:visible transition-all z-50">
+              <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-border-soft rounded-xl overflow-hidden shadow-lg opacity-0 invisible group-hover/lang:opacity-100 group-hover/lang:visible transition-all z-50">
                 {LANGUAGES.map(lang => (
                   <button
                     key={lang.id}
                     onClick={() => setSelectedLanguage(lang.id)}
-                    className={`w-full text-left px-4 py-2.5 text-[10px] hover:bg-forest transition-colors ${
-                      selectedLanguage === lang.id ? 'bg-forest text-white' : 'text-wheat/60'
+                    className={`w-full text-left px-4 py-2.5 font-body text-xs font-bold transition-colors ${
+                      selectedLanguage === lang.id ? 'bg-forest text-white' : 'text-ink-muted hover:bg-bone-low hover:text-ink'
                     }`}
                   >
                     {lang.label}
@@ -139,20 +139,20 @@ export default function VillageElderChat() {
         </div>
 
         {/* Chat Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide bg-bone-low/30">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center opacity-20">
-              <TreePine size={64} className="text-wheat mb-4" />
-              <p className="text-sm text-wheat font-medium max-w-[200px]">How can I assist your farming today?</p>
+            <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
+              <TreePine size={48} className="text-forest mb-3" />
+              <p className="font-body text-xs text-ink-muted font-bold max-w-[200px]">How can I assist your farming today?</p>
             </div>
           ) : (
             messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] ${msg.sender === 'user' ? 'bg-forest/40' : 'bg-white/5'} p-4 rounded-2xl border border-white/5`}>
-                  <p className="text-sm text-white/90 leading-relaxed">{msg.text}</p>
-                  <div className="flex items-center justify-between mt-3 gap-4">
-                    <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">{msg.metadata?.dialect || ''}</span>
-                    <p className="text-[10px] text-white/20 font-mono">{msg.timestamp}</p>
+                <div className={`max-w-[85%] ${msg.sender === 'user' ? 'bg-forest text-white' : 'bg-bone-low text-ink'} p-4 rounded-2xl border border-border-soft shadow-sm`}>
+                  <p className="font-body text-xs leading-relaxed">{msg.text}</p>
+                  <div className="flex items-center justify-between mt-2 gap-4">
+                    <span className="font-body text-[9px] font-bold opacity-60 uppercase tracking-widest">{msg.metadata?.dialect || ''}</span>
+                    <p className="font-body text-[9px] font-bold opacity-40">{msg.timestamp}</p>
                   </div>
                 </div>
               </div>
@@ -160,10 +160,10 @@ export default function VillageElderChat() {
           )}
           {isGeneratingAI && (
             <div className="flex justify-start">
-              <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex gap-1.5 items-center">
-                <div className="w-1.5 h-1.5 bg-wheat/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="w-1.5 h-1.5 bg-wheat/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-1.5 h-1.5 bg-wheat/40 rounded-full animate-bounce"></div>
+              <div className="bg-bone-low p-3 rounded-2xl border border-border-soft flex gap-1.5 items-center">
+                <div className="w-1.5 h-1.5 bg-forest rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-1.5 h-1.5 bg-forest rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-1.5 h-1.5 bg-forest rounded-full animate-bounce"></div>
               </div>
             </div>
           )}
@@ -171,33 +171,33 @@ export default function VillageElderChat() {
         </div>
 
         {/* Input Bar */}
-        <div className="p-6 bg-white/[0.01] border-t border-white/5">
-          <form onSubmit={handleSend} className="flex gap-3 items-center max-w-4xl mx-auto">
+        <div className="p-4 bg-white border-t border-border-soft">
+          <form onSubmit={handleSend} className="flex gap-2 items-center max-w-4xl mx-auto">
             <div className="relative flex-1 group">
               <input
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder={isListening ? "Listening..." : "Ask for agricultural advice..."}
-                className="w-full bg-white/[0.03] border border-white/10 rounded-full px-6 py-4 text-sm text-white focus:outline-none focus:border-forest/50 focus:bg-white/[0.05] transition-all placeholder:text-white/20"
+                className="w-full bg-bone-low border border-border-soft rounded-xl pl-4 pr-10 py-3 font-body text-xs text-ink focus:outline-none focus:border-forest shadow-inner transition-all placeholder:text-ink-faint"
               />
               <button
                 type="button"
                 onClick={toggleListening}
-                className={`absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                  isListening ? 'bg-alert text-white animate-pulse' : 'text-white/20 hover:text-white/40 hover:bg-white/5'
+                className={`absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                  isListening ? 'bg-alert text-white animate-pulse' : 'text-ink-muted hover:text-ink'
                 }`}
               >
-                {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+                {isListening ? <MicOff size={14} /> : <Mic size={14} />}
               </button>
             </div>
             
             <button
               type="submit"
               disabled={!inputText.trim() || isGeneratingAI}
-              className="w-12 h-12 rounded-full bg-forest/20 text-leaf flex items-center justify-center hover:bg-forest/40 transition-all active:scale-90 disabled:opacity-30 disabled:grayscale"
+              className="btn-primary py-3 px-4 text-xs shrink-0 flex items-center justify-center"
             >
-              <Send size={20} />
+              <Send size={14} />
             </button>
           </form>
         </div>

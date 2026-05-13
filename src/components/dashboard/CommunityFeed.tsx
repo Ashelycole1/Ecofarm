@@ -32,15 +32,15 @@ export interface CommunityPost {
 // ─── Severity Config ───────────────────────────────────────────────────────────
 
 const postTypeConfig = {
-  pest_alert: { label: 'Pest Alert', color: 'text-alert', bg: 'bg-alert/10', border: 'border-alert/30', Icon: Bug },
+  pest_alert: { label: 'Pest Alert', color: 'text-alert', bg: 'bg-alert-container', border: 'border-alert/30', Icon: Bug },
   tip: { label: 'Farming Tip', color: 'text-safe', bg: 'bg-safe/10', border: 'border-safe/30', Icon: Leaf },
-  market: { label: 'Market Info', color: 'text-wheat', bg: 'bg-wheat/10', border: 'border-wheat/30', Icon: TrendingUp },
-  general: { label: 'Community', color: 'text-white/60', bg: 'bg-white/5', border: 'border-white/10', Icon: Users },
+  market: { label: 'Market Info', color: 'text-sienna', bg: 'bg-sienna-pale', border: 'border-sienna/30', Icon: TrendingUp },
+  general: { label: 'Community', color: 'text-ink-muted', bg: 'bg-bone-low', border: 'border-border-soft', Icon: Users },
 }
 
-const severityBorder = { low: 'border-safe/40', medium: 'border-wheat/40', high: 'border-alert/50' }
+const severityBorder = { low: 'border-safe/40', medium: 'border-warn/40', high: 'border-alert/50' }
 const severityLabel = { low: 'LOW', medium: 'MEDIUM', high: 'HIGH' }
-const severityColor = { low: 'text-safe', medium: 'text-wheat', high: 'text-alert' }
+const severityColor = { low: 'text-safe', medium: 'text-warn', high: 'text-alert' }
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -81,11 +81,11 @@ function PostCard({ post, currentUserId }: { post: CommunityPost; currentUserId?
 
   return (
     <div
-      className={`rounded-[24px] p-6 space-y-4 border transition-all duration-300 hover:translate-y-[-2px] hover:shadow-2xl ${
+      className={`mh-card p-6 space-y-4 border transition-all duration-300 hover:translate-y-[-2px] ${
         isPestAlert && severity
           ? severityBorder[severity]
           : cfg.border
-      } bg-white/[0.02] backdrop-blur-md`}
+      } bg-white`}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
@@ -94,27 +94,27 @@ function PostCard({ post, currentUserId }: { post: CommunityPost; currentUserId?
             <img
               src={post.authorAvatar}
               alt={post.authorName}
-              className="w-10 h-10 rounded-2xl object-cover border border-white/10"
+              className="w-10 h-10 rounded-2xl object-cover border border-border-soft"
             />
           ) : (
-            <div className="w-10 h-10 rounded-2xl bg-forest/30 border border-forest/40 flex items-center justify-center">
-              <User size={18} className="text-forest-light" />
+            <div className="w-10 h-10 rounded-2xl bg-forest-medium/10 border border-forest-medium/20 flex items-center justify-center">
+              <User size={18} className="text-forest" />
             </div>
           )}
           <div>
-            <p className="font-black text-white text-sm leading-tight">{post.authorName}</p>
-            <p className="text-[9px] text-white/30 uppercase tracking-widest font-black">
+            <p className="font-display font-bold text-ink text-base leading-tight">{post.authorName}</p>
+            <p className="font-body text-[10px] text-ink-muted uppercase tracking-wider font-semibold mt-0.5">
               {post.authorRole} · {timeAgo(post.createdAt)}
             </p>
           </div>
         </div>
 
         {/* Post type badge */}
-        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${cfg.border} ${cfg.bg} shrink-0`}>
-          <Icon size={10} className={cfg.color} />
-          <span className={`text-[9px] font-black uppercase tracking-wider ${cfg.color}`}>{cfg.label}</span>
+        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${cfg.border} ${cfg.bg} shrink-0`}>
+          <Icon size={12} className={cfg.color} />
+          <span className={`font-body text-[9px] font-bold uppercase tracking-wider ${cfg.color}`}>{cfg.label}</span>
           {isPestAlert && severity && (
-            <span className={`text-[9px] font-black uppercase ${severityColor[severity]}`}>
+            <span className={`font-body text-[9px] font-bold uppercase ${severityColor[severity]}`}>
               · {severityLabel[severity]}
             </span>
           )}
@@ -122,34 +122,34 @@ function PostCard({ post, currentUserId }: { post: CommunityPost; currentUserId?
       </div>
 
       {/* Content */}
-      <p className="text-white/80 text-sm leading-relaxed font-medium">{post.content}</p>
+      <p className="font-body text-ink text-sm leading-relaxed">{post.content}</p>
 
       {/* Image */}
       {post.imageUrl && (
-        <div className="rounded-2xl overflow-hidden border border-white/10">
+        <div className="rounded-xl overflow-hidden border border-border-soft bg-bone-low">
           <img
             src={post.imageUrl}
             alt="Post image"
-            className="w-full max-h-72 object-cover"
+            className="w-full max-h-80 object-cover"
           />
         </div>
       )}
 
       {/* Footer actions */}
-      <div className="flex items-center gap-4 pt-2 border-t border-white/5">
+      <div className="flex items-center gap-6 pt-3 border-t border-bone-dim/40">
         <button
           onClick={handleLike}
           disabled={!currentUserId}
-          className={`flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${
-            liked ? 'text-alert' : 'text-white/30 hover:text-white/60'
+          className={`flex items-center gap-1.5 font-body text-xs font-bold uppercase tracking-wider transition-all ${
+            liked ? 'text-alert' : 'text-ink-muted hover:text-ink'
           } disabled:cursor-default`}
         >
-          <Heart size={14} fill={liked ? 'currentColor' : 'none'} />
-          <span>{likesCount > 0 ? likesCount : ''}</span>
+          <Heart size={16} fill={liked ? 'currentColor' : 'none'} />
+          <span>{likesCount > 0 ? likesCount : 'Like'}</span>
         </button>
-        <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-white/20">
-          <MessageCircle size={14} />
-          <span>{post.commentsCount > 0 ? post.commentsCount : ''}</span>
+        <div className="flex items-center gap-1.5 font-body text-xs font-bold uppercase tracking-wider text-ink-muted">
+          <MessageCircle size={16} />
+          <span>{post.commentsCount > 0 ? post.commentsCount : 'Discuss'}</span>
         </div>
       </div>
     </div>
@@ -187,7 +187,6 @@ function PostComposer({ user, onPost }: { user: any; onPost: () => void }) {
     try {
       let imageUrl: string | null = null
 
-      // Upload image if provided
       if (imageFile) {
         const ext = imageFile.name.split('.').pop()
         const path = `community/${user.uid}_${Date.now()}.${ext}`
@@ -236,16 +235,16 @@ function PostComposer({ user, onPost }: { user: any; onPost: () => void }) {
   ]
 
   return (
-    <div className="rounded-[24px] p-6 border border-forest/30 bg-forest/5 space-y-4">
+    <div className="mh-card p-6 border border-border-soft bg-white space-y-4">
       <div className="flex items-center gap-3">
         {user.photoURL ? (
-          <img src={user.photoURL} alt={user.displayName} className="w-10 h-10 rounded-2xl object-cover border border-white/10" />
+          <img src={user.photoURL} alt={user.displayName} className="w-10 h-10 rounded-2xl object-cover border border-border-soft" />
         ) : (
-          <div className="w-10 h-10 rounded-2xl bg-forest/30 border border-forest/40 flex items-center justify-center">
-            <User size={18} className="text-forest-light" />
+          <div className="w-10 h-10 rounded-2xl bg-forest/10 border border-forest/20 flex items-center justify-center">
+            <User size={18} className="text-forest" />
           </div>
         )}
-        <p className="font-black text-white text-sm">{user.displayName || 'Farmer'}</p>
+        <p className="font-display font-bold text-ink text-base">{user.displayName || 'Farmer'}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -258,13 +257,13 @@ function PostComposer({ user, onPost }: { user: any; onPost: () => void }) {
                 key={id}
                 type="button"
                 onClick={() => setPostType(id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-body text-xs font-bold transition-all ${
                   postType === id
-                    ? `${cfg.bg} ${cfg.border} ${cfg.color} shadow-lg`
-                    : 'border-white/10 text-white/30 hover:text-white/60 bg-white/5'
+                    ? `${cfg.bg} ${cfg.border} ${cfg.color} shadow-sm`
+                    : 'border-border-soft text-ink-muted hover:text-ink bg-bone-low'
                 }`}
               >
-                <Icon size={10} />
+                <Icon size={12} />
                 {label}
               </button>
             )
@@ -281,16 +280,16 @@ function PostComposer({ user, onPost }: { user: any; onPost: () => void }) {
             'Share something with the EcoFarm community...'
           }
           rows={3}
-          className="w-full bg-white/5 border border-white/10 text-white rounded-2xl py-3 px-4 outline-none focus:border-forest/50 focus:bg-white/10 transition-all placeholder:text-white/20 text-sm resize-none"
+          className="w-full bg-bone-low border border-border-soft text-ink rounded-xl py-3 px-4 outline-none focus:border-forest-tint focus:bg-white transition-all placeholder:text-ink-faint font-body text-sm resize-none shadow-inner"
         />
 
         {imagePreview && (
-          <div className="relative rounded-2xl overflow-hidden border border-white/10">
+          <div className="relative rounded-xl overflow-hidden border border-border-soft bg-bone-low">
             <img src={imagePreview} alt="Preview" className="w-full max-h-48 object-cover" />
             <button
               type="button"
               onClick={() => { setImageFile(null); setImagePreview(null) }}
-              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-all"
+              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-ink/80 flex items-center justify-center text-white hover:bg-ink transition-all"
             >
               <X size={14} />
             </button>
@@ -298,31 +297,31 @@ function PostComposer({ user, onPost }: { user: any; onPost: () => void }) {
         )}
 
         {error && (
-          <p className="text-red-400 text-xs font-medium text-center">{error}</p>
+          <p className="text-alert font-body text-xs font-bold text-center">{error}</p>
         )}
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-1">
           <input type="file" ref={fileRef} accept="image/*" className="hidden" onChange={handleImage} />
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="flex items-center gap-2 text-white/40 hover:text-wheat text-xs font-black uppercase tracking-wider transition-all"
+            className="flex items-center gap-2 text-ink-muted hover:text-forest font-body text-xs font-bold transition-all"
           >
             <ImageIcon size={16} />
-            Add Photo
+            <span>Add Photo</span>
           </button>
 
           <button
             type="submit"
             disabled={loading || !content.trim()}
-            className="flex items-center gap-2 bg-forest hover:bg-forest-light disabled:opacity-40 text-white font-black uppercase tracking-widest rounded-2xl px-5 py-2.5 transition-all text-xs"
+            className="btn-primary py-2 px-5 text-xs"
           >
             {loading ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <Send size={14} />
             )}
-            Post
+            <span>Post</span>
           </button>
         </div>
       </form>
@@ -376,7 +375,6 @@ export default function CommunityFeed() {
     return () => { channel.unsubscribe() }
   }, [])
 
-  // Convert active pest alerts into pinned community posts view
   const alertPosts: CommunityPost[] = pestAlerts.map(a => ({
     id: `alert-${a.id}`,
     userId: 'system',
@@ -405,20 +403,20 @@ export default function CommunityFeed() {
   ]
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-16">
       {/* Header */}
-      <div className="flex items-end justify-between px-1">
+      <div className="flex items-end justify-between px-1 border-b border-border-soft pb-4">
         <div className="space-y-1">
-          <h2 className="font-display font-black text-2xl text-white uppercase tracking-tight">
+          <h2 className="font-display font-bold text-4xl text-ink tracking-tight">
             Farmer Community
           </h2>
-          <p className="text-[10px] text-white/30 font-black uppercase tracking-widest">
+          <p className="font-body text-xs text-ink-muted font-bold tracking-wide">
             {allPosts.length} posts · Live updates
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-safe animate-pulse" />
-          <span className="text-[9px] font-black text-safe uppercase tracking-widest">Live</span>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-safe animate-pulse" />
+          <span className="font-body text-xs font-bold text-safe uppercase tracking-wider">Live</span>
         </div>
       </div>
 
@@ -426,9 +424,9 @@ export default function CommunityFeed() {
       {user && !user.isGuest ? (
         <PostComposer user={user} onPost={fetchPosts} />
       ) : (
-        <div className="rounded-[24px] p-6 border border-white/10 bg-white/[0.02] text-center space-y-2">
-          <Sparkles size={24} className="text-wheat mx-auto" />
-          <p className="text-white/60 text-sm font-medium">Sign in to post, share images, and join the conversation.</p>
+        <div className="mh-card p-6 border border-border-soft bg-bone-low text-center space-y-2">
+          <Sparkles size={24} className="text-ochre-light mx-auto" />
+          <p className="font-body text-ink-muted text-sm font-bold">Sign in to post, share images, and join the conversation.</p>
         </div>
       )}
 
@@ -438,10 +436,10 @@ export default function CommunityFeed() {
           <button
             key={tab.id}
             onClick={() => setFilter(tab.id)}
-            className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+            className={`px-4 py-2 rounded-full font-body text-xs font-bold transition-all border ${
               filter === tab.id
-                ? 'bg-forest text-white shadow-[0_0_12px_rgba(25,116,59,0.4)]'
-                : 'bg-white/5 text-white/40 hover:text-white/70 border border-white/10'
+                ? 'bg-forest text-white border-forest shadow-sm'
+                : 'bg-white text-ink-muted hover:text-ink border-border-soft shadow-card-sm'
             }`}
           >
             {tab.label}
@@ -452,12 +450,12 @@ export default function CommunityFeed() {
       {/* Feed */}
       {loading ? (
         <div className="space-y-4">
-          {[1, 2, 3].map(i => <div key={i} className="h-48 rounded-[24px] bg-white/5 animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-48 rounded-xl bg-bone-card animate-pulse" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 space-y-3">
-          <Users size={40} className="text-white/10 mx-auto" />
-          <p className="text-white/30 text-sm font-medium">No posts yet. Be the first to share!</p>
+        <div className="text-center py-16 bg-white rounded-xl border border-border-soft space-y-3">
+          <Users size={40} className="text-ink-faint mx-auto" />
+          <p className="font-body text-ink-muted text-sm font-bold">No posts yet. Be the first to share!</p>
         </div>
       ) : (
         <div className="space-y-4">

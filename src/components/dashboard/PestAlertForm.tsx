@@ -6,9 +6,9 @@ import { pestTypes } from '@/lib/mockData'
 import { Send, CheckCircle, MapPin, AlertTriangle, Bug, Ghost, Microscope, CloudRain, Wind, Sprout, Info, AlertCircle } from 'lucide-react'
 
 const severityConfig = {
-  low:    { label: 'Low',    color: 'border-safe/50 bg-safe/10 text-safe',   Icon: Info },
-  medium: { label: 'Medium', color: 'border-wheat/50 bg-wheat/10 text-wheat', Icon: AlertTriangle },
-  high:   { label: 'High',   color: 'border-alert/50 bg-alert/10 text-alert', Icon: AlertCircle },
+  low:    { label: 'Low',    color: 'border-safe/30 bg-safe/10 text-safe',   Icon: Info },
+  medium: { label: 'Medium', color: 'border-warn/30 bg-warn/10 text-warn',   Icon: AlertTriangle },
+  high:   { label: 'High',   color: 'border-alert/30 bg-alert/10 text-alert', Icon: AlertCircle },
 }
 
 const pestIcons: Record<string, any> = {
@@ -23,6 +23,28 @@ const pestIcons: Record<string, any> = {
 }
 
 type Severity = 'low' | 'medium' | 'high'
+
+function Loader2({ className, size }: { className?: string; size?: number }) {
+  return (
+    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+  )
+}
+
+function FormSection({ number, title, children }: { number: string; title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 px-1">
+        <span className="w-5 h-5 rounded-full bg-forest/10 border border-forest/20 text-forest text-[10px] font-bold flex items-center justify-center shrink-0">
+          {number}
+        </span>
+        <p className="font-body text-xs font-bold text-ink-muted uppercase tracking-wider">{title}</p>
+      </div>
+      {children}
+    </div>
+  )
+}
 
 export default function PestAlertForm() {
   const { crops, submitPestReport, pestReports } = useApp()
@@ -59,34 +81,34 @@ export default function PestAlertForm() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mh-card p-6 md:p-8 border border-border-soft bg-white space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between px-2">
+      <div className="flex items-start justify-between border-b border-border-soft pb-4">
         <div>
-          <h2 className="font-display font-black text-2xl text-white uppercase tracking-tight">Report a Pest</h2>
-          <p className="text-[10px] text-white/30 font-black uppercase tracking-widest mt-1">Help your community by sharing sightings</p>
+          <h2 className="font-display font-bold text-2xl text-ink tracking-tight">Report a Pest</h2>
+          <p className="font-body text-xs text-ink-muted font-bold tracking-wide mt-0.5">Help your community by sharing sightings</p>
         </div>
         <div className="text-right">
-          <p className="text-[9px] text-white/20 font-black uppercase tracking-widest">Community reports</p>
-          <p className="text-xl font-black text-wheat uppercase tracking-tighter">{pestReports.length + 93}</p>
+          <p className="font-body text-[9px] text-ink-muted font-bold uppercase tracking-wider">Community reports</p>
+          <p className="font-display text-xl font-bold text-forest leading-tight mt-0.5">{pestReports.length + 93}</p>
         </div>
       </div>
 
       {submitted ? (
-        <div className="nature-card p-12 flex flex-col items-center text-center gap-4 animate-fade-in rounded-[32px] bg-safe/5 border-safe/20">
-          <div className="w-20 h-20 bg-safe/20 rounded-full flex items-center justify-center border border-safe/30 shadow-2xl">
-            <CheckCircle size={40} className="text-safe" />
+        <div className="p-8 flex flex-col items-center text-center gap-4 animate-fade-in rounded-2xl bg-safe/10 border border-safe/20">
+          <div className="w-16 h-16 bg-safe/20 rounded-full flex items-center justify-center text-safe">
+            <CheckCircle size={32} />
           </div>
-          <div className="space-y-2">
-            <h3 className="font-display font-black text-white text-xl uppercase tracking-tight">Report Logged</h3>
-            <p className="text-xs text-white/40 font-medium max-w-[200px]">Thank you. Your intelligence helps protect nearby farmers.</p>
+          <div className="space-y-1">
+            <h3 className="font-display font-bold text-ink text-xl tracking-tight">Report Logged</h3>
+            <p className="font-body text-xs text-ink-muted max-w-[220px]">Thank you. Your intelligence helps protect nearby farmers.</p>
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Step 1: Select pest type */}
           <FormSection number="1" title="What pest did you see?">
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {pestTypes.map(pest => {
                 const Icon = pestIcons[pest.id] || Bug
                 return (
@@ -94,18 +116,14 @@ export default function PestAlertForm() {
                     key={pest.id}
                     type="button"
                     onClick={() => setSelectedPest(pest.id)}
-                    className={`
-                      flex flex-col items-center gap-3 p-4 rounded-[24px] border transition-all duration-300
-                      ${selectedPest === pest.id
-                        ? 'border-wheat bg-wheat/10 scale-105 shadow-2xl'
-                        : 'border-white/5 bg-white/[0.02] hover:bg-white/5'
-                      }
-                    `}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border font-body text-xs font-bold transition-all ${
+                      selectedPest === pest.id
+                        ? 'border-forest bg-forest/10 text-forest shadow-sm'
+                        : 'border-border-soft bg-bone-low text-ink-muted hover:text-ink hover:bg-white'
+                    }`}
                   >
-                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-transform ${selectedPest === pest.id ? 'bg-wheat/20' : 'bg-white/5'}`}>
-                      <Icon className={selectedPest === pest.id ? 'text-wheat' : 'text-white/20'} size={20} />
-                    </div>
-                    <span className={`text-[10px] font-black uppercase tracking-tight ${selectedPest === pest.id ? 'text-white' : 'text-white/30'}`}>{pest.label}</span>
+                    <Icon size={18} />
+                    <span className="truncate w-full text-center">{pest.label}</span>
                   </button>
                 )
               })}
@@ -114,24 +132,20 @@ export default function PestAlertForm() {
 
           {/* Step 2: Affected crop */}
           <FormSection number="2" title="Which crop is affected?">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               {crops.slice(0, 6).map(crop => (
                 <button
                   key={crop.id}
                   type="button"
                   onClick={() => setSelectedCrop(crop.id)}
-                  className={`
-                    flex items-center gap-4 px-5 py-4 rounded-[24px] border text-sm font-black transition-all
-                    ${selectedCrop === crop.id
-                      ? 'border-forest-light bg-forest/20 text-wheat shadow-2xl'
-                      : 'border-white/5 bg-white/[0.02] text-white/30 hover:bg-white/5'
-                    }
-                  `}
+                  className={`flex items-center gap-3 p-3 rounded-xl border font-body text-xs font-bold transition-all ${
+                    selectedCrop === crop.id
+                      ? 'border-forest bg-forest text-white shadow-sm'
+                      : 'border-border-soft bg-bone-low text-ink-muted hover:text-ink hover:bg-white'
+                  }`}
                 >
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${selectedCrop === crop.id ? 'bg-forest/40' : 'bg-white/5'}`}>
-                    <Sprout size={16} />
-                  </div>
-                  <span className="uppercase tracking-widest text-[10px]">{crop.localName}</span>
+                  <Sprout size={16} className="shrink-0" />
+                  <span className="truncate text-left">{crop.localName}</span>
                 </button>
               ))}
             </div>
@@ -139,19 +153,18 @@ export default function PestAlertForm() {
 
           {/* Step 3: Severity */}
           <FormSection number="3" title="How severe is it?">
-            <div className="flex gap-3">
+            <div className="flex gap-2.5">
               {(Object.entries(severityConfig) as [Severity, typeof severityConfig[Severity]][]).map(([key, cfg]) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setSeverity(key)}
-                  className={`
-                    flex-1 py-4 px-4 rounded-[24px] border text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2
-                    ${severity === key ? cfg.color + ' scale-105 shadow-2xl' : 'border-white/5 bg-white/[0.02] text-white/20'}
-                  `}
+                  className={`flex-1 py-3 px-3 rounded-xl border font-body text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                    severity === key ? cfg.color + ' shadow-sm border-current' : 'border-border-soft bg-bone-low text-ink-muted hover:text-ink'
+                  }`}
                 >
                   <cfg.Icon size={14} />
-                  {cfg.label}
+                  <span>{cfg.label}</span>
                 </button>
               ))}
             </div>
@@ -159,18 +172,14 @@ export default function PestAlertForm() {
 
           {/* Step 4: Location */}
           <FormSection number="4" title="Your location (optional)">
-            <div className="relative group">
-              <MapPin size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-wheat transition-colors" />
+            <div className="relative">
+              <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" />
               <input
                 type="text"
                 value={location}
                 onChange={e => setLocation(e.target.value)}
                 placeholder="e.g. Kampala, Jinja, Mbale..."
-                className="
-                  w-full pl-12 pr-6 py-5 bg-white/[0.02] border border-white/5 rounded-[24px]
-                  text-sm text-white placeholder-white/10 focus:outline-none focus:border-wheat/30
-                  transition-all font-medium
-                "
+                className="mh-input py-3 pl-11"
               />
             </div>
           </FormSection>
@@ -179,48 +188,19 @@ export default function PestAlertForm() {
           <button
             type="submit"
             disabled={!selectedPest || !selectedCrop || submitting}
-            className={`
-              w-full py-6 rounded-[24px] font-display font-black text-xs uppercase tracking-[0.3em]
-              flex items-center justify-center gap-3 transition-all duration-300 shadow-2xl
-              ${selectedPest && selectedCrop
-                ? 'bg-white text-black hover:scale-[1.02] active:scale-95'
-                : 'bg-white/5 text-white/10 cursor-not-allowed'
-              }
-            `}
+            className="btn-primary w-full py-3 text-xs font-bold flex items-center justify-center gap-2 mt-2"
           >
             {submitting ? (
               <Loader2 className="animate-spin" size={18} />
             ) : (
               <>
                 <Send size={16} />
-                Deploy Intelligence
+                <span>Deploy Intelligence</span>
               </>
             )}
           </button>
         </form>
       )}
-    </div>
-  )
-}
-
-function Loader2({ className, size }: { className?: string; size?: number }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
-  )
-}
-
-function FormSection({ number, title, children }: { number: string; title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 px-1">
-        <span className="w-6 h-6 rounded-xl bg-white/5 border border-white/10 text-white/40 text-[10px] font-black flex items-center justify-center shrink-0">
-          {number}
-        </span>
-        <p className="text-[11px] font-black text-white/50 uppercase tracking-[0.2em]">{title}</p>
-      </div>
-      {children}
     </div>
   )
 }

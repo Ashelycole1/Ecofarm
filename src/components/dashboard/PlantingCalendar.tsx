@@ -5,9 +5,8 @@ import { useApp } from '@/context/AppContext'
 import { ChevronDown, ChevronUp, Calendar, Droplets, Clock, Sprout } from 'lucide-react'
 import type { Crop } from '@/lib/mockData'
 
-// ... same status, icons, and CropCard components ...
 const statusConfig = {
-  optimal: { label: 'Optimal Now',   bg: 'bg-safe/15',  border: 'border-safe/40',  text: 'text-safe',  dot: 'bg-safe'  },
+  optimal: { label: 'Optimal Now',   bg: 'bg-safe/10',  border: 'border-safe/30',  text: 'text-safe',  dot: 'bg-safe'  },
   good:    { label: 'Good Window',   bg: 'bg-rain/10',  border: 'border-rain/30',  text: 'text-rain',  dot: 'bg-rain'  },
   caution: { label: 'Wait a Bit',    bg: 'bg-wheat/10', border: 'border-wheat/40', text: 'text-wheat', dot: 'bg-wheat' },
   avoid:   { label: 'Avoid Now',     bg: 'bg-alert/10', border: 'border-alert/30', text: 'text-alert', dot: 'bg-alert' },
@@ -17,56 +16,67 @@ const waterIcons = { low: 'LOW', medium: 'MED', high: 'HIGH' }
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
+function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="bg-bone-low rounded-xl p-2.5 border border-border-soft flex flex-col items-center gap-0.5 shadow-inner">
+      <span className="text-ink-muted">{icon}</span>
+      <span className="font-body text-[9px] font-bold text-ink-muted uppercase tracking-wider">{label}</span>
+      <span className="font-display text-xs text-ink font-bold mt-0.5">{value}</span>
+    </div>
+  )
+}
+
 function CropCard({ crop }: { crop: Crop }) {
   const [expanded, setExpanded] = useState(false)
   
-  // Safe fallback for status styling
   const validStatus = Object.keys(statusConfig).includes(crop.status) ? crop.status : 'caution'
   const cfg = statusConfig[validStatus as keyof typeof statusConfig]
   const currentMonth = new Date().getMonth() + 1
 
   return (
-    <div className={`crop-row rounded-leaf border ${cfg.border} ${cfg.bg} transition-all duration-300 overflow-hidden shadow-lg`}>
+    <div className={`mh-card border ${cfg.border} bg-white transition-all duration-300 overflow-hidden`}>
       <button
         className="w-full flex items-center gap-4 p-5 text-left"
         onClick={() => setExpanded(e => !e)}
         id={`crop-card-${crop.id}`}
         aria-expanded={expanded}
       >
-        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 text-wheat shrink-0">
+        <div className="w-12 h-12 rounded-2xl bg-forest/10 flex items-center justify-center border border-forest/20 text-forest shrink-0">
           <Sprout size={24} />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-black text-white text-sm leading-tight uppercase tracking-tight">{crop.name}</p>
-            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${cfg.bg} ${cfg.border} border ${cfg.text} leading-none`}>
+            <p className="font-display font-bold text-ink text-lg leading-tight tracking-tight">{crop.name}</p>
+            <span className={`px-2.5 py-1 rounded-full font-body text-[9px] font-bold uppercase tracking-widest ${cfg.bg} ${cfg.border} border ${cfg.text} leading-none`}>
               {cfg.label}
             </span>
           </div>
-          <p className="text-[10px] text-white/40 mt-1 uppercase font-black tracking-widest">&quot;{crop.localName || 'Local Seed'}&quot; · {crop.region ? crop.region.join(', ') : 'Uganda'}</p>
+          <p className="font-body text-[10px] text-ink-muted mt-1 uppercase font-bold tracking-wider">
+            &quot;{crop.localName || 'Local Seed'}&quot; · {crop.region ? crop.region.join(', ') : 'Uganda'}
+          </p>
         </div>
 
-        <span className={`${cfg.text} shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
-          <ChevronDown size={16} />
+        <span className={`text-ink-muted shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
+          <ChevronDown size={18} />
         </span>
       </button>
 
       {expanded && (
-        <div className="px-5 pb-5 space-y-4 border-t border-white/5 pt-5">
-          <div className="bg-white/[0.03] rounded-2xl p-4 border border-white/5">
-            <p className="text-[11px] text-white/70 leading-relaxed font-medium">{crop.tip}</p>
+        <div className="px-5 pb-5 space-y-4 border-t border-bone-dim/40 pt-5">
+          <div className="bg-bone-low rounded-xl p-4 border border-border-soft">
+            <p className="font-body text-xs text-ink-muted leading-relaxed font-medium">{crop.tip}</p>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <MiniStat icon={<Droplets size={12} />} label="Water" value={waterIcons[crop.waterNeed as keyof typeof waterIcons] || 'MED'} />
-            <MiniStat icon={<Clock size={12} />} label="Harvest" value={`${crop.harvestWeeks || 12}W`} />
-            <MiniStat icon={<Calendar size={12} />} label="Season" value={`${crop.plantingMonths?.length || 2} WINDOWS`} />
+            <MiniStat icon={<Droplets size={14} />} label="Water" value={waterIcons[crop.waterNeed as keyof typeof waterIcons] || 'MED'} />
+            <MiniStat icon={<Clock size={14} />} label="Harvest" value={`${crop.harvestWeeks || 12}W`} />
+            <MiniStat icon={<Calendar size={14} />} label="Season" value={`${crop.plantingMonths?.length || 2} WINDOWS`} />
           </div>
 
-          <div>
-            <p className="text-[10px] text-white/40 uppercase tracking-wider mb-2">Planting Months</p>
-            <div className="flex flex-wrap gap-1">
+          <div className="pt-1">
+            <p className="font-body text-[10px] font-bold text-ink-muted uppercase tracking-wider mb-2">Planting Months</p>
+            <div className="flex flex-wrap gap-1.5">
               {MONTH_NAMES.map((m, i) => {
                 const month = i + 1
                 const isPlanting = crop.plantingMonths?.includes(month)
@@ -74,14 +84,13 @@ function CropCard({ crop }: { crop: Crop }) {
                 return (
                   <span
                     key={month}
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-all
-                      ${isPlanting
+                    className={`font-body text-[10px] font-bold px-2.5 py-1 rounded-full transition-all border ${
+                      isPlanting
                         ? isCurrent
-                          ? 'bg-wheat text-forest-dark ring-1 ring-wheat/80'
-                          : 'bg-forest text-white/90'
-                        : 'bg-white/5 text-white/25'
-                      }
-                    `}
+                          ? 'bg-sienna text-white border-sienna shadow-sm'
+                          : 'bg-forest text-white border-forest shadow-sm'
+                        : 'bg-bone-low text-ink-faint border-transparent'
+                    }`}
                   >
                     {m}
                   </span>
@@ -91,16 +100,6 @@ function CropCard({ crop }: { crop: Crop }) {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="bg-black/20 rounded-lg p-2 flex flex-col items-center gap-0.5">
-      <span className="text-white/40">{icon}</span>
-      <span className="text-[9px] text-white/40 uppercase">{label}</span>
-      <span className="text-xs text-white font-semibold">{value}</span>
     </div>
   )
 }
@@ -127,52 +126,57 @@ export default function PlantingCalendar() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 pb-16 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h2 className="font-display font-bold text-white text-lg high-contrast-text">Cropping Calendar</h2>
-        <p className="text-xs text-white/40">
+      <div className="flex flex-col gap-1 border-b border-border-soft pb-4">
+        <h2 className="font-display font-bold text-ink text-4xl tracking-tight">Cropping Calendar</h2>
+        <p className="font-body text-xs font-bold text-ink-muted tracking-wide">
           {MONTH_NAMES[new Date().getMonth()]} — Custom AI schedules
         </p>
       </div>
 
       {/* AI Selectors */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-         <select 
-           value={selectedRegion} 
-           onChange={(e) => setSelectedRegion(e.target.value)}
-           className="w-full bg-black/40 border border-white/10 rounded-leaf-sm p-2 text-xs text-white"
-         >
-           <option>Central (Kampala)</option>
-           <option>Northern (Gulu)</option>
-           <option>Western (Mbarara)</option>
-           <option>Eastern (Mbale)</option>
-         </select>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <select 
+          value={selectedRegion} 
+          onChange={(e) => setSelectedRegion(e.target.value)}
+          className="mh-input py-3 bg-white"
+        >
+          <option>Central (Kampala)</option>
+          <option>Northern (Gulu)</option>
+          <option>Western (Mbarara)</option>
+          <option>Eastern (Mbale)</option>
+        </select>
 
-         <select 
-           value={selectedCrop} 
-           onChange={(e) => setSelectedCrop(e.target.value)}
-           className="w-full bg-black/40 border border-white/10 rounded-leaf-sm p-2 text-xs text-white"
-         >
-           <option>Maize</option>
-           <option>Beans</option>
-           <option>Cassava</option>
-           <option>Matooke</option>
-           <option>Coffee</option>
-         </select>
+        <select 
+          value={selectedCrop} 
+          onChange={(e) => setSelectedCrop(e.target.value)}
+          className="mh-input py-3 bg-white"
+        >
+          <option>Maize</option>
+          <option>Beans</option>
+          <option>Cassava</option>
+          <option>Matooke</option>
+          <option>Coffee</option>
+        </select>
 
-         <button 
-           onClick={handleGenerate}
-           disabled={isGeneratingAI}
-           className="sm:col-span-1 col-span-2 py-2.5 rounded-leaf bg-forest/40 border border-white/10 text-wheat font-bold text-xs uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-forest transition-colors"
-         >
-           {isGeneratingAI ? <><Clock className="animate-spin" size={14} /> Generating...</> : 'Generate AI Schedule'}
-         </button>
+        <button 
+          onClick={handleGenerate}
+          disabled={isGeneratingAI}
+          className="btn-primary py-3 px-4 text-xs font-bold w-full"
+        >
+          {isGeneratingAI ? (
+            <span className="flex items-center justify-center gap-2">
+              <Clock className="animate-spin" size={16} /> Generating...
+            </span>
+          ) : (
+            'Generate AI Schedule'
+          )}
+        </button>
       </div>
 
-
       {/* Filter tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide pt-2">
+      <div className="flex gap-2 flex-wrap pt-2">
         {(['all', 'optimal', 'good', 'caution'] as const).map(f => {
           const cfg = f === 'all' ? null : statusConfig[f]
           return (
@@ -180,28 +184,31 @@ export default function PlantingCalendar() {
               key={f}
               id={`calendar-filter-${f}`}
               onClick={() => setFilter(f)}
-              className={`
-                shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-all
-                ${filter === f
-                  ? 'bg-forest text-wheat shadow-nature'
-                  : 'bg-white/5 text-white/50 hover:bg-white/10'
-                }
-              `}
+              className={`px-4 py-2 rounded-full font-body text-xs font-bold transition-all border ${
+                filter === f
+                  ? 'bg-forest text-white border-forest shadow-sm'
+                  : 'bg-white text-ink-muted hover:text-ink border-border-soft shadow-card-sm'
+              }`}
             >
-              {cfg && <span className={`status-dot ${cfg.dot} mr-1.5`} />}
-              {f === 'all' ? '🌿 All' : cfg?.label}
+              <span className="flex items-center gap-1.5">
+                {cfg && <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />}
+                <span>{f === 'all' ? '🌿 All Crops' : cfg?.label}</span>
+              </span>
             </button>
           )
         })}
       </div>
 
-      {/* Crop list */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+      {/* Crop list grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
         {filtered.map((crop, index) => (
           <CropCard key={crop.id || index} crop={crop} />
         ))}
         {filtered.length === 0 && (
-          <div className="col-span-full text-center text-white/30 py-8 text-sm">No crops in this category</div>
+          <div className="col-span-full text-center bg-white rounded-xl border border-border-soft py-12 space-y-2">
+            <p className="font-display font-bold text-lg text-ink">No scheduled crops match this condition</p>
+            <p className="font-body text-xs text-ink-muted">Try switching filtering tabs or generate a new customized AI forecast.</p>
+          </div>
         )}
       </div>
     </div>

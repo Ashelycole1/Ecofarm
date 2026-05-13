@@ -28,7 +28,7 @@ import { syncCoordinates, getSupabase } from '@/lib/supabaseClient';
 
 const MapComponent = dynamic(() => import('./MapComponent'), {
   ssr: false,
-  loading: () => <div className="h-full w-full bg-forest/10 animate-pulse rounded-2xl flex items-center justify-center text-white/20">Loading Map Engine...</div>
+  loading: () => <div className="h-full w-full bg-bone-low animate-pulse rounded-2xl flex items-center justify-center font-body text-xs text-ink-muted font-bold">Loading Map Engine...</div>
 });
 
 export default function EcoTrack() {
@@ -45,7 +45,7 @@ export default function EcoTrack() {
   const [canGenerateQR, setCanGenerateQR] = useState(false);
   
   const watchIdRef = useRef<number | null>(null);
-  const destination: [number, number] = [0.3200, 32.5900]; // Mock Market Location (e.g. Kalerwe)
+  const destination: [number, number] = [0.3200, 32.5900];
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -60,7 +60,6 @@ export default function EcoTrack() {
     };
   }, []);
 
-  // ── Requirement 2: Reverse Geocoding (Nominatim) ──────────────────────────
   const fetchAddress = async (lat: number, lon: number) => {
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
@@ -73,13 +72,11 @@ export default function EcoTrack() {
     }
   };
 
-  // ── Requirement 3: Routing & ETA (OpenRouteService) ─────────────────────────
   const fetchRoute = async (start: [number, number], end: [number, number]) => {
     const orsKey = process.env.NEXT_PUBLIC_ORS_API_KEY;
     
     try {
       if (orsKey) {
-        // Use Official OpenRouteService
         const res = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${orsKey}&start=${start[1]},${start[0]}&end=${end[1]},${end[0]}`);
         const data = await res.json();
         if (data.features && data.features[0]) {
@@ -91,7 +88,6 @@ export default function EcoTrack() {
         }
       }
 
-      // Fallback to OSRM if no key
       const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full`);
       const data = await res.json();
       if (data.routes && data.routes[0]) {
@@ -105,7 +101,6 @@ export default function EcoTrack() {
     }
   };
 
-  // ── Requirement 4: Offline Sync (Dexie.js) ───────────────────────────────
   useEffect(() => {
     if (isOnline && currentTrip) {
       const sync = async () => {
@@ -139,7 +134,6 @@ export default function EcoTrack() {
     const trip = await dbStartTrip('farmer-001');
     setCurrentTrip(trip);
 
-    // ── Supabase Integration ──
     const supabase = getSupabase();
     if (supabase && isOnline) {
       await supabase.from('trips').insert([{
@@ -159,16 +153,11 @@ export default function EcoTrack() {
         setCurrentPosition(newPos);
         setRouteCoordinates(prev => [...prev, newPos]);
 
-        // 1. Reverse Geocoding
         fetchAddress(lat, lng);
-        
-        // 2. Routing/ETA
         fetchRoute(newPos, destination);
 
-        // 3. Offline Store (Dexie)
         await addCoordinate({ tripId: trip.id, lat, lng, timestamp });
 
-        // 4. Real-time Sync (Supabase)
         if (navigator.onLine) {
           syncCoordinates([{ trip_id: trip.id, lat, lng, timestamp }]);
         }
@@ -194,46 +183,40 @@ export default function EcoTrack() {
   };
 
   return (
-    <div className="flex flex-col gap-5 animate-fade-in">
+    <div className="flex flex-col gap-5 animate-fade-in pb-12">
       {/* Header Panel */}
-      <div 
-        className="p-5 rounded-3xl relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, rgba(45,102,95,0.40) 0%, rgba(13,36,34,0.85) 100%)',
-          border: '1px solid rgba(61,138,129,0.25)',
-        }}
-      >
-        <div className="flex items-center justify-between relative z-10">
+      <div className="mh-card p-6 bg-white border border-border-soft">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-forest/30 border border-white/10">
-              <Truck className="text-leaf" size={20} />
+            <div className="p-2.5 rounded-xl bg-forest/10 border border-forest/20 shadow-inner">
+              <Truck className="text-forest" size={20} />
             </div>
             <div>
-              <h2 className="text-white font-display font-black text-lg">Eco-Track Pro</h2>
-              <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Logistics & Real-time Fleet</p>
+              <h2 className="font-display font-bold text-ink text-xl leading-tight">Eco-Track Pro</h2>
+              <p className="font-body text-ink-muted text-[10px] uppercase tracking-wider font-bold mt-0.5">Logistics & Real-time Fleet</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {syncing && <RefreshCw size={12} className="text-wheat animate-spin" />}
-            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold ${
-              isOnline ? 'bg-safe/15 text-safe border border-safe/20' : 'bg-alert/15 text-alert border border-alert/20'
+            {syncing && <RefreshCw size={12} className="text-forest animate-spin" />}
+            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-body text-[9px] font-bold uppercase tracking-wider ${
+              isOnline ? 'bg-safe/10 text-safe border border-safe/20' : 'bg-alert-container text-alert border border-alert/20'
             }`}>
               {isOnline ? <Wifi size={10} /> : <WifiOff size={10} />}
-              {isOnline ? 'ONLINE' : 'OFFLINE MODE'}
+              <span>{isOnline ? 'ONLINE' : 'OFFLINE MODE'}</span>
             </div>
           </div>
         </div>
 
         {currentTrip && (
-          <div className="mt-5 p-3 rounded-2xl bg-black/30 border border-white/5 flex items-center justify-between animate-slide-up">
+          <div className="mt-4 p-3 rounded-xl bg-bone-low border border-border-soft flex items-center justify-between animate-slide-up shadow-inner">
             <div className="flex flex-col">
-              <span className="text-white/30 text-[9px] uppercase font-black">Active Trip ID</span>
-              <span className="text-wheat font-mono text-xs font-bold">{currentTrip.id.split('-')[0]}...</span>
+              <span className="font-body text-ink-muted text-[9px] uppercase font-bold tracking-wider">Active Trip ID</span>
+              <span className="font-mono text-ink text-xs font-bold mt-0.5">{currentTrip.id.split('-')[0]}...</span>
             </div>
             <button 
               onClick={copyTripId}
-              className="px-4 py-2 rounded-xl bg-forest/40 text-white text-[10px] font-bold hover:bg-forest/60 transition-all active:scale-95"
+              className="btn-ghost py-1.5 px-3 text-[10px] font-bold"
             >
               Share ID
             </button>
@@ -242,21 +225,18 @@ export default function EcoTrack() {
       </div>
 
       {/* Map & Live Stats */}
-      <div 
-        className="h-[400px] rounded-3xl overflow-hidden relative border border-white/10 shadow-2xl"
-        style={{ background: 'rgba(13,36,34,0.80)' }}
-      >
+      <div className="h-[400px] rounded-2xl overflow-hidden relative border border-border-soft shadow-card-sm bg-bone-low">
         <MapComponent currentPosition={currentPosition} routeCoordinates={routeCoordinates} />
         
         {/* Floating Address Overlay (Nominatim) */}
         <div className="absolute top-4 left-4 right-4 z-[1000] pointer-events-none">
-          <div className="bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex items-center gap-3 pointer-events-auto shadow-xl">
-             <div className="w-8 h-8 rounded-full bg-forest/40 flex items-center justify-center shrink-0">
-               <MapPin className="text-wheat" size={16} />
+          <div className="bg-white/95 backdrop-blur-md border border-border-soft p-3 rounded-xl flex items-center gap-3 pointer-events-auto shadow-sm">
+             <div className="w-8 h-8 rounded-full bg-forest/10 flex items-center justify-center shrink-0">
+               <MapPin className="text-forest" size={16} />
              </div>
              <div className="flex-1 min-w-0">
-               <p className="text-white/40 text-[8px] uppercase font-black tracking-tighter">Current Location</p>
-               <p className="text-white text-xs font-bold truncate">{address}</p>
+               <p className="font-body text-ink-muted text-[8px] uppercase font-bold tracking-wider">Current Location</p>
+               <p className="font-body text-ink text-xs font-bold truncate mt-0.5">{address}</p>
              </div>
           </div>
         </div>
@@ -264,17 +244,17 @@ export default function EcoTrack() {
         {/* ETA Panel */}
         {eta && (
           <div className="absolute bottom-4 left-4 right-4 z-[1000] pointer-events-none">
-            <div className="bg-[#FF9800] p-4 rounded-2xl flex items-center justify-between pointer-events-auto shadow-2xl border-t border-white/20">
+            <div className="bg-sienna p-4 rounded-xl flex items-center justify-between pointer-events-auto shadow-md text-white">
               <div className="flex items-center gap-3">
-                <Navigation className="text-black" size={20} />
+                <Navigation size={20} />
                 <div>
-                  <p className="text-black/60 text-[8px] font-black uppercase">Market Destination</p>
-                  <p className="text-black font-black text-sm uppercase italic">Optimized Route Active</p>
+                  <p className="font-body text-[8px] font-bold uppercase tracking-wider opacity-80">Market Destination</p>
+                  <p className="font-body font-bold text-xs uppercase italic mt-0.5">Optimized Route Active</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-black font-black text-xl leading-none">{eta}</p>
-                <p className="text-black/60 text-[8px] font-black uppercase">{distance}</p>
+                <p className="font-display font-bold text-xl leading-none">{eta}</p>
+                <p className="font-body text-[8px] font-bold uppercase tracking-wider opacity-80 mt-1">{distance}</p>
               </div>
             </div>
           </div>
@@ -282,17 +262,17 @@ export default function EcoTrack() {
       </div>
 
       {/* Action Bar */}
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-2 pt-1">
         {!currentTrip ? (
           <button 
             onClick={handleStartTrip}
-            className="w-full py-5 rounded-3xl bg-forest text-white font-display font-black text-lg flex items-center justify-center gap-3 shadow-lg shadow-forest/20 active:scale-[0.98] transition-all"
-            style={{ background: 'linear-gradient(135deg, #2D665F 0%, #1A3E3A 100%)' }}
+            className="btn-primary py-4 w-full text-xs font-bold flex items-center justify-center gap-2"
           >
-            <Truck size={24} /> START DELIVERY
+            <Truck size={18} /> 
+            <span>START DELIVERY</span>
           </button>
         ) : (
-          <div className="flex gap-3">
+          <div className="flex gap-2">
              <button 
               onClick={() => {
                 if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
@@ -300,20 +280,22 @@ export default function EcoTrack() {
                 setCurrentPosition(null);
                 setRouteCoordinates([]);
               }}
-              className="flex-[2] py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold flex items-center justify-center gap-2"
+              className="flex-[2] py-3 rounded-xl bg-white border border-border-soft text-ink font-body text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm hover:bg-bone-low transition-all"
             >
-              <X size={18} /> Cancel
+              <X size={16} /> 
+              <span>Cancel</span>
             </button>
             <button 
               onClick={generateQR}
               disabled={!canGenerateQR}
-              className={`flex-[3] py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-xl ${
+              className={`flex-[3] py-3 rounded-xl font-body font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm ${
                 canGenerateQR 
-                  ? 'bg-wheat text-forest active:scale-95' 
-                  : 'bg-white/5 text-white/20 grayscale cursor-not-allowed'
+                  ? 'bg-forest text-white active:scale-95' 
+                  : 'bg-bone-low text-ink-faint border border-border-soft cursor-not-allowed'
               }`}
             >
-              <QrCode size={18} /> {canGenerateQR ? 'GENERATE DELIVERY QR' : 'REACH DESTINATION'}
+              <QrCode size={16} /> 
+              <span>{canGenerateQR ? 'GENERATE DELIVERY QR' : 'REACH DESTINATION'}</span>
             </button>
           </div>
         )}
@@ -322,32 +304,25 @@ export default function EcoTrack() {
       {/* QR Modal */}
       {showQR && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={() => setShowQR(false)} />
-          <div 
-            className="relative w-full max-w-sm rounded-[40px] p-8 flex flex-col items-center gap-6 animate-zoom-in"
-            style={{ 
-              background: 'linear-gradient(160deg, #1A3E3A 0%, #061412 100%)',
-              border: '2px solid rgba(242,201,76,0.3)'
-            }}
-          >
-            <div className="w-12 h-1 bg-white/10 rounded-full mb-2" />
+          <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setShowQR(false)} />
+          <div className="relative w-full max-w-sm rounded-2xl p-6 flex flex-col items-center gap-5 bg-white border border-border-soft shadow-xl animate-zoom-in">
             <div className="text-center">
-              <h3 className="text-wheat font-display font-black text-2xl uppercase italic">Delivery Verified</h3>
-              <p className="text-white/50 text-xs mt-1">Buyer scans this to confirm arrival</p>
+              <h3 className="font-display font-bold text-2xl text-ink">Delivery Verified</h3>
+              <p className="font-body text-xs text-ink-muted mt-0.5">Buyer scans this to confirm arrival</p>
             </div>
             
-            <div className="p-4 bg-white rounded-3xl shadow-2xl border-4 border-wheat">
+            <div className="p-4 bg-white rounded-xl shadow-inner border border-border-soft">
               <Image src={qrUrl} alt="Delivery QR" width={192} height={192} className="w-48 h-48" />
             </div>
 
-            <div className="flex flex-col items-center gap-1">
-              <p className="text-white/30 text-[10px] uppercase font-black">Shipment ID</p>
-              <p className="text-white font-mono text-sm">{currentTrip?.id}</p>
+            <div className="flex flex-col items-center gap-0.5">
+              <p className="font-body text-ink-muted text-[9px] uppercase font-bold tracking-wider">Shipment ID</p>
+              <p className="font-mono text-ink text-xs font-bold">{currentTrip?.id}</p>
             </div>
 
             <button 
               onClick={() => setShowQR(false)}
-              className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-sm"
+              className="btn-ghost py-2.5 w-full text-xs font-bold"
             >
               Close
             </button>
