@@ -8,6 +8,7 @@ import { diagnosticTestGemini } from '@/lib/ai-test'
 import {
   mockCrops,
   mockPestAlerts,
+  pestTypes,
 } from '@/lib/mockData'
 import type {
   WeatherData,
@@ -97,6 +98,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
           displayName: clerkUser.fullName || clerkUser.username || 'Farmer',
           photoURL: clerkUser.imageUrl,
         })
+
+        // Ensure user profile exists in Supabase
+        const syncProfile = async () => {
+          const supabase = getSupabase()
+          if (!supabase) return
+          const role = (clerkUser.unsafeMetadata?.role as string) || 'farmer'
+          const validRole = ['farmer', 'buyer', 'delivery'].includes(role) ? role : 'farmer'
+          
+          const { error } = await supabase.from('profiles').upsert({
+            id: clerkUser.id,
+            full_name: clerkUser.fullName || clerkUser.username || 'Farmer',
+            email: clerkUser.primaryEmailAddress?.emailAddress || '',
+            phone_number: clerkUser.primaryPhoneNumber?.phoneNumber || clerkUser.unsafeMetadata?.phone || '',
+            role: validRole,
+            avatar_url: clerkUser.imageUrl || ''
+          }, { onConflict: 'id' })
+          if (error) {
+            console.warn('[Supabase] Auto profile sync warning:', error)
+          }
+        }
+        syncProfile()
       } else if (!user?.isGuest) {
         setUser(null)
       }
@@ -149,11 +171,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .select('*')
         .order('report_count', { ascending: false })
       
-      if (data) setPestAlerts(data as any)
-      else setPestAlerts(mockPestAlerts)
+      if (data && data.length > 0) {
+        const mappedAlerts: PestAlert[] = data.map((row: any) => {
+          const pt = pestTypes.find(p => p.id === row.pest_type_id)
+          return {
+            id: row.id,
+            pestName: pt ? pt.label : row.pest_type_id,
+            emoji: '',
+            affectedCrops: [row.crop_id],
+            severity: row.severity || 'medium',
+            description: `Active sighting reported in ${row.location}. ${pt?.description || ''}`,
+            action: 'Apply recommended organic/chemical treatment and notify local agricultural officers.',
+            reportCount: row.report_count || 1,
+            lastReported: new Date(row.last_reported).toLocaleDateString()
+          }
+        })
+        setPestAlerts(mappedAlerts)
+      } else {
+        setPestAlerts(mockPestAlerts)
+      }
     }
 
     fetchAlerts()
+
+    // Fetch existing pest reports to populate community counter
+    const fetchReports = async () => {
+      const { data } = await supabase.from('pest_reports').select('*').order('timestamp', { ascending: false })
+      if (data && data.length > 0) {
+        const formattedReports = data.map((r: any) => ({
+          id: r.id,
+          pestTypeId: r.pest_type_id,
+          cropId: r.crop_id,
+          location: r.location,
+          severity: r.severity,
+          notes: r.notes,
+          timestamp: r.timestamp
+        }))
+        setPestReports(formattedReports)
+      }
+    }
+    fetchReports()
 
     const alertsChannel = supabase
       .channel('pest_alerts_changes')
@@ -289,15 +346,66 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!supabase) return
     
     try {
-      const { error } = await supabase.from('pest_reports').insert([{
-        ...report,
+      // 1. Insert into pest_reports using correct snake_case column names
+      const { error: reportError } = await supabase.from('pest_reports').insert([{
         user_id: user.uid,
+        pest_type_id: report.pestTypeId,
+        crop_id: report.cropId,
+        location: report.location || 'Not specified',
+        severity: report.severity,
+        notes: report.notes || '',
         timestamp: new Date().toISOString()
       }])
       
-      if (!error) {
-        setFarmStatus(prev => prev ? { ...prev, alerts: prev.alerts + 1 } : prev)
+      if (reportError) {
+        console.error("[Supabase] Error inserting pest_report:", reportError)
+        return
       }
+
+      // Dynamically update local state to reflect new report in the UI instantly
+      const newReport: PestReport = {
+        id: Date.now().toString(),
+        pestTypeId: report.pestTypeId,
+        cropId: report.cropId,
+        location: report.location || 'Not specified',
+        severity: report.severity,
+        notes: report.notes || '',
+        timestamp: new Date().toISOString()
+      }
+      setPestReports(prev => [newReport, ...prev])
+
+      // 2. Insert or update the aggregated pest_alerts table
+      const { data: existingAlerts } = await supabase
+        .from('pest_alerts')
+        .select('*')
+        .eq('pest_type_id', report.pestTypeId)
+        .eq('crop_id', report.cropId)
+        .limit(1)
+
+      if (existingAlerts && existingAlerts.length > 0) {
+        const existing = existingAlerts[0]
+        await supabase
+          .from('pest_alerts')
+          .update({
+            report_count: (existing.report_count || 1) + 1,
+            last_reported: new Date().toISOString(),
+            severity: report.severity
+          })
+          .eq('id', existing.id)
+      } else {
+        await supabase
+          .from('pest_alerts')
+          .insert([{
+            pest_type_id: report.pestTypeId,
+            crop_id: report.cropId,
+            location: report.location || 'Not specified',
+            severity: report.severity,
+            report_count: 1,
+            last_reported: new Date().toISOString()
+          }])
+      }
+      
+      setFarmStatus(prev => prev ? { ...prev, alerts: prev.alerts + 1 } : prev)
     } catch (error) {
       console.error("Error submitting report:", error)
     }
