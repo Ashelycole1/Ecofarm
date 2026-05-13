@@ -446,6 +446,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       
       setFarmStatus(prev => prev ? { ...prev, alerts: prev.alerts + 1 } : prev)
+
+      // 3. Also post to community feed so every farmer sees it
+      const pt = pestTypes.find(p => p.id === report.pestTypeId)
+      await supabase.from('community_posts').insert([{
+        user_id: user.uid,
+        author_name: user.displayName || 'Farmer',
+        author_avatar: user.photoURL || null,
+        author_role: 'farmer',
+        content: `PEST ALERT: ${pt?.label || report.pestTypeId} spotted on ${report.cropId} in ${report.location || 'local area'}. ${report.notes ? `Notes: ${report.notes}` : ''}`.trim(),
+        image_url: null,
+        post_type: 'pest_alert',
+        pest_severity: report.severity,
+        likes: 0,
+        liked_by: [],
+        comments_count: 0,
+        created_at: new Date().toISOString()
+      }])
     } catch (error) {
       console.error("Error submitting report:", error)
     }

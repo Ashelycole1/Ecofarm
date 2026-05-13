@@ -15,26 +15,27 @@ import MarketDashboard from '@/components/dashboard/MarketDashboard'
 import EcoTrack from '@/components/dashboard/EcoTrack'
 import LogisticsViewer from '@/components/dashboard/LogisticsViewer'
 import LogisticTrackingView from '@/components/dashboard/LogisticTrackingView'
+import CommunityFeed from '@/components/dashboard/CommunityFeed'
 
 // ─── Sidebar nav items ────────────────────────────────────────────────────────
 const navTabs = [
-  { id: 'home',     label: 'Home',     Icon: Home },
-
-  { id: 'market',   label: 'Market',   Icon: TrendingUp },
-  { id: 'calendar', label: 'Planting', Icon: Leaf },
-  { id: 'chat',     label: 'Chat',     Icon: MessageCircle },
-  { id: 'alerts',   label: 'Alerts',   Icon: Bell },
-  { id: 'track',    label: 'Track',    Icon: Navigation },
+  { id: 'home',      label: 'Home',      Icon: Home },
+  { id: 'market',    label: 'Market',    Icon: TrendingUp },
+  { id: 'calendar',  label: 'Planting',  Icon: Leaf },
+  { id: 'community', label: 'Community', Icon: Users },
+  { id: 'chat',      label: 'Chat',      Icon: MessageCircle },
+  { id: 'alerts',    label: 'Alerts',    Icon: Bell },
+  { id: 'track',     label: 'Track',     Icon: Navigation },
 ]
 
 const tabTitles: Record<string, string> = {
-  home:     'EcoFarm',
-
-  market:   'Market',
-  calendar: 'Planting',
-  chat:     'Village Elder',
-  alerts:   'Pest Alerts',
-  track:    'Eco-Track',
+  home:      'EcoFarm',
+  market:    'Market',
+  calendar:  'Planting',
+  community: 'Farmer Community',
+  chat:      'Village Elder',
+  alerts:    'Pest Alerts',
+  track:     'Eco-Track',
 }
 
 // ─── Top app bar ──────────────────────────────────────────────────────────────
@@ -244,9 +245,10 @@ function TabContent({ tab }: { tab: string }) {
   const { user } = useApp()
 
   if (tab === 'home') return <HomeTab />
-
   if (tab === 'market') return <MarketDashboard />
   if (tab === 'track') return <TrackTab />
+  // Community is publicly viewable; posting requires auth (handled inside component)
+  if (tab === 'community') return <CommunityFeed />
 
   if (!user) return <AuthGate tabName={tab} />
 
