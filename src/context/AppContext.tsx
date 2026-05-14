@@ -573,7 +573,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           await supabase.from('chat_messages').insert([
             { user_id: user.uid, text, sender: 'user', language },
             { user_id: user.uid, text: aiData.voice_script, sender: 'elder', language, metadata: elderMsg.metadata }
-          ]).catch(() => {})
+          ])
         }
       }
     } catch (outerErr) {
@@ -658,7 +658,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 severity: diagnosis.visual_status === 'Red' ? 'high' : diagnosis.visual_status === 'Yellow' ? 'medium' : 'low',
                 ai_diagnosis: diagnosis,
                 timestamp: new Date().toISOString()
-              }]).catch(() => {})
+              }])
             }
           }
 
