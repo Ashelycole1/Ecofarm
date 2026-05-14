@@ -503,12 +503,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const langMap: Record<string, string> = {
         'English': 'eng', 'Luganda': 'lug', 'Acholi': 'ach', 'Lusoga': 'xog', 'Runyankole': 'nyn', 'Lugbara': 'lgg', 'Swahili': 'swa'
       }
+      const sLang = langMap[source] || 'eng'
+      const tLang = langMap[target] || 'lug'
+      
       const res = await sunbirdRequest('tasks/nllb_translate', {
         text, 
-        source_language: langMap[source] || 'eng', 
-        target_language: langMap[target] || 'lug'
+        source_language: sLang, 
+        target_language: tLang
       })
-      return res.output || text
+      
+      console.log(`[Sunbird] ${sLang}->${tLang} translation result:`, res)
+      return res.translated_text || res.output || res.result || text
     } catch (e) {
       console.error("[Sunbird] Translation failed:", e)
       return text
@@ -550,31 +555,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
         
-        const systemPrompt = `Role: Village Elder Agricultural Expert. Audience: Ugandan smallholder farmer. 
-        Context: The user is asking for farming advice. 
-        Current Status: ${JSON.stringify(farmStatus || 'Unknown')}.
-        Respond in English with professional yet accessible agricultural wisdom. 
-        JSON format only: { "voice_script": "...", "action_icon_meta": "...", "daily_brief": "..." }`
+        const systemPrompt = `Role: Village Elder Agricultural Expert. 
+        Audience: Ugandan smallholder farmer. 
+        Context: The user is asking for farming advice. If the message is not in English, it is a local Ugandan language (Luganda, Runyankole, etc.)—please translate it mentally and respond in English.
+        Current Farm Status: ${JSON.stringify(farmStatus || 'Optimal')}.
+        Instructions: 
+        1. Provide professional yet accessible agricultural wisdom.
+        2. Keep the response concise but deeply helpful.
+        3. ALWAYS respond in valid JSON format.
         
-        const result = await model.generateContent(systemPrompt + "\n\nFarmer Message: " + inputForAI)
+        Format: { "voice_script": "Detailed English advice", "action_icon_meta": "IconName", "daily_brief": "Short summary" }`
+        
+        const result = await model.generateContent(systemPrompt + "\n\nFarmer's Message (may be translated or original): " + inputForAI)
         let responseText = result.response.text().trim()
-        const firstBrace = responseText.indexOf('{')
-        const lastBrace = responseText.lastIndexOf('}')
-        if (firstBrace !== -1 && lastBrace !== -1) {
-          responseText = responseText.substring(firstBrace, lastBrace + 1)
+        
+        // Robust JSON extraction
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          aiData = JSON.parse(jsonMatch[0])
+        } else {
+          throw new Error("No JSON found in AI response")
         }
-        aiData = JSON.parse(responseText)
       } catch (aiErr) {
-        console.error("[Gemini Chat Fallback]:", aiErr)
-        const fallbacks = [
-          "Greetings, child of the soil. Withered leaves often call for gentle morning drip-irrigation. Patience yields the golden harvest.",
-          "Welcome, seeker of wisdom. The soil is our mother; ensure she is well-fed with compost and protected from the harsh midday sun.",
-          "Ah, a diligent farmer! Remember that healthy crops begin with healthy seeds and clean water. Inspect your fields daily for early signs of stress."
-        ]
+        console.error("[Gemini Chat Failure]:", aiErr)
         aiData = {
-          voice_script: fallbacks[Math.floor(Math.random() * fallbacks.length)],
+          voice_script: t('ai.fallback_advice'),
           action_icon_meta: "Sprout",
-          daily_brief: "Observe your fields closely and maintain consistent watering."
+          daily_brief: "Maintain consistent field observation."
         }
       }
 

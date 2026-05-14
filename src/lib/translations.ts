@@ -49,6 +49,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     'weather.humidity': 'Humidity',
     'weather.wind': 'Wind Speed',
     'weather.rain': 'Chance of Rain',
+    'ai.fallback_advice': 'Greetings, farmer. Ensure your crops have enough water and check for pests daily.',
   },
   Luganda: {
     'nav.home': 'Awaka',
@@ -95,6 +96,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     'weather.humidity': 'Obunnyogovu',
     'weather.wind': 'Embuyaga',
     'weather.rain': 'Enkuba',
+    'ai.fallback_advice': 'Kulika, mulimi. Kakasa nti ebirime byo bifuna amazzi agamala era wekebeje ebiwuka buli lunaku.',
   },
   Runyankole: {
     'nav.home': 'Eka',
@@ -141,6 +143,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     'weather.humidity': 'Obunnyogovu',
     'weather.wind': 'Omuyaga',
     'weather.rain': 'Enjura',
+    'ai.fallback_advice': 'Mugwerwa, mulimi. Hamya ngu ebirime byawe biine amaizi gahikire kandi orolezeho ebikoko buri izoba.',
   },
   Lusoga: {
     'nav.home': 'Enka',
@@ -187,6 +190,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     'weather.humidity': 'Obunnyogovu',
     'weather.wind': 'Embuyaga',
     'weather.rain': 'Enkuba',
+    'ai.fallback_advice': 'Kulika, mulimi. Kakasa nti ebirime byo bifuna amazzi agamala era wekebeze ebiwuka buli lunaku.',
   },
   Acholi: {
     'nav.home': 'Paco',
@@ -233,6 +237,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     'weather.humidity': 'Nying Pii',
     'weather.wind': 'Yamo',
     'weather.rain': 'Kot',
+    'ai.fallback_advice': 'Wunu rwot, lapur. Nen nyo ekitino pito me i pii ma arom dok itit kudi ma ineno.',
   },
   Swahili: {
     'nav.home': 'Nyumbani',
@@ -279,5 +284,6 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     'weather.humidity': 'Unyevu',
     'weather.wind': 'Kasi ya Upepo',
     'weather.rain': 'Uwezekano wa Mvua',
+    'ai.fallback_advice': 'Salamu, mkulima. Hakikisha mimea yako ina maji ya kutosha na kagua wadudu kila siku.',
   },
 };
