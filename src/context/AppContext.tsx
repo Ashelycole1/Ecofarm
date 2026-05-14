@@ -504,10 +504,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         'English': 'eng', 'Luganda': 'lug', 'Acholi': 'ach', 'Lusoga': 'xog', 'Runyankole': 'nyn', 'Lugbara': 'lgg', 'Swahili': 'swa'
       }
       const res = await sunbirdRequest('tasks/nllb_translate', {
-        text, src_lang: langMap[source] || 'eng', tgt_lang: langMap[target] || 'lug'
+        text, 
+        source_language: langMap[source] || 'eng', 
+        target_language: langMap[target] || 'lug'
       })
       return res.output || text
     } catch (e) {
+      console.error("[Sunbird] Translation failed:", e)
       return text
     }
   }
@@ -547,7 +550,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
         
-        const systemPrompt = `Role: Village Elder. Audience: Ugandan farmer. Respond in English about farming. JSON format only: { "voice_script": "...", "action_icon_meta": "...", "daily_brief": "..." }`
+        const systemPrompt = `Role: Village Elder Agricultural Expert. Audience: Ugandan smallholder farmer. 
+        Context: The user is asking for farming advice. 
+        Current Status: ${JSON.stringify(farmStatus || 'Unknown')}.
+        Respond in English with professional yet accessible agricultural wisdom. 
+        JSON format only: { "voice_script": "...", "action_icon_meta": "...", "daily_brief": "..." }`
+        
         const result = await model.generateContent(systemPrompt + "\n\nFarmer Message: " + inputForAI)
         let responseText = result.response.text().trim()
         const firstBrace = responseText.indexOf('{')
@@ -558,10 +566,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         aiData = JSON.parse(responseText)
       } catch (aiErr) {
         console.error("[Gemini Chat Fallback]:", aiErr)
+        const fallbacks = [
+          "Greetings, child of the soil. Withered leaves often call for gentle morning drip-irrigation. Patience yields the golden harvest.",
+          "Welcome, seeker of wisdom. The soil is our mother; ensure she is well-fed with compost and protected from the harsh midday sun.",
+          "Ah, a diligent farmer! Remember that healthy crops begin with healthy seeds and clean water. Inspect your fields daily for early signs of stress."
+        ]
         aiData = {
-          voice_script: "Greetings, child of the soil. Withered leaves or stunted stems often call for gentle morning drip-irrigation and checking the leaf nodes for sap-sucking aphids. Patience yields the golden harvest.",
+          voice_script: fallbacks[Math.floor(Math.random() * fallbacks.length)],
           action_icon_meta: "Sprout",
-          daily_brief: "Water in cooler hours and inspect leaf nodes."
+          daily_brief: "Observe your fields closely and maintain consistent watering."
         }
       }
 

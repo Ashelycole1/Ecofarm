@@ -497,7 +497,7 @@ function PostComposer({ user, onPost }: { user: any; onPost: () => void }) {
 // ─── Main Community Feed ───────────────────────────────────────────────────────
 
 export default function CommunityFeed() {
-  const { user, pestAlerts } = useApp()
+  const { user, pestAlerts, t } = useApp()
   const [posts, setPosts] = useState<CommunityPost[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | CommunityPost['postType']>('all')
@@ -585,15 +585,15 @@ export default function CommunityFeed() {
       <div className="flex items-end justify-between px-1 border-b border-border-soft pb-4">
         <div className="space-y-1">
           <h2 className="font-display font-bold text-3xl md:text-4xl text-ink tracking-tight">
-            Farmer Community
+            {t('header.community')}
           </h2>
           <p className="font-body text-[10px] text-ink-muted font-bold tracking-wide uppercase">
-            {allPosts.length} posts · Live updates
+            {allPosts.length} posts · {t('community.live_updates')}
           </p>
         </div>
         <div className="flex items-center gap-2 mb-1">
           <span className="w-2 h-2 rounded-full bg-safe animate-pulse" />
-          <span className="font-body text-[10px] font-bold text-safe uppercase tracking-wider">Live</span>
+          <span className="font-body text-[10px] font-bold text-safe uppercase tracking-wider">{t('common.live')}</span>
         </div>
       </div>
 
@@ -603,7 +603,7 @@ export default function CommunityFeed() {
       ) : (
         <div className="mh-card p-6 border border-border-soft bg-bone-low text-center space-y-2">
           <Sparkles size={24} className="text-ochre-light mx-auto" />
-          <p className="font-body text-ink-muted text-xs font-bold uppercase tracking-wider">Sign in to join the conversation</p>
+          <p className="font-body text-ink-muted text-xs font-bold uppercase tracking-wider">{t('community.join_convo')}</p>
         </div>
       )}
 

@@ -14,13 +14,21 @@ const LANGUAGES = [
 ]
 
 export default function VillageElderChat() {
-  const { messages, sendMessage, isGeneratingAI } = useApp()
+  const { messages, sendMessage, isGeneratingAI, language, setLanguage, t } = useApp()
   const [inputText, setInputText] = useState('')
-  const [selectedLanguage, setSelectedLanguage] = useState('English')
   const [isListening, setIsListening] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
   const lastMsgIdRef = useRef<string | null>(null)
+
+  const LANGUAGES = [
+    { id: 'English', label: 'English' },
+    { id: 'Luganda', label: 'Luganda' },
+    { id: 'Lusoga', label: 'Lusoga' },
+    { id: 'Runyankole', label: 'Runyankole' },
+    { id: 'Acholi', label: 'Acholi' },
+    { id: 'Swahili', label: 'Swahili' },
+  ]
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -31,7 +39,7 @@ export default function VillageElderChat() {
     
     const lastMsg = messages[messages.length - 1]
     if (lastMsg && lastMsg.sender === 'elder' && lastMsg.id !== lastMsgIdRef.current) {
-      speakMessage(lastMsg.text, selectedLanguage)
+      speakMessage(lastMsg.text, language)
       lastMsgIdRef.current = lastMsg.id
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -50,7 +58,7 @@ export default function VillageElderChat() {
           return 'en-UG'
         }
         
-        recognitionRef.current.lang = getLangCode(selectedLanguage)
+        recognitionRef.current.lang = getLangCode(language)
         recognitionRef.current.onresult = (event: any) => {
           const transcript = event.results[0][0].transcript
           setInputText(transcript)
@@ -60,7 +68,7 @@ export default function VillageElderChat() {
         recognitionRef.current.onend = () => setIsListening(false)
       }
     }
-  }, [selectedLanguage])
+  }, [language])
 
   const toggleListening = () => {
     if (isListening) {
@@ -85,7 +93,7 @@ export default function VillageElderChat() {
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault()
     if (!inputText.trim() || isGeneratingAI) return
-    sendMessage(inputText, selectedLanguage)
+    sendMessage(inputText, language)
     setInputText('')
   }
 
@@ -107,7 +115,7 @@ export default function VillageElderChat() {
               <TreePine size={20} />
             </div>
             <div>
-              <h3 className="font-display font-bold text-base text-ink leading-tight">Agricultural Expert</h3>
+              <h3 className="font-display font-bold text-base text-ink leading-tight">{t('chat.expert')}</h3>
               <p className="font-body text-[10px] text-forest font-bold flex items-center gap-1.5 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-safe animate-pulse" />
                 <span>Online · Professional Advice</span>
@@ -119,15 +127,15 @@ export default function VillageElderChat() {
             <div className="relative group/lang">
               <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full border border-border-soft text-ink-muted text-[10px] font-bold hover:text-ink shadow-sm transition-all">
                 <Globe size={12} />
-                <span>{selectedLanguage}</span>
+                <span>{language}</span>
               </button>
               <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-border-soft rounded-xl overflow-hidden shadow-lg opacity-0 invisible group-hover/lang:opacity-100 group-hover/lang:visible transition-all z-50">
                 {LANGUAGES.map(lang => (
                   <button
                     key={lang.id}
-                    onClick={() => setSelectedLanguage(lang.id)}
+                    onClick={() => setLanguage(lang.id as any)}
                     className={`w-full text-left px-4 py-2.5 font-body text-xs font-bold transition-colors ${
-                      selectedLanguage === lang.id ? 'bg-forest text-white' : 'text-ink-muted hover:bg-bone-low hover:text-ink'
+                      language === lang.id ? 'bg-forest text-white' : 'text-ink-muted hover:bg-bone-low hover:text-ink'
                     }`}
                   >
                     {lang.label}
@@ -178,7 +186,7 @@ export default function VillageElderChat() {
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder={isListening ? "Listening..." : "Ask for agricultural advice..."}
+                placeholder={isListening ? "Listening..." : t('chat.ask_elder')}
                 className="w-full bg-bone-low border border-border-soft rounded-xl pl-4 pr-10 py-3 font-body text-xs text-ink focus:outline-none focus:border-forest shadow-inner transition-all placeholder:text-ink-faint"
               />
               <button

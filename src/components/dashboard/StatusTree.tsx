@@ -6,7 +6,7 @@ interface StatusTreeProps {
 }
 
 export default function StatusTree({ compact = false }: StatusTreeProps) {
-  const { farmStatus, isLoading } = useApp()
+  const { farmStatus, isLoading, t } = useApp()
 
   if (isLoading || !farmStatus) {
     return (
@@ -30,35 +30,29 @@ export default function StatusTree({ compact = false }: StatusTreeProps) {
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bone-low border border-border-soft shadow-inner">
           <span className={`w-2 h-2 rounded-full animate-pulse ${isHealthy ? 'bg-safe' : 'bg-warn'}`} />
           <span className="font-body text-[10px] font-bold tracking-wider uppercase text-ink">
-            {isHealthy ? 'Farm is Healthy' : 'Observation Mode'}
+            {isHealthy ? t('status.health') + ': Optimal' : t('status.health') + ': Caution'}
           </span>
         </div>
         <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-ochre-light/10 border border-ochre-light/20 text-ochre text-[10px] font-body font-bold tracking-wider">
           <Sparkles size={12} className="text-ochre-light" />
-          <span>Expert View</span>
+          <span>{t('status.tree')}</span>
         </div>
       </div>
 
       {/* Main Centerpiece Visual */}
       <div className="flex flex-col items-center justify-center my-6 relative z-10">
         <div className="relative flex items-center justify-center">
-          {/* Outer rotating decorative ring */}
           <div className="absolute inset-[-16px] rounded-full border border-forest-light/30 border-dashed animate-[spin_30s_linear_infinite] pointer-events-none" />
-          
-          {/* Inner ambient ring */}
           <div className="absolute inset-[-8px] rounded-full border border-forest-light/40 pointer-events-none" />
-          
-          {/* Core circle */}
           <div className="w-28 h-28 rounded-full bg-bone-low border border-border-soft flex items-center justify-center shadow-inner relative group-hover/tree:border-forest-light transition-colors duration-500">
             <div className="absolute inset-0 rounded-full bg-forest-pale/40 scale-0 group-hover/tree:scale-100 transition-transform duration-500 pointer-events-none" />
             <TreePine size={48} className="text-forest relative z-10 transition-transform duration-500 group-hover/tree:scale-110" />
           </div>
         </div>
 
-        {/* Dynamic status title */}
         <div className="text-center mt-6 max-w-[260px]">
           <h4 className="font-display font-bold text-2xl text-ink tracking-tight leading-tight">
-            {isHealthy ? 'Optimal Soil Vitals' : 'Soil Health Update'}
+            {isHealthy ? t('status.health') : 'Alert'}
           </h4>
           <p className="font-body text-xs text-ink-muted font-bold tracking-wide mt-1 line-clamp-2">
             {farmStatus.message || 'Nutrient density and moisture content align with target planting thresholds.'}
@@ -68,9 +62,9 @@ export default function StatusTree({ compact = false }: StatusTreeProps) {
 
       {/* Metrics Footer Grid */}
       <div className="grid grid-cols-3 gap-2.5 w-full relative z-10 pt-2 border-t border-border-soft/60">
-        <StatBlock label="Moisture" value={`${farmStatus.waterLevel}%`} />
-        <StatBlock label="Soil NPK" value={`${farmStatus.soilHealth}%`} />
-        <StatBlock label="Sunlight" value="85%" />
+        <StatBlock label={t('status.water')} value={`${farmStatus.waterLevel}%`} />
+        <StatBlock label={t('status.soil')} value={`${farmStatus.soilHealth}%`} />
+        <StatBlock label={t('status.pests')} value="Low" />
       </div>
     </div>
   )

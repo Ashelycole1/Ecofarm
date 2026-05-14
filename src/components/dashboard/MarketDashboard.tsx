@@ -124,7 +124,7 @@ function getCardinalDirection(lat1: number, lng1: number, lat2: number, lng2: nu
 }
 
 export default function MarketDashboard() {
-  const { user } = useApp()
+  const { user, t } = useApp()
   const [listings, setListings] = useState<MarketListing[]>(initialListings)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -339,7 +339,7 @@ export default function MarketDashboard() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border-soft pb-8">
         <div className="space-y-2 max-w-xl">
           <p className="font-body text-xs font-extrabold text-sienna tracking-[0.2em] uppercase">Premium Marketplace</p>
-          <h1 className="font-display font-bold text-ink text-4xl md:text-5xl tracking-tight">Market Intel</h1>
+          <h1 className="font-display font-bold text-ink text-4xl md:text-5xl tracking-tight">{t('header.intel')}</h1>
           <p className="font-body text-base text-ink-muted leading-relaxed pt-1">
             Real-time agricultural data and direct connections to verified regional eco-buyers.
           </p>
@@ -372,7 +372,7 @@ export default function MarketDashboard() {
               className="btn-primary py-2.5 px-4 text-xs font-bold flex items-center gap-2"
             >
               {showAddForm ? <X size={16} /> : <Plus size={16} />}
-              {showAddForm ? 'Close Form' : 'List Your Produce'}
+              {showAddForm ? 'Close Form' : t('market.list_produce')}
             </button>
           </div>
 
@@ -465,7 +465,7 @@ export default function MarketDashboard() {
                 className="w-full py-4 rounded-xl bg-white text-forest font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all disabled:opacity-50"
               >
                 {isNavigating ? <RefreshCcw className="animate-spin" size={18} /> : <MapPin size={18} />}
-                {isNavigating ? 'LOCATING...' : 'FIND NEAREST HUB'}
+                {isNavigating ? 'LOCATING...' : t('market.find_buyer')}
              </button>
           </div>
 

@@ -462,7 +462,7 @@ export default function HomePage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-bone">
         <div className="w-12 h-12 rounded-full border-2 border-forest-light/30 border-t-sienna animate-spin" />
-        <p className="font-body text-ink-muted text-[11px] font-semibold uppercase tracking-[0.3em]">Loading EcoFarm</p>
+        <p className="font-body text-ink-muted text-[11px] font-semibold uppercase tracking-[0.3em]">{t('common.loading')}</p>
       </div>
     )
   }

@@ -3,7 +3,7 @@
 import { useSignIn, useSignUp } from '@clerk/nextjs'
 import { useState } from 'react'
 import { X, ArrowLeft, Leaf, Loader2, Mail, Lock, User, Phone, CheckCircle2 } from 'lucide-react'
-import { getSupabase } from '@/lib/supabaseClient'
+import { useApp } from '@/context/AppContext'
 
 interface AuthModalProps {
   onClose: () => void
@@ -13,6 +13,7 @@ type AuthMode = 'signin' | 'signup' | 'verify' | 'verify_signin'
 type UserRole = 'farmer' | 'buyer' | 'delivery'
 
 export default function AuthModal({ onClose }: AuthModalProps) {
+  const { t } = useApp()
   const { isLoaded: isSignUpLoaded, signUp, setActive: setSignUpActive } = useSignUp()
   const { isLoaded: isSignInLoaded, signIn, setActive: setSignInActive } = useSignIn()
 
