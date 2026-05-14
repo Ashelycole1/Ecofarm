@@ -65,7 +65,14 @@ export interface AppContextValue {
   loginAsGuest: () => void
   translateWithSunbird: (text: string, source: string, target: string) => Promise<string>
   systemStats: { farmersCount: number; reportsCount: number; districtsCount: number }
+  
+  // Localization
+  language: SupportedLanguage
+  setLanguage: (lang: SupportedLanguage) => void
+  t: (key: string) => string
 }
+
+import { translations, SupportedLanguage } from '@/lib/translations'
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -88,6 +95,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [favoriteCropIds, setFavoriteCropIds] = useState<string[]>(['matooke', 'maize', 'beans'])
   const [systemStats, setSystemStats] = useState({ farmersCount: 0, reportsCount: 0, districtsCount: 0 })
+  const [language, setLanguage] = useState<SupportedLanguage>('English')
+
+  const t = (key: string) => {
+    return translations[language]?.[key] || translations['English']?.[key] || key
+  }
 
   // ── Auth Sync ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -587,6 +599,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider value={{
       user, authLoading, weather, crops, pestAlerts, farmStatus, pestReports, messages,
       isLoading, isGeneratingAI, isConnected: !!user, showAuthModal, systemStats,
+      language, setLanguage, t,
       logout, submitPestReport, refreshWeather,
       getFavoriteCrops: () => crops.filter(c => favoriteCropIds.includes(c.id)),
       setFavoriteCrops: (cropIds: string[]) => setFavoriteCropIds(cropIds),

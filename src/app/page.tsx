@@ -16,6 +16,7 @@ import EcoTrack from '@/components/dashboard/EcoTrack'
 import LogisticsViewer from '@/components/dashboard/LogisticsViewer'
 import LogisticTrackingView from '@/components/dashboard/LogisticTrackingView'
 import CommunityFeed from '@/components/dashboard/CommunityFeed'
+import { SupportedLanguage } from '@/lib/translations'
 
 // ─── Sidebar nav items ────────────────────────────────────────────────────────
 const navTabs = [
@@ -40,7 +41,19 @@ const tabTitles: Record<string, string> = {
 
 // ─── Top app bar ──────────────────────────────────────────────────────────────
 function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSidebar: () => void }) {
-  const { isConnected, user, logout } = useApp()
+  const { isConnected, user, logout, language, setLanguage, t } = useApp()
+
+  const languages: SupportedLanguage[] = ['English', 'Luganda', 'Runyankole', 'Lusoga', 'Acholi', 'Swahili']
+
+  const tabTitleKeys: Record<string, string> = {
+    home:      'header.title',
+    market:    'header.intel',
+    calendar:  'header.planting',
+    community: 'header.community',
+    chat:      'header.elder',
+    alerts:    'header.alerts',
+    track:     'header.track',
+  }
 
   return (
     <header
@@ -55,17 +68,28 @@ function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSid
             <Menu size={20} />
           </button>
           <span className="md:hidden font-display font-semibold text-lg text-ink tracking-tight">
-            EcoFarm
+            {t('header.title')}
           </span>
         </div>
 
-        <span className="md:hidden font-body text-xs font-semibold text-ink-muted uppercase tracking-widest">
-          {tabTitles[activeTab] || 'EcoFarm'}
+        <span className="md:hidden font-body text-[10px] font-bold text-ink-muted uppercase tracking-widest truncate max-w-[120px]">
+          {t(tabTitleKeys[activeTab]) || t('header.title')}
         </span>
 
         <div className="hidden md:block" />
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Language Switcher */}
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
+            className="bg-bone-dim/20 border border-border-soft rounded-lg px-2 py-1 font-body text-[10px] font-bold text-ink outline-none focus:border-forest-tint transition-all"
+          >
+            {languages.map(lang => (
+              <option key={lang} value={lang}>{lang}</option>
+            ))}
+          </select>
+
           <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-bone-card border border-border-soft`}>
             {isConnected
               ? <Wifi className="text-safe" size={14} />
@@ -98,7 +122,17 @@ function Sidebar({
   isOpen: boolean; 
   onClose: () => void 
 }) {
-  const { user, setShowAuthModal } = useApp()
+  const { user, setShowAuthModal, t } = useApp()
+
+  const navItemKeys: Record<string, string> = {
+    home:      'nav.home',
+    market:    'nav.market',
+    calendar:  'nav.planting',
+    community: 'nav.community',
+    chat:      'nav.chat',
+    alerts:    'nav.alerts',
+    track:     'nav.track',
+  }
 
   return (
     <>
@@ -142,7 +176,7 @@ function Sidebar({
                 className={`mh-sidebar-item ${isActive ? 'active' : ''}`}
               >
                 <Icon size={17} strokeWidth={isActive ? 2.5 : 1.75} />
-                <span className="text-[12px] font-semibold tracking-wide">{label}</span>
+                <span className="text-[12px] font-semibold tracking-wide">{t(navItemKeys[id]) || label}</span>
               </button>
             )
           })}
@@ -176,7 +210,7 @@ function Sidebar({
 
 // ─── Home tab ─────────────────────────────────────────────────────────────────
 function HomeTab() {
-  const { weather, user, systemStats } = useApp()
+  const { weather, user, systemStats, t } = useApp()
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -193,9 +227,11 @@ function HomeTab() {
           }}
         />
         <div className="relative z-10">
-          <p className="font-body text-[11px] text-ink-muted uppercase tracking-[0.25em] font-semibold mb-3">Good day</p>
+          <p className="font-body text-[11px] text-ink-muted uppercase tracking-[0.25em] font-semibold mb-3">
+            {t('home.welcome').split(',')[0]}
+          </p>
           <h1 className="font-display font-semibold text-ink text-4xl md:text-5xl leading-tight">
-            {user ? (user.displayName || 'Farmer') : 'Welcome'}
+            {user ? (user.displayName || 'Farmer') : t('auth.signin')}
           </h1>
           <div className="flex items-center gap-2 mt-4">
             <MapPin size={14} className="text-sienna" />
@@ -214,11 +250,11 @@ function HomeTab() {
 
       {/* Community Stats */}
       <div className="mh-card p-8 bogolan-border">
-        <p className="font-body text-[10px] text-ink-muted uppercase tracking-[0.2em] font-bold mb-8">Platform Activity</p>
+        <p className="font-body text-[10px] text-ink-muted uppercase tracking-[0.2em] font-bold mb-8">{t('home.activity')}</p>
         <div className="grid grid-cols-3 gap-6 text-center">
-          <CommunityStat value={String(systemStats?.farmersCount || 0)} label="Farmers" Icon={Users} color="text-forest-medium" />
-          <CommunityStat value={String(systemStats?.reportsCount || 0)} label="Reports" Icon={ClipboardList} color="text-sienna" />
-          <CommunityStat value={String(systemStats?.districtsCount || 0)} label="Districts" Icon={MapPin} color="text-ochre-light" />
+          <CommunityStat value={String(systemStats?.farmersCount || 0)} label={t('home.farmers')} Icon={Users} color="text-forest-medium" />
+          <CommunityStat value={String(systemStats?.reportsCount || 0)} label={t('home.reports')} Icon={ClipboardList} color="text-sienna" />
+          <CommunityStat value={String(systemStats?.districtsCount || 0)} label={t('home.districts')} Icon={MapPin} color="text-ochre-light" />
         </div>
       </div>
 
@@ -353,21 +389,21 @@ function TrackTab() {
 }
 
 function AuthGate({ tabName }: { tabName: string }) {
-  const { setShowAuthModal } = useApp()
+  const { setShowAuthModal, t } = useApp()
   return (
     <div className="p-10 md:p-12 text-center animate-fade-in mt-10 mh-card bg-white">
       <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 bg-bone-low border border-border-soft shadow-inner">
         <Lock className="text-ochre-light" size={32} />
       </div>
-      <h3 className="font-display font-bold text-ink text-3xl mb-2 tracking-tight leading-tight">Protected Feature</h3>
+      <h3 className="font-display font-bold text-ink text-3xl mb-2 tracking-tight leading-tight">{t('common.protected')}</h3>
       <p className="font-body text-xs text-ink-muted mb-8 leading-relaxed max-w-[260px] mx-auto font-medium">
-        Please sign in to access your personalized {tabName} data and AI advice.
+        {t('common.protected_desc')}
       </p>
       <button
         onClick={() => setShowAuthModal(true)}
         className="btn-primary w-full py-3.5 text-xs font-bold uppercase tracking-widest justify-center shadow-md hover:scale-[1.02] transition-all active:scale-95"
       >
-        Sign In to Continue
+        {t('common.signin_to_continue')}
       </button>
     </div>
   )
@@ -375,6 +411,16 @@ function AuthGate({ tabName }: { tabName: string }) {
 
 // ─── Bottom Navigation (Mobile Only) ──────────────────────────────────────────
 function BottomNav({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
+  const { t } = useApp()
+
+  const navItemKeys: Record<string, string> = {
+    home:      'nav.home',
+    market:    'nav.market',
+    community: 'nav.community',
+    chat:      'nav.chat',
+    alerts:    'nav.alerts',
+  }
+
   const mobileNavItems = [
     { id: 'home',      label: 'Home',      Icon: Home },
     { id: 'market',    label: 'Market',    Icon: TrendingUp },
@@ -398,7 +444,7 @@ function BottomNav({ activeTab, onTabChange }: { activeTab: string; onTabChange:
             <div className={`p-1 rounded-lg transition-colors ${isActive ? 'bg-sienna-pale' : ''}`}>
               <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">{t(navItemKeys[id]) || label}</span>
           </button>
         )
       })}
