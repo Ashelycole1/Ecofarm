@@ -43,7 +43,9 @@ const severityLabel = { low: 'LOW', medium: 'MEDIUM', high: 'HIGH' }
 const severityColor = { low: 'text-safe', medium: 'text-warn', high: 'text-alert' }
 
 function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime()
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return 'recent'
+  const diff = Date.now() - date.getTime()
   const m = Math.floor(diff / 60000)
   if (m < 1) return 'just now'
   if (m < 60) return `${m}m ago`
@@ -565,7 +567,7 @@ export default function CommunityFeed() {
     likes: 0,
     likedBy: [],
     commentsCount: 0,
-    createdAt: new Date(a.lastReported).toISOString(),
+    createdAt: a.lastReported.includes('ago') ? new Date().toISOString() : a.lastReported,
   }))
 
   const allPosts = [...alertPosts, ...posts]

@@ -228,7 +228,7 @@ export const mockPestAlerts: PestAlert[] = [
     description: 'Active outbreak near Mbale and Jinja regions. Worms visible in leaf whorls.',
     action: 'Apply Emamectin Benzoate or neem extract. Report to your sub-county agricultural officer.',
     reportCount: 47,
-    lastReported: '2 hours ago',
+    lastReported: new Date(Date.now() - 2 * 3600000).toISOString(),
   },
   {
     id: 'banana-weevil',
@@ -239,7 +239,7 @@ export const mockPestAlerts: PestAlert[] = [
     description: 'Larvae boring into Matooke corms in Central region. Watch for yellowing leaves.',
     action: 'Use clean planting material. Trash management and application of Diazinon granules.',
     reportCount: 23,
-    lastReported: '5 hours ago',
+    lastReported: new Date(Date.now() - 5 * 3600000).toISOString(),
   },
   {
     id: 'cassava-mosaic',
@@ -250,7 +250,7 @@ export const mockPestAlerts: PestAlert[] = [
     description: 'Whitefly-transmitted virus causing yellow mosaic on leaves. Reducing yields.',
     action: 'Use disease-free cuttings (NASE 14). Remove and burn infected plants immediately.',
     reportCount: 18,
-    lastReported: '1 day ago',
+    lastReported: new Date(Date.now() - 24 * 3600000).toISOString(),
   },
   {
     id: 'locust',
@@ -261,7 +261,7 @@ export const mockPestAlerts: PestAlert[] = [
     description: 'Small swarm spotted in Moroto. Monitoring underway by Ministry of Agriculture.',
     action: 'Report any sightings immediately. Do not attempt to spray alone — contact district office.',
     reportCount: 5,
-    lastReported: '3 days ago',
+    lastReported: new Date(Date.now() - 72 * 3600000).toISOString(),
   },
 ]
 
