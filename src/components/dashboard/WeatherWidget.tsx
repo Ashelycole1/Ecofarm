@@ -87,15 +87,3 @@ function WeatherStat({ label, value, icon }: { label: string; value: string; ico
     </div>
   )
 }
-
-function WeatherStat({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
-  return (
-    <div className="bg-bone-low border border-border-soft rounded-xl p-2.5 flex flex-col items-center justify-center shadow-inner group-hover/weather:bg-white transition-colors duration-300">
-      <div className="flex items-center gap-1">
-        {icon}
-        <span className="font-body text-[9px] font-bold text-ink-faint uppercase tracking-wider">{label}</span>
-      </div>
-      <span className="font-display font-bold text-base text-ink mt-0.5">{value}</span>
-    </div>
-  )
-}

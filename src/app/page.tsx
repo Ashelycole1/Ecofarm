@@ -456,7 +456,7 @@ function BottomNav({ activeTab, onTabChange }: { activeTab: string; onTabChange:
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('home')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { authLoading, showAuthModal, setShowAuthModal } = useApp()
+  const { authLoading, showAuthModal, setShowAuthModal, t } = useApp()
 
   if (authLoading) {
     return (

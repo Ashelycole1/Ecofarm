@@ -3,6 +3,7 @@
 import { useSignIn, useSignUp } from '@clerk/nextjs'
 import { useState } from 'react'
 import { X, ArrowLeft, Leaf, Loader2, Mail, Lock, User, Phone, CheckCircle2 } from 'lucide-react'
+import { getSupabase } from '@/lib/supabaseClient'
 import { useApp } from '@/context/AppContext'
 
 interface AuthModalProps {
@@ -99,18 +100,12 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     try {
       const [firstName, ...lastNames] = fullName.split(' ')
       const lastName = lastNames.join(' ')
-      
-      const generatedUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + Math.floor(Math.random() * 10000);
-
       await signUp.create({
         emailAddress: email,
-        username: generatedUsername,
         password,
-        firstName: firstName || fullName,
-        lastName: lastName || undefined,
-        unsafeMetadata: { role, phone }
+        firstName,
+        lastName,
       })
-      
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
       setMode('verify')
     } catch (err: any) {
@@ -120,175 +115,131 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     }
   }
 
-  const handleVerify = async (e: React.FormEvent) => {
+  const handleVerification = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isSignUpLoaded) return
     setLoading(true)
     setError('')
     try {
-      let completeSignUp = signUp
-
-      if (signUp.status !== 'complete') {
-        completeSignUp = await signUp.attemptEmailAddressVerification({
-          code,
-        })
-      }
-
+      const completeSignUp = await signUp.attemptEmailAddressVerification({ code })
       if (completeSignUp.status === 'complete') {
         try {
           const supabase = getSupabase()
           if (supabase && completeSignUp.createdUserId) {
              const { error: dbError } = await supabase.from('profiles').insert([{
                id: completeSignUp.createdUserId,
-               email,
                full_name: fullName,
-               phone_number: phone,
-               role: role
+               email: email,
+               phone: phone,
+               role: role,
+               is_onboarded: true,
+               created_at: new Date().toISOString()
              }])
-             if (dbError) {
-               console.warn("Failed to create profile in Supabase:", dbError)
-             }
+             if (dbError) console.warn("Supabase profile creation failed:", dbError)
           }
         } catch (dbErr) {
-          console.warn("Supabase client error:", dbErr)
+          console.warn("Supabase connection error during signup:", dbErr)
         }
-
-        if (completeSignUp.createdSessionId) {
-          await setSignUpActive({ session: completeSignUp.createdSessionId })
-          onClose()
-          window.location.reload()
-        } else {
-          setMode('signin')
-          setError('Account created! Please sign in.')
-        }
-      } else {
-        setError('Verification incomplete. Please try again.')
+        await setSignUpActive({ session: completeSignUp.createdSessionId })
+        onClose()
+        window.location.reload()
       }
     } catch (err: any) {
-      const errorMessage = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Invalid verification code.'
-      
-      if (errorMessage.toLowerCase().includes('already been verified') || err.errors?.[0]?.code === 'form_verification_already_verified') {
-        if (signUp.status === 'complete' && signUp.createdSessionId) {
-          await setSignUpActive({ session: signUp.createdSessionId })
-          onClose()
-          window.location.reload()
-        } else {
-          setMode('signin')
-          setError('Email verified successfully! Please sign in.')
-        }
-      } else {
-        setError(errorMessage)
-      }
+      setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Verification failed.')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleVerifySignIn = async (e: React.FormEvent) => {
+  const handleSignInVerification = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isSignInLoaded) return
     setLoading(true)
     setError('')
     try {
-      let result;
-      if (signInFactorType === 'second') {
-        result = await signIn.attemptSecondFactor({ strategy: signInStrategy as any, code })
-      } else {
-        result = await signIn.attemptFirstFactor({ strategy: signInStrategy as any, code })
-      }
+      const attempt = signInFactorType === 'first' 
+        ? await signIn.attemptFirstFactor({ strategy: signInStrategy as any, code })
+        : await signIn.attemptSecondFactor({ strategy: signInStrategy as any, code })
 
-      if (result.status === 'complete' || result.createdSessionId) {
-        await setSignInActive({ session: result.createdSessionId })
+      if (attempt.status === 'complete') {
+        await setSignInActive({ session: attempt.createdSessionId })
         onClose()
         window.location.reload()
-      } else {
-        setError(`Verification incomplete (Status: ${result.status}).`)
       }
     } catch (err: any) {
-      setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Invalid verification code.')
+      setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Verification failed.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-ink/40 backdrop-blur-sm animate-fade-in"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div className="bg-white w-full max-w-md max-h-[92dvh] overflow-y-auto animate-slide-up rounded-t-3xl sm:rounded-3xl relative shadow-modal border border-border-soft">
-
-        {/* Ambient top glowing leaf arc overlay */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-forest-pale/40 rounded-b-full blur-2xl pointer-events-none" />
-
-        {/* Premium multi-tone top border strip */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-forest via-forest-tint to-sienna rounded-t-3xl sm:rounded-t-3xl" />
-
-        <button
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-ink/60 backdrop-blur-md animate-fade-in">
+      <div 
+        className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-modal overflow-hidden flex flex-col border border-border-soft animate-slide-up relative"
+        onClick={e => e.stopPropagation()}
+      >
+        <button 
           onClick={onClose}
-          className="absolute top-5 right-5 z-[110] w-9 h-9 rounded-full bg-bone-low border border-border-soft flex items-center justify-center text-ink-muted hover:text-ink hover:bg-white hover:border-border-strong transition-all shadow-sm active:scale-95"
-          title="Close Modal"
+          className="absolute top-8 right-8 w-12 h-12 rounded-full flex items-center justify-center text-ink-muted hover:bg-bone-dim/20 transition-all z-10"
         >
-          <X size={16} />
+          <X size={24} />
         </button>
 
-        {mode === 'verify' && (
-          <button
-            onClick={() => setMode('signup')}
-            className="absolute top-5 left-5 z-[110] w-9 h-9 rounded-full bg-bone-low border border-border-soft flex items-center justify-center text-ink-muted hover:text-ink hover:bg-white transition-all shadow-sm active:scale-95"
-            title="Go Back"
-          >
-            <ArrowLeft size={16} />
-          </button>
-        )}
-
-        <div className="p-8 pt-10 relative z-10">
-          {/* Header */}
-          <div className="text-center mb-8 space-y-2">
-            <div className="w-16 h-16 bg-bone-low rounded-2xl flex items-center justify-center mx-auto border border-border-soft shadow-inner mb-4">
-              <Leaf className="text-forest" size={32} />
+        <div className="flex-1 overflow-y-auto p-10 md:p-14 scrollbar-hide">
+          <div className="mb-10 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-forest-medium/10 flex items-center justify-center text-forest mx-auto mb-6 border border-forest-medium/20 shadow-inner">
+              <Leaf size={32} />
             </div>
-            <h2 className="text-3xl font-display font-bold text-ink tracking-tight leading-tight">
-              {mode === 'signin' ? 'Welcome Back' : mode === 'signup' ? 'Join EcoFarm' : mode === 'verify_signin' ? 'Verify Identity' : 'Verify Email'}
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-ink tracking-tight mb-3">
+              {mode === 'signin' ? 'Welcome Back' : 
+               mode === 'signup' ? 'Join EcoFarm' : 
+               'Verify Account'}
             </h2>
-            <p className="font-body text-ink-muted text-xs font-semibold tracking-wide">
-              {mode === 'signin' ? 'Secure editorial platform access' : mode === 'signup' ? 'Create your authorized farmer account' : mode === 'verify_signin' ? 'Enter the authentication code' : 'Enter the code sent to your inbox'}
+            <p className="font-body text-ink-muted text-sm max-w-xs mx-auto">
+              {mode === 'signin' ? 'Sign in to access your professional dashboard and AI advice.' : 
+               mode === 'signup' ? 'Start your journey towards sustainable and profitable farming.' : 
+               'Enter the code sent to your email to continue.'}
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-3.5 bg-alert/10 border border-alert/20 rounded-xl font-body text-alert text-xs font-semibold text-center animate-fade-in leading-relaxed shadow-sm">
-              {error}
+            <div className="mb-8 p-5 bg-alert/5 border border-alert/20 rounded-2xl flex items-start gap-4 animate-shake">
+              <div className="w-8 h-8 rounded-full bg-alert/10 flex items-center justify-center text-alert shrink-0">
+                <X size={16} />
+              </div>
+              <p className="font-body text-alert text-sm font-bold pt-1">{error}</p>
             </div>
           )}
 
-          {mode === 'signin' && (
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-3.5">
+          {mode === 'signin' ? (
+            <form onSubmit={handleSignIn} className="space-y-6">
+              <div className="space-y-2">
+                <label className="block font-body text-xs font-bold text-ink-muted uppercase tracking-widest ml-1">Email Address</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                    <Mail className="w-4 h-4 text-ink-faint" />
-                  </div>
+                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-faint" size={20} />
                   <input
                     type="email"
-                    required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email Address"
-                    className="w-full bg-bone-low border border-border-soft text-ink rounded-xl py-3 pl-11 pr-4 font-body text-xs outline-none focus:border-forest focus:bg-white transition-all placeholder:text-ink-faint shadow-inner"
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full pl-14 pr-6 py-4 bg-bone-low border border-border-soft rounded-2xl font-body text-sm text-ink outline-none focus:border-forest shadow-inner transition-all"
+                    required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block font-body text-xs font-bold text-ink-muted uppercase tracking-widest ml-1">Password</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                    <Lock className="w-4 h-4 text-ink-faint" />
-                  </div>
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-faint" size={20} />
                   <input
                     type="password"
-                    required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
-                    className="w-full bg-bone-low border border-border-soft text-ink rounded-xl py-3 pl-11 pr-4 font-body text-xs outline-none focus:border-forest focus:bg-white transition-all placeholder:text-ink-faint shadow-inner"
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-14 pr-6 py-4 bg-bone-low border border-border-soft rounded-2xl font-body text-sm text-ink outline-none focus:border-forest shadow-inner transition-all"
+                    required
                   />
                 </div>
               </div>
@@ -296,233 +247,179 @@ export default function AuthModal({ onClose }: AuthModalProps) {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full py-3.5 text-xs font-bold uppercase tracking-widest justify-center shadow-md mt-6"
+                className="btn-primary w-full py-5 rounded-2xl text-base font-bold shadow-lg hover:shadow-xl active:scale-[0.98] transition-all"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign In'}
+                {loading ? <Loader2 className="animate-spin mx-auto" /> : 'Sign In Now'}
               </button>
 
-              {/* Divider */}
-              <div className="flex items-center gap-3 my-4">
-                <div className="flex-1 h-px bg-border-soft/60" />
-                <span className="font-body text-ink-faint text-[9px] font-bold uppercase tracking-widest">or</span>
-                <div className="flex-1 h-px bg-border-soft/60" />
+              <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border-soft"></div></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-4 font-bold text-ink-faint tracking-widest">Or continue with</span></div>
               </div>
 
-              {/* Google Sign-In Button */}
               <button
                 type="button"
                 onClick={handleGoogleAuth}
-                className="w-full flex items-center justify-center gap-2.5 bg-bone-low hover:bg-bone border border-border-soft text-ink font-body font-bold text-xs rounded-xl py-3 transition-all shadow-sm active:scale-95"
+                className="w-full py-4 border border-border-soft rounded-2xl flex items-center justify-center gap-3 font-bold text-ink hover:bg-bone-low transition-all active:scale-[0.98]"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                <span>Continue with Google</span>
+                <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/><path d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.712s.102-1.173.282-1.712V4.956H.957C.347 6.173 0 7.548 0 9s.347 2.827.957 4.044l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.582C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.956L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+                Google
               </button>
 
-              <div className="text-center pt-2">
+              <p className="text-center font-body text-sm text-ink-muted">
+                New to the platform?{' '}
                 <button 
-                  type="button"
+                  type="button" 
                   onClick={() => setMode('signup')}
-                  className="font-body text-ink-muted hover:text-forest font-bold text-[11px] transition-colors underline decoration-border-soft hover:decoration-forest underline-offset-4"
+                  className="text-forest font-bold hover:underline"
                 >
-                  New to EcoFarm? Create an Account
+                  Create an account
                 </button>
-              </div>
+              </p>
             </form>
-          )}
+          ) : mode === 'signup' ? (
+            <form onSubmit={handleSignUp} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block font-body text-xs font-bold text-ink-muted uppercase tracking-widest ml-1">Full Name</label>
+                  <div className="relative">
+                    <User className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-faint" size={20} />
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={e => setFullName(e.target.value)}
+                      placeholder="John Doe"
+                      className="w-full pl-14 pr-6 py-4 bg-bone-low border border-border-soft rounded-2xl font-body text-sm text-ink outline-none focus:border-forest shadow-inner transition-all"
+                      required
+                    />
+                  </div>
+                </div>
 
-          {mode === 'signup' && (
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="space-y-3.5">
-                {/* Role Toggle Selector */}
-                <div className="grid grid-cols-3 gap-1.5 p-1 bg-bone-low rounded-xl border border-border-soft shadow-inner">
-                  {(['farmer', 'buyer', 'delivery'] as UserRole[]).map((r) => (
+                <div className="space-y-2">
+                  <label className="block font-body text-xs font-bold text-ink-muted uppercase tracking-widest ml-1">Phone Number</label>
+                  <div className="relative">
+                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-faint" size={20} />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                      placeholder="+256 7..."
+                      className="w-full pl-14 pr-6 py-4 bg-bone-low border border-border-soft rounded-2xl font-body text-sm text-ink outline-none focus:border-forest shadow-inner transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block font-body text-xs font-bold text-ink-muted uppercase tracking-widest ml-1">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-faint" size={20} />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full pl-14 pr-6 py-4 bg-bone-low border border-border-soft rounded-2xl font-body text-sm text-ink outline-none focus:border-forest shadow-inner transition-all"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block font-body text-xs font-bold text-ink-muted uppercase tracking-widest ml-1">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-faint" size={20} />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-14 pr-6 py-4 bg-bone-low border border-border-soft rounded-2xl font-body text-sm text-ink outline-none focus:border-forest shadow-inner transition-all"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block font-body text-xs font-bold text-ink-muted uppercase tracking-widest ml-1">Your Primary Role</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {(['farmer', 'buyer', 'delivery'] as UserRole[]).map(r => (
                     <button
                       key={r}
                       type="button"
                       onClick={() => setRole(r)}
-                      className={`py-2 rounded-lg font-body text-[10px] font-bold uppercase tracking-wider transition-all ${
-                        role === r 
-                          ? 'bg-forest text-white shadow-sm' 
-                          : 'text-ink-muted hover:text-ink'
+                      className={`py-3 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-all ${
+                        role === r ? 'bg-forest text-white border-forest shadow-md' : 'bg-bone-low border-border-soft text-ink-muted'
                       }`}
                     >
                       {r}
                     </button>
                   ))}
                 </div>
-
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                    <User className="w-4 h-4 text-ink-faint" />
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Full Name"
-                    className="w-full bg-bone-low border border-border-soft text-ink rounded-xl py-3 pl-11 pr-4 font-body text-xs outline-none focus:border-forest focus:bg-white transition-all placeholder:text-ink-faint shadow-inner"
-                  />
-                </div>
-
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                    <Mail className="w-4 h-4 text-ink-faint" />
-                  </div>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email Address"
-                    className="w-full bg-bone-low border border-border-soft text-ink rounded-xl py-3 pl-11 pr-4 font-body text-xs outline-none focus:border-forest focus:bg-white transition-all placeholder:text-ink-faint shadow-inner"
-                  />
-                </div>
-
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                    <Phone className="w-4 h-4 text-ink-faint" />
-                  </div>
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Phone Number (e.g. +256...)"
-                    className="w-full bg-bone-low border border-border-soft text-ink rounded-xl py-3 pl-11 pr-4 font-body text-xs outline-none focus:border-forest focus:bg-white transition-all placeholder:text-ink-faint shadow-inner"
-                  />
-                </div>
-
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                    <Lock className="w-4 h-4 text-ink-faint" />
-                  </div>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create Password"
-                    className="w-full bg-bone-low border border-border-soft text-ink rounded-xl py-3 pl-11 pr-4 font-body text-xs outline-none focus:border-forest focus:bg-white transition-all placeholder:text-ink-faint shadow-inner"
-                  />
-                </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full py-3.5 text-xs font-bold uppercase tracking-widest justify-center shadow-md mt-6"
+                className="btn-primary w-full py-5 rounded-2xl text-base font-bold shadow-lg hover:shadow-xl active:scale-[0.98] transition-all"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Account'}
+                {loading ? <Loader2 className="animate-spin mx-auto" /> : 'Create Account'}
               </button>
 
-              {/* Divider */}
-              <div className="flex items-center gap-3 my-4">
-                <div className="flex-1 h-px bg-border-soft/60" />
-                <span className="font-body text-ink-faint text-[9px] font-bold uppercase tracking-widest">or</span>
-                <div className="flex-1 h-px bg-border-soft/60" />
-              </div>
-
-              {/* Google Sign-Up Button */}
-              <button
-                type="button"
-                onClick={handleGoogleAuth}
-                className="w-full flex items-center justify-center gap-2.5 bg-bone-low hover:bg-bone border border-border-soft text-ink font-body font-bold text-xs rounded-xl py-3 transition-all shadow-sm active:scale-95"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                <span>Sign up with Google</span>
-              </button>
-
-              <div className="text-center pt-2">
+              <p className="text-center font-body text-sm text-ink-muted">
+                Already have an account?{' '}
                 <button 
-                  type="button"
+                  type="button" 
                   onClick={() => setMode('signin')}
-                  className="font-body text-ink-muted hover:text-forest font-bold text-[11px] transition-colors underline decoration-border-soft hover:decoration-forest underline-offset-4"
+                  className="text-forest font-bold hover:underline"
                 >
-                  Already have an account? Sign In
+                  Sign In
                 </button>
-              </div>
+              </p>
             </form>
-          )}
-
-          {mode === 'verify' && (
-            <form onSubmit={handleVerify} className="space-y-4">
-              <div className="text-center mb-6 space-y-2">
-                <p className="font-body text-ink text-xs font-semibold leading-relaxed">
-                  We sent a confirmation code to <span className="text-forest font-bold">{email}</span>. Please enter it below.
-                </p>
-                <p className="font-body text-ink-muted text-[11px] bg-bone-low border border-border-soft py-2 px-3 rounded-xl inline-block mt-1 shadow-inner">
-                  ⏱️ Emails usually arrive instantly, but can take 1-2 minutes depending on mail routing.
-                </p>
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                  <CheckCircle2 className="w-4 h-4 text-ink-faint" />
-                </div>
+          ) : (
+            <form onSubmit={mode === 'verify' ? handleVerification : handleSignInVerification} className="space-y-8">
+              <div className="space-y-4">
+                <label className="block text-center font-body text-xs font-bold text-ink-muted uppercase tracking-[0.2em]">6-Digit Verification Code</label>
                 <input
                   type="text"
-                  required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="6-digit code"
-                  className="w-full bg-bone-low border border-border-soft text-ink rounded-xl py-3.5 pl-11 pr-4 outline-none focus:border-forest focus:bg-white transition-all placeholder:text-ink-faint text-center tracking-[0.4em] font-mono font-bold text-sm shadow-inner"
                   maxLength={6}
+                  value={code}
+                  onChange={e => setCode(e.target.value)}
+                  placeholder="000000"
+                  className="w-full py-6 text-center text-4xl font-display font-bold tracking-[0.5em] bg-bone-low border border-border-soft rounded-3xl outline-none focus:border-forest shadow-inner transition-all text-ink placeholder:text-ink-faint/20"
+                  required
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading || code.length < 6}
-                className="btn-primary w-full py-3.5 text-xs font-bold uppercase tracking-widest justify-center shadow-md mt-6"
+                className="btn-primary w-full py-5 rounded-2xl text-base font-bold shadow-lg active:scale-[0.98] transition-all"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify Account'}
+                {loading ? <Loader2 className="animate-spin mx-auto" /> : 'Complete Verification'}
               </button>
+
+              <div className="flex flex-col items-center gap-4">
+                <button 
+                  type="button" 
+                  onClick={() => setMode('signin')}
+                  className="flex items-center gap-2 text-ink-muted hover:text-ink font-body text-xs font-bold uppercase tracking-widest transition-all"
+                >
+                  <ArrowLeft size={16} />
+                  Back to Sign In
+                </button>
+              </div>
             </form>
           )}
-
-          {mode === 'verify_signin' && (
-            <form onSubmit={handleVerifySignIn} className="space-y-4">
-              <div className="text-center mb-6 space-y-2">
-                <p className="font-body text-ink text-xs font-bold">
-                  Two-Factor / Extra Security Verification
-                </p>
-                <p className="font-body text-ink-muted text-[11px]">
-                  Please enter the authorization code sent to your registered contact.
-                </p>
-              </div>
-
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="Code"
-                  className="w-full bg-bone-low border border-border-soft text-ink rounded-xl py-3.5 px-4 outline-none focus:border-forest focus:bg-white transition-all placeholder:text-ink-faint text-center tracking-[0.4em] font-mono font-bold text-sm shadow-inner"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || !code}
-                className="btn-primary w-full py-3.5 text-xs font-bold uppercase tracking-widest justify-center shadow-md mt-6"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Sign In'}
-              </button>
-            </form>
-          )}
-
+        </div>
+        
+        <div className="p-8 bg-bone-low/50 border-t border-border-soft text-center">
+          <p className="font-body text-[10px] text-ink-faint uppercase tracking-[0.2em] font-extrabold flex items-center justify-center gap-2">
+            <CheckCircle2 size={12} className="text-forest" />
+            Secured by EcoFarm Enterprise Logic
+          </p>
         </div>
       </div>
     </div>
