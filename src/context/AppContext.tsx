@@ -552,36 +552,55 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       let aiData;
       try {
-        const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '')
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
+        if (!apiKey) throw new Error("GEMINI_API_KEY_MISSING")
+
+        const genAI = new GoogleGenerativeAI(apiKey)
+        const modelsToTry = ["gemini-1.5-flash", "gemini-pro"]
+        let lastError = null
         
-        const systemPrompt = `Role: Village Elder Agricultural Expert. 
-        Audience: Ugandan smallholder farmer. 
-        Context: The user is asking for farming advice. If the message is not in English, it is a local Ugandan language (Luganda, Runyankole, etc.)—please translate it mentally and respond in English.
-        Current Farm Status: ${JSON.stringify(farmStatus || 'Optimal')}.
-        Instructions: 
-        1. Provide professional yet accessible agricultural wisdom.
-        2. Keep the response concise but deeply helpful.
-        3. ALWAYS respond in valid JSON format.
-        
-        Format: { "voice_script": "Detailed English advice", "action_icon_meta": "IconName", "daily_brief": "Short summary" }`
-        
-        const result = await model.generateContent(systemPrompt + "\n\nFarmer's Message (may be translated or original): " + inputForAI)
-        let responseText = result.response.text().trim()
-        
-        // Robust JSON extraction
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          aiData = JSON.parse(jsonMatch[0])
-        } else {
-          throw new Error("No JSON found in AI response")
+        for (const modelName of modelsToTry) {
+          try {
+            const model = genAI.getGenerativeModel({ 
+              model: modelName,
+              safetySettings: [
+                { category: "HARM_CATEGORY_HARASSMENT" as any, threshold: "BLOCK_NONE" as any },
+                { category: "HARM_CATEGORY_HATE_SPEECH" as any, threshold: "BLOCK_NONE" as any },
+                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT" as any, threshold: "BLOCK_NONE" as any },
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT" as any, threshold: "BLOCK_NONE" as any }
+              ]
+            })
+            
+            const systemPrompt = `Role: Village Elder Agricultural Expert. 
+            Audience: Ugandan smallholder farmer. 
+            Context: The user is asking for farming advice. If the message is not in English, it is a local Ugandan language—please translate it mentally and respond in English.
+            Instructions: ALWAYS respond in valid JSON format: { "voice_script": "Detailed advice", "action_icon_meta": "IconName", "daily_brief": "Summary" }`
+            
+            const result = await model.generateContent(systemPrompt + "\n\nFarmer Message: " + inputForAI)
+            const responseText = result.response.text().trim()
+            const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+            
+            if (jsonMatch) {
+              aiData = JSON.parse(jsonMatch[0])
+              console.log(`[Gemini] Success with model ${modelName}`)
+              break
+            }
+          } catch (e) {
+            console.warn(`[Gemini] Model ${modelName} failed:`, e)
+            lastError = e
+          }
         }
-      } catch (aiErr) {
+        
+        if (!aiData?.voice_script && lastError) throw lastError
+
+      } catch (aiErr: any) {
         console.error("[Gemini Chat Failure]:", aiErr)
         aiData = {
-          voice_script: t('ai.fallback_advice'),
+          voice_script: aiErr.message?.includes("API_KEY") 
+            ? "My wisdom is blocked by a technical issue. Please ensure AI keys are set."
+            : t('ai.fallback_advice'),
           action_icon_meta: "Sprout",
-          daily_brief: "Maintain consistent field observation."
+          daily_brief: "Technical connection issue."
         }
       }
 
