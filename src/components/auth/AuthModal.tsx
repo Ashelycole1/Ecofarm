@@ -81,7 +81,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
         setError('')
         setMode('verify_signin')
       } else {
-        setError(`Unexpected status: ${result.status}. Please contact support.`)
+        setError(`We couldn't complete your sign-in (Status: ${result.status}). Please try again or contact the EcoFarm platform for help.`)
       }
     } catch (err: any) {
       setError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Sign in failed. Check your credentials.')

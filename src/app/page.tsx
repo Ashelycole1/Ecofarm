@@ -373,6 +373,39 @@ function AuthGate({ tabName }: { tabName: string }) {
   )
 }
 
+// ─── Bottom Navigation (Mobile Only) ──────────────────────────────────────────
+function BottomNav({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
+  const mobileNavItems = [
+    { id: 'home',      label: 'Home',      Icon: Home },
+    { id: 'market',    label: 'Market',    Icon: TrendingUp },
+    { id: 'community', label: 'Community', Icon: Users },
+    { id: 'chat',      label: 'Chat',      Icon: MessageCircle },
+    { id: 'alerts',    label: 'Alerts',    Icon: Bell },
+  ]
+
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/90 backdrop-blur-lg border-t border-border-soft flex items-center justify-around px-2 py-3 pb-safe shadow-modal">
+      {mobileNavItems.map(({ id, label, Icon }) => {
+        const isActive = activeTab === id
+        return (
+          <button
+            key={id}
+            onClick={() => onTabChange(id)}
+            className={`flex flex-col items-center gap-1 transition-all ${
+              isActive ? 'text-sienna' : 'text-ink-muted'
+            }`}
+          >
+            <div className={`p-1 rounded-lg transition-colors ${isActive ? 'bg-sienna-pale' : ''}`}>
+              <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
+          </button>
+        )
+      })}
+    </nav>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('home')
@@ -404,6 +437,8 @@ export default function HomePage() {
           <TabContent tab={activeTab} />
         </div>
       </main>
+
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>

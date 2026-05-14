@@ -45,5 +45,8 @@ CREATE POLICY "Allow update on community_posts"
 -- INSERT INTO storage.buckets (id, name, public) VALUES ('community-images', 'community-images', true)
 -- ON CONFLICT (id) DO NOTHING;
 
+-- 8. Enable Realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE public.community_posts;
+
 -- Done!
 SELECT 'community_posts table created successfully' as status;

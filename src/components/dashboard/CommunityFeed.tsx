@@ -54,7 +54,17 @@ function timeAgo(dateStr: string) {
 
 // ─── Post Card ─────────────────────────────────────────────────────────────────
 
-function PostCard({ post, currentUserId }: { post: CommunityPost; currentUserId?: string }) {
+// ─── Post Card ─────────────────────────────────────────────────────────────────
+
+function PostCard({ 
+  post, 
+  currentUserId, 
+  onDiscuss 
+}: { 
+  post: CommunityPost; 
+  currentUserId?: string;
+  onDiscuss: (post: CommunityPost) => void;
+}) {
   const [liked, setLiked] = useState(currentUserId ? post.likedBy.includes(currentUserId) : false)
   const [likesCount, setLikesCount] = useState(post.likes)
 
@@ -81,7 +91,7 @@ function PostCard({ post, currentUserId }: { post: CommunityPost; currentUserId?
 
   return (
     <div
-      className={`mh-card p-6 space-y-4 border transition-all duration-300 hover:translate-y-[-2px] ${
+      className={`mh-card p-5 md:p-6 space-y-4 border transition-all duration-300 hover:translate-y-[-2px] ${
         isPestAlert && severity
           ? severityBorder[severity]
           : cfg.border
@@ -122,7 +132,7 @@ function PostCard({ post, currentUserId }: { post: CommunityPost; currentUserId?
       </div>
 
       {/* Content */}
-      <p className="font-body text-ink text-sm leading-relaxed">{post.content}</p>
+      <p className="font-body text-ink text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
 
       {/* Image */}
       {post.imageUrl && (
@@ -147,9 +157,162 @@ function PostCard({ post, currentUserId }: { post: CommunityPost; currentUserId?
           <Heart size={16} fill={liked ? 'currentColor' : 'none'} />
           <span>{likesCount > 0 ? likesCount : 'Like'}</span>
         </button>
-        <div className="flex items-center gap-1.5 font-body text-xs font-bold uppercase tracking-wider text-ink-muted">
+        <button
+          onClick={() => onDiscuss(post)}
+          className="flex items-center gap-1.5 font-body text-xs font-bold uppercase tracking-wider text-ink-muted hover:text-forest transition-colors"
+        >
           <MessageCircle size={16} />
-          <span>{post.commentsCount > 0 ? post.commentsCount : 'Discuss'}</span>
+          <span>{post.commentsCount > 0 ? `${post.commentsCount} Discuss` : 'Discuss'}</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Comments Modal ───────────────────────────────────────────────────────────
+
+function DiscussionModal({ 
+  post, 
+  user, 
+  onClose 
+}: { 
+  post: CommunityPost; 
+  user: any; 
+  onClose: () => void 
+}) {
+  const [comments, setComments] = useState<any[]>([])
+  const [newComment, setNewComment] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const supabase = getSupabase()
+
+  const fetchComments = async () => {
+    if (!supabase) return
+    const { data } = await supabase
+      .from('community_comments')
+      .select('*')
+      .eq('post_id', post.id)
+      .order('created_at', { ascending: true })
+    if (data) setComments(data)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    fetchComments()
+    if (!supabase) return
+    const channel = supabase
+      .channel(`comments_${post.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_comments', filter: `post_id=eq.${post.id}` }, fetchComments)
+      .subscribe()
+    return () => { channel.unsubscribe() }
+  }, [post.id])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newComment.trim() || !user || submitting || !supabase) return
+    setSubmitting(true)
+    try {
+      const { error } = await supabase.from('community_comments').insert([{
+        post_id: post.id,
+        user_id: user.uid,
+        author_name: user.displayName || 'Farmer',
+        author_avatar: user.photoURL || null,
+        content: newComment.trim()
+      }])
+      if (error) throw error
+      setNewComment('')
+      fetchComments()
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-ink/40 backdrop-blur-sm animate-fade-in">
+      <div 
+        className="bg-white w-full max-w-xl max-h-[90vh] rounded-3xl shadow-modal overflow-hidden flex flex-col border border-border-soft animate-slide-up"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="p-5 border-b border-border-soft flex items-center justify-between bg-bone-low">
+          <div className="flex items-center gap-3">
+            <MessageCircle size={20} className="text-forest" />
+            <h3 className="font-display font-bold text-lg text-ink">Discussion</h3>
+          </div>
+          <button 
+            onClick={onClose}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-ink-muted hover:bg-bone-dim/20 transition-all"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Post Preview */}
+        <div className="p-5 bg-bone-low/30 border-b border-border-soft">
+          <p className="font-body text-xs text-ink-muted italic line-clamp-2">
+            &quot;{post.content}&quot;
+          </p>
+        </div>
+
+        {/* Comments List */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-white scrollbar-hide">
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2].map(i => <div key={i} className="h-16 rounded-xl bg-bone-low animate-pulse" />)}
+            </div>
+          ) : comments.length === 0 ? (
+            <div className="py-12 text-center space-y-2 opacity-40">
+              <MessageCircle size={32} className="mx-auto text-ink-faint" />
+              <p className="font-body text-xs font-bold uppercase tracking-wider">No comments yet</p>
+            </div>
+          ) : (
+            comments.map((c) => (
+              <div key={c.id} className="flex gap-3">
+                {c.author_avatar ? (
+                  <img src={c.author_avatar} alt="" className="w-8 h-8 rounded-xl object-cover shrink-0" />
+                ) : (
+                  <div className="w-8 h-8 rounded-xl bg-forest/10 flex items-center justify-center text-forest shrink-0">
+                    <User size={14} />
+                  </div>
+                )}
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-display font-bold text-ink text-sm">{c.author_name}</span>
+                    <span className="font-body text-[9px] text-ink-muted uppercase font-bold">{timeAgo(c.created_at)}</span>
+                  </div>
+                  <p className="font-body text-sm text-ink leading-relaxed">{c.content}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Input */}
+        <div className="p-5 border-t border-border-soft bg-white">
+          {user && !user.isGuest ? (
+            <form onSubmit={handleSubmit} className="flex gap-2">
+              <input 
+                type="text"
+                value={newComment}
+                onChange={e => setNewComment(e.target.value)}
+                placeholder="Share your thoughts..."
+                className="flex-1 bg-bone-low border border-border-soft rounded-xl px-4 py-3 font-body text-sm outline-none focus:border-forest transition-all"
+              />
+              <button 
+                type="submit"
+                disabled={!newComment.trim() || submitting}
+                className="btn-primary p-3 rounded-xl shrink-0"
+              >
+                {submitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send size={16} />}
+              </button>
+            </form>
+          ) : (
+            <p className="text-center font-body text-[10px] font-bold text-ink-muted uppercase tracking-widest py-2">
+              Sign in to join the discussion
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -235,7 +398,7 @@ function PostComposer({ user, onPost }: { user: any; onPost: () => void }) {
   ]
 
   return (
-    <div className="mh-card p-6 border border-border-soft bg-white space-y-4">
+    <div className="mh-card p-5 md:p-6 border border-border-soft bg-white space-y-4">
       <div className="flex items-center gap-3">
         {user.photoURL ? (
           <img src={user.photoURL} alt={user.displayName} className="w-10 h-10 rounded-2xl object-cover border border-border-soft" />
@@ -257,7 +420,7 @@ function PostComposer({ user, onPost }: { user: any; onPost: () => void }) {
                 key={id}
                 type="button"
                 onClick={() => setPostType(id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-body text-xs font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-body text-[10px] md:text-xs font-bold transition-all ${
                   postType === id
                     ? `${cfg.bg} ${cfg.border} ${cfg.color} shadow-sm`
                     : 'border-border-soft text-ink-muted hover:text-ink bg-bone-low'
@@ -274,13 +437,13 @@ function PostComposer({ user, onPost }: { user: any; onPost: () => void }) {
           value={content}
           onChange={e => setContent(e.target.value)}
           placeholder={
-            postType === 'pest_alert' ? 'Describe the pest sighting, crop affected, and location...' :
-            postType === 'tip' ? 'Share a farming tip or technique with the community...' :
-            postType === 'market' ? 'Share market prices, demand info, or buyer contacts...' :
-            'Share something with the EcoFarm community...'
+            postType === 'pest_alert' ? 'Describe the pest sighting...' :
+            postType === 'tip' ? 'Share a farming tip...' :
+            postType === 'market' ? 'Share market prices...' :
+            'Share something with the community...'
           }
           rows={3}
-          className="w-full bg-bone-low border border-border-soft text-ink rounded-xl py-3 px-4 outline-none focus:border-forest-tint focus:bg-white transition-all placeholder:text-ink-faint font-body text-sm resize-none shadow-inner"
+          className="w-full bg-bone-low border border-border-soft text-ink rounded-xl py-3 px-4 outline-none focus:border-forest transition-all placeholder:text-ink-faint font-body text-sm resize-none"
         />
 
         {imagePreview && (
@@ -308,7 +471,7 @@ function PostComposer({ user, onPost }: { user: any; onPost: () => void }) {
             className="flex items-center gap-2 text-ink-muted hover:text-forest font-body text-xs font-bold transition-all"
           >
             <ImageIcon size={16} />
-            <span>Add Photo</span>
+            <span className="hidden sm:inline">Add Photo</span>
           </button>
 
           <button
@@ -319,9 +482,11 @@ function PostComposer({ user, onPost }: { user: any; onPost: () => void }) {
             {loading ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <Send size={14} />
+              <>
+                <Send size={14} />
+                <span>Post</span>
+              </>
             )}
-            <span>Post</span>
           </button>
         </div>
       </form>
@@ -336,6 +501,7 @@ export default function CommunityFeed() {
   const [posts, setPosts] = useState<CommunityPost[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | CommunityPost['postType']>('all')
+  const [activeDiscussion, setActiveDiscussion] = useState<CommunityPost | null>(null)
   const supabase = getSupabase()
 
   const mapRow = (row: any): CommunityPost => ({
@@ -355,14 +521,25 @@ export default function CommunityFeed() {
   })
 
   const fetchPosts = async () => {
-    if (!supabase) return
-    const { data } = await supabase
-      .from('community_posts')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100)
-    if (data) setPosts(data.map(mapRow))
-    setLoading(false)
+    const supabase = getSupabase()
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    try {
+      const { data, error } = await supabase
+        .from('community_posts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100)
+      
+      if (error) throw error
+      if (data) setPosts(data.map(mapRow))
+    } catch (err) {
+      console.error("[Community] Fetch error:", err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -407,16 +584,16 @@ export default function CommunityFeed() {
       {/* Header */}
       <div className="flex items-end justify-between px-1 border-b border-border-soft pb-4">
         <div className="space-y-1">
-          <h2 className="font-display font-bold text-4xl text-ink tracking-tight">
+          <h2 className="font-display font-bold text-3xl md:text-4xl text-ink tracking-tight">
             Farmer Community
           </h2>
-          <p className="font-body text-xs text-ink-muted font-bold tracking-wide">
+          <p className="font-body text-[10px] text-ink-muted font-bold tracking-wide uppercase">
             {allPosts.length} posts · Live updates
           </p>
         </div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="w-2.5 h-2.5 rounded-full bg-safe animate-pulse" />
-          <span className="font-body text-xs font-bold text-safe uppercase tracking-wider">Live</span>
+          <span className="w-2 h-2 rounded-full bg-safe animate-pulse" />
+          <span className="font-body text-[10px] font-bold text-safe uppercase tracking-wider">Live</span>
         </div>
       </div>
 
@@ -426,17 +603,17 @@ export default function CommunityFeed() {
       ) : (
         <div className="mh-card p-6 border border-border-soft bg-bone-low text-center space-y-2">
           <Sparkles size={24} className="text-ochre-light mx-auto" />
-          <p className="font-body text-ink-muted text-sm font-bold">Sign in to post, share images, and join the conversation.</p>
+          <p className="font-body text-ink-muted text-xs font-bold uppercase tracking-wider">Sign in to join the conversation</p>
         </div>
       )}
 
       {/* Filter tabs */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar -mx-1 px-1">
         {filterTabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setFilter(tab.id)}
-            className={`px-4 py-2 rounded-full font-body text-xs font-bold transition-all border ${
+            className={`px-4 py-2 rounded-full font-body text-[10px] md:text-xs font-bold transition-all border whitespace-nowrap uppercase tracking-wider ${
               filter === tab.id
                 ? 'bg-forest text-white border-forest shadow-sm'
                 : 'bg-white text-ink-muted hover:text-ink border-border-soft shadow-card-sm'
@@ -453,16 +630,30 @@ export default function CommunityFeed() {
           {[1, 2, 3].map(i => <div key={i} className="h-48 rounded-xl bg-bone-card animate-pulse" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-border-soft space-y-3">
-          <Users size={40} className="text-ink-faint mx-auto" />
-          <p className="font-body text-ink-muted text-sm font-bold">No posts yet. Be the first to share!</p>
+        <div className="text-center py-16 bg-white rounded-2xl border border-border-soft space-y-3">
+          <Users size={40} className="text-ink-faint mx-auto opacity-20" />
+          <p className="font-body text-ink-muted text-xs font-bold uppercase tracking-widest">No posts yet</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:gap-6">
           {filtered.map(post => (
-            <PostCard key={post.id} post={post} currentUserId={user?.uid} />
+            <PostCard 
+              key={post.id} 
+              post={post} 
+              currentUserId={user?.uid} 
+              onDiscuss={(p) => setActiveDiscussion(p)}
+            />
           ))}
         </div>
+      )}
+
+      {/* Discussion Modal */}
+      {activeDiscussion && (
+        <DiscussionModal 
+          post={activeDiscussion} 
+          user={user} 
+          onClose={() => setActiveDiscussion(null)} 
+        />
       )}
     </div>
   )
