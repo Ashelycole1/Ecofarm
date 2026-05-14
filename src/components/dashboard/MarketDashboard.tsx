@@ -3,12 +3,22 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import dynamic from 'next/dynamic'
 import { useApp } from '@/context/AppContext'
 import { getSupabase } from '@/lib/supabaseClient'
 import { 
-  Search, Plus, X, Image as ImageIcon, MessageSquare, 
-  Phone, MapPin, Store, Sparkles, CheckCircle2, AlertCircle 
+  TrendingUp, TrendingDown, ShoppingCart, Phone, RefreshCcw, 
+  MapPin, Navigation, Info, Store, Wheat, Coffee, Cherry, Leaf, 
+  Box, ArrowUpRight, Compass, Search, Plus, X, Image as ImageIcon, 
+  MessageSquare, CheckCircle2, AlertCircle 
 } from 'lucide-react'
+import { findNearestEcoBuyer, getProximityRoute } from '@/lib/farmIntelligence'
+import type { EcoMarket } from '@/lib/db'
+
+const MapComponent = dynamic(() => import('./MapComponent'), {
+  ssr: false,
+  loading: () => <div className="h-48 w-full bg-white/5 animate-pulse rounded-2xl" />
+})
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,6 +39,14 @@ export interface MarketListing {
   whatsappContact: string
   createdAt: string
 }
+
+// Mock Markets for Farm Intel
+const MOCK_MARKETS: EcoMarket[] = [
+  { id: 'm1', name: 'Nakawa Eco-Hub', lat: 0.3348, lng: 32.6105, type: 'eco_buyer', accepts_organic: true, description: 'Direct export hub for organic grains.' },
+  { id: 'm2', name: 'Kalerwe Green Market', lat: 0.3540, lng: 32.5780, type: 'market', accepts_organic: true, description: 'Local community market.' },
+  { id: 'm3', name: 'Kawempe Cooperative', lat: 0.3750, lng: 32.5580, type: 'cooperative', accepts_organic: true, description: 'Bulk buyer for legumes.' },
+  { id: 'm4', name: 'Mengo Organic Traders', lat: 0.3020, lng: 32.5650, type: 'eco_buyer', accepts_organic: true },
+];
 
 // Premium Default Listings matching the reference perfectly
 const initialListings: MarketListing[] = [
@@ -93,12 +111,31 @@ function buildWhatsappUrl(contact: string, title: string, price: number, unit: s
   return `https://wa.me/${cleanPhone}?text=${message}`
 }
 
+function getCardinalDirection(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const dLat = lat2 - lat1;
+  const dLng = lng2 - lng1;
+  let dir = "";
+  if (Math.abs(dLat) > Math.abs(dLng)) {
+    dir = dLat > 0 ? "North" : "South";
+  } else {
+    dir = dLng > 0 ? "East" : "West";
+  }
+  return dir;
+}
+
 export default function MarketDashboard() {
   const { user } = useApp()
   const [listings, setListings] = useState<MarketListing[]>(initialListings)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+
+  // Geospatial State
+  const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null)
+  const [activeCategory, setActiveCategory] = useState('All')
+  const [nearestBuyer, setNearestBuyer] = useState<EcoMarket | null>(null)
+  const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number; polyline: [number, number][] } | null>(null)
+  const [isNavigating, setIsNavigating] = useState(false)
 
   // Form State
   const [title, setTitle] = useState('')
@@ -150,7 +187,6 @@ export default function MarketDashboard() {
           whatsappContact: row.whatsapp_contact || '+256700000000',
           createdAt: row.created_at
         }))
-        // Combine DB listings with premium defaults for full populated view
         setListings([...mapped, ...initialListings])
       } else {
         setListings(initialListings)
@@ -174,7 +210,6 @@ export default function MarketDashboard() {
     return () => { channel.unsubscribe() }
   }, [supabase])
 
-  // Pre-fill user's phone if available when opening form
   useEffect(() => {
     if (user && user.phoneNumber) {
       setWhatsappContact(user.phoneNumber)
@@ -182,6 +217,15 @@ export default function MarketDashboard() {
       setWhatsappContact('+2567')
     }
   }, [user])
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setCurrentPosition([pos.coords.latitude, pos.coords.longitude]),
+        () => setCurrentPosition([0.3476, 32.5825]) // Default Kampala
+      )
+    }
+  }, [])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -191,6 +235,25 @@ export default function MarketDashboard() {
     reader.onload = () => setImagePreview(reader.result as string)
     reader.readAsDataURL(file)
   }
+
+  const handleFindNearest = async () => {
+    if (!currentPosition) return;
+    setIsNavigating(true);
+    try {
+      const nearest = findNearestEcoBuyer(currentPosition[0], currentPosition[1], MOCK_MARKETS);
+      setNearestBuyer(nearest);
+      const route = await getProximityRoute(currentPosition[0], currentPosition[1], nearest.lat, nearest.lng);
+      setRouteInfo({
+        distance: route.distanceKm,
+        duration: route.durationMin,
+        polyline: route.polyline
+      });
+    } catch (err) {
+      console.warn('Proximity search failed');
+    } finally {
+      setIsNavigating(false);
+    }
+  };
 
   const handleCreateListing = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -203,7 +266,7 @@ export default function MarketDashboard() {
     }
 
     if (!user || user.isGuest) {
-      setFormError('Please sign in to upload produce images and publish listings.')
+      setFormError('Please sign in to publish listings.')
       return
     }
 
@@ -221,8 +284,6 @@ export default function MarketDashboard() {
         if (!uploadError) {
           const { data } = supabase.storage.from('market-images').getPublicUrl(path)
           finalImageUrl = data.publicUrl
-        } else {
-          console.warn('Storage upload error, using local base64/fallback:', uploadError)
         }
       }
 
@@ -244,428 +305,196 @@ export default function MarketDashboard() {
       }
 
       if (supabase) {
-        const { error: insertError } = await supabase.from('market_listings').insert([newRecord])
-        if (insertError) {
-          console.warn('DB Insert error, updating local inline view:', insertError)
-        } else {
-          fetchListings()
-        }
+        await supabase.from('market_listings').insert([newRecord])
+        fetchListings()
       }
 
-      // Immediately append locally so the farmer sees it instantly
-      const localAppended: MarketListing = {
-        id: `local-${Date.now()}`,
-        userId: user.uid,
-        farmerName: user.displayName || 'Verified Farmer',
-        title: title.trim(),
-        category,
-        priceUgx: Number(priceUgx),
-        unit,
-        stockAmount: Number(stockAmount),
-        stockUnit,
-        statusBadge,
-        gradeOrType: gradeOrType.trim(),
-        description: description.trim(),
-        imageUrl: finalImageUrl,
-        whatsappContact: whatsappContact.trim(),
-        createdAt: new Date().toISOString()
-      }
-
-      setListings(prev => [localAppended, ...prev])
       setFormSuccess('Produce successfully listed on the Premium Marketplace!')
-      
-      // Reset form
-      setTitle('')
-      setPriceUgx('')
-      setStockAmount('')
-      setDescription('')
-      setImageFile(null)
-      setImagePreview(null)
-      setTimeout(() => {
-        setShowAddForm(false)
-        setFormSuccess('')
-      }, 1500)
+      setTitle(''); setPriceUgx(''); setStockAmount(''); setDescription(''); setImageFile(null); setImagePreview(null);
+      setTimeout(() => { setShowAddForm(false); setFormSuccess(''); }, 1500)
 
     } catch (err: any) {
-      setFormError(err.message || 'Failed to publish listing. Please verify your connection.')
+      setFormError(err.message || 'Failed to publish listing.')
     } finally {
       setFormLoading(false)
     }
   }
 
   const filteredListings = listings.filter(item => 
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.gradeOrType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    (activeCategory === 'All' || item.category === activeCategory) &&
+    (item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     item.description.toLowerCase().includes(searchQuery.toLowerCase()))
   )
+
+  const categories = [
+    { name: 'All', Icon: Store },
+    { name: 'Grains', Icon: Wheat },
+    { name: 'Fruits', Icon: Leaf },
+    { name: 'Vegetables', Icon: Box },
+    { name: 'Cash Crops', Icon: Coffee },
+  ]
 
   return (
     <div className="space-y-10 animate-fade-in pb-16">
-      {/* Header section matching reference precisely */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border-soft pb-8">
         <div className="space-y-2 max-w-xl">
-          <p className="font-body text-xs font-extrabold text-sienna tracking-[0.2em] uppercase">
-            Premium Marketplace
-          </p>
-          <h1 className="font-display font-bold text-ink text-4xl md:text-5xl tracking-tight">
-            Market Intel
-          </h1>
+          <p className="font-body text-xs font-extrabold text-sienna tracking-[0.2em] uppercase">Premium Marketplace</p>
+          <h1 className="font-display font-bold text-ink text-4xl md:text-5xl tracking-tight">Market Intel</h1>
           <p className="font-body text-base text-ink-muted leading-relaxed pt-1">
-            Real-time agricultural data and direct connections to verified regional eco-buyers across the continent.
+            Real-time agricultural data and direct connections to verified regional eco-buyers.
           </p>
         </div>
 
-        {/* Search Input directly matching reference */}
         <div className="w-full md:w-80 space-y-2 shrink-0">
-          <label className="block font-body text-xs font-bold text-ink">
-            Find Nearest Eco-Buyer
-          </label>
+          <label className="block font-body text-xs font-bold text-ink">Search Listings</label>
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" size={18} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Enter region or buyer name..."
-              className="w-full pl-11 pr-4 py-3.5 bg-white border border-border-soft rounded-xl font-body text-sm text-ink placeholder:text-ink-faint shadow-card-sm outline-none focus:border-forest-tint transition-all"
+              placeholder="Search produce..."
+              className="w-full pl-11 pr-4 py-3.5 bg-white border border-border-soft rounded-xl font-body text-sm text-ink outline-none focus:border-forest transition-all"
             />
           </div>
         </div>
       </div>
 
-      {/* Primary Actions Bar */}
-      <div className="flex justify-between items-center bg-bone-low p-4 rounded-xl border border-border-soft">
-        <div className="flex items-center gap-2">
-          <Store size={18} className="text-forest" />
-          <span className="font-body text-xs font-bold text-ink">
-            Verified Direct Sales Hub
-          </span>
-        </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="btn-primary py-2.5 px-4 text-xs font-bold"
-        >
-          {showAddForm ? <X size={16} /> : <Plus size={16} />}
-          <span>{showAddForm ? 'Close Form' : 'List Your Produce'}</span>
-        </button>
-      </div>
-
-      {/* Expandable Produce Upload Form */}
-      {showAddForm && (
-        <div className="mh-card p-6 md:p-8 border-forest-light bg-white animate-slide-up space-y-6">
-          <div className="border-b border-border-soft pb-4">
-            <h3 className="font-display font-bold text-2xl text-ink">List New Produce</h3>
-            <p className="font-body text-xs text-ink-muted">Upload high-quality images and enter your direct WhatsApp link for buyers.</p>
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex-1 space-y-6">
+          <div className="flex justify-between items-center bg-bone-low p-4 rounded-xl border border-border-soft">
+            <div className="flex items-center gap-2">
+              <Store size={18} className="text-forest" />
+              <span className="font-body text-xs font-bold text-ink">Verified Direct Sales Hub</span>
+            </div>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="btn-primary py-2.5 px-4 text-xs font-bold flex items-center gap-2"
+            >
+              {showAddForm ? <X size={16} /> : <Plus size={16} />}
+              {showAddForm ? 'Close Form' : 'List Your Produce'}
+            </button>
           </div>
 
-          {formSuccess && (
-            <div className="p-4 rounded-xl bg-safe/10 border border-safe text-safe flex items-center gap-3 font-body text-xs font-bold">
-              <CheckCircle2 size={18} />
-              {formSuccess}
+          {showAddForm && (
+            <div className="mh-card p-6 border-forest-light bg-white animate-slide-up space-y-6">
+              <h3 className="font-display font-bold text-xl text-ink">List New Produce</h3>
+              {formSuccess && <div className="p-3 rounded-lg bg-safe/10 text-safe text-xs font-bold">{formSuccess}</div>}
+              {formError && <div className="p-3 rounded-lg bg-alert/10 text-alert text-xs font-bold">{formError}</div>}
+              <form onSubmit={handleCreateListing} className="space-y-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" placeholder="Title" value={title} onChange={e=>setTitle(e.target.value)} className="mh-input" />
+                    <select value={category} onChange={e=>setCategory(e.target.value)} className="mh-input">
+                      <option>Grains</option><option>Fruits</option><option>Vegetables</option>
+                    </select>
+                 </div>
+                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <input type="number" placeholder="Price" value={priceUgx} onChange={e=>setPriceUgx(e.target.value===''? '':Number(e.target.value))} className="mh-input" />
+                    <input type="text" placeholder="Unit (KG)" value={unit} onChange={e=>setUnit(e.target.value)} className="mh-input" />
+                    <input type="number" placeholder="Stock" value={stockAmount} onChange={e=>setStockAmount(e.target.value===''? '':Number(e.target.value))} className="mh-input" />
+                    <input type="text" placeholder="Stock Unit" value={stockUnit} onChange={e=>setStockUnit(e.target.value)} className="mh-input" />
+                 </div>
+                 <textarea placeholder="Description" value={description} onChange={e=>setDescription(e.target.value)} className="mh-input h-24" />
+                 <input type="text" placeholder="WhatsApp Contact" value={whatsappContact} onChange={e=>setWhatsappContact(e.target.value)} className="mh-input" />
+                 <button type="submit" disabled={formLoading} className="btn-primary w-full py-3">{formLoading ? 'Publishing...' : 'Publish Listing'}</button>
+              </form>
             </div>
           )}
 
-          {formError && (
-            <div className="p-4 rounded-xl bg-alert-container border border-alert/20 text-alert flex items-center gap-3 font-body text-xs font-bold">
-              <AlertCircle size={18} />
-              {formError}
-            </div>
-          )}
-
-          <form onSubmit={handleCreateListing} className="space-y-6">
-            {/* Image upload widget */}
-            <div className="space-y-2">
-              <label className="block font-body text-xs font-bold text-ink">Produce Image *</label>
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-border-soft hover:border-forest rounded-2xl p-6 text-center cursor-pointer bg-bone-low/50 transition-all relative overflow-hidden group"
-              >
-                {imagePreview ? (
-                  <div className="relative h-48 w-full rounded-xl overflow-hidden">
-                    <img src={imagePreview} alt="Produce Preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-ink/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold text-xs">
-                      Click to Change Image
-                    </div>
-                  </div>
-                ) : (
-                  <div className="py-8 space-y-3">
-                    <div className="w-12 h-12 rounded-full bg-white shadow-card-sm flex items-center justify-center mx-auto text-forest">
-                      <ImageIcon size={24} />
-                    </div>
-                    <div>
-                      <p className="font-body text-sm font-bold text-ink">Click to upload produce photo</p>
-                      <p className="font-body text-xs text-ink-muted mt-1">PNG, JPG, WebP up to 10MB</p>
-                    </div>
-                  </div>
-                )}
-                <input 
-                  ref={fileInputRef}
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleImageChange} 
-                  className="hidden" 
-                />
-              </div>
-            </div>
-
-            {/* Grid fields */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <label className="block font-body text-xs font-bold text-ink">Produce Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  placeholder="e.g. Premium White Maize"
-                  className="mh-input py-2.5"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="block font-body text-xs font-bold text-ink">Category</label>
-                <select
-                  value={category}
-                  onChange={e => setCategory(e.target.value)}
-                  className="mh-input py-2.5 bg-white"
-                >
-                  <option value="Grains">Grains</option>
-                  <option value="Fruits">Fruits</option>
-                  <option value="Vegetables">Vegetables</option>
-                  <option value="Root Crops">Root Crops</option>
-                  <option value="Cash Crops">Cash Crops</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="block font-body text-xs font-bold text-ink">Grade / Quality Label</label>
-                <input
-                  type="text"
-                  value={gradeOrType}
-                  onChange={e => setGradeOrType(e.target.value)}
-                  placeholder="e.g. Grade A Organic"
-                  className="mh-input py-2.5"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                <label className="block font-body text-xs font-bold text-ink">Price (UGX) *</label>
-                <input
-                  type="number"
-                  required
-                  value={priceUgx}
-                  onChange={e => setPriceUgx(e.target.value === '' ? '' : Number(e.target.value))}
-                  placeholder="e.g. 1200"
-                  className="mh-input py-2.5"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="block font-body text-xs font-bold text-ink">Pricing Unit</label>
-                <select
-                  value={unit}
-                  onChange={e => setUnit(e.target.value)}
-                  className="mh-input py-2.5 bg-white"
-                >
-                  <option value="KG">per KG</option>
-                  <option value="Bunch">per Bunch</option>
-                  <option value="Bag">per Bag</option>
-                  <option value="Ton">per Ton</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="block font-body text-xs font-bold text-ink">Available Stock *</label>
-                <input
-                  type="number"
-                  required
-                  value={stockAmount}
-                  onChange={e => setStockAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                  placeholder="e.g. 45"
-                  className="mh-input py-2.5"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="block font-body text-xs font-bold text-ink">Stock Unit</label>
-                <select
-                  value={stockUnit}
-                  onChange={e => setStockUnit(e.target.value)}
-                  className="mh-input py-2.5 bg-white"
-                >
-                  <option value="Tons">Tons</option>
-                  <option value="Bunches">Bunches</option>
-                  <option value="Bags">Bags</option>
-                  <option value="KGs">KGs</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="block font-body text-xs font-bold text-ink">Status Badge</label>
-                <select
-                  value={statusBadge}
-                  onChange={e => setStatusBadge(e.target.value)}
-                  className="mh-input py-2.5 bg-white"
-                >
-                  <option value="Harvest Ready">Harvest Ready</option>
-                  <option value="In Transit">In Transit</option>
-                  <option value="Cured & Stored">Cured & Stored</option>
-                  <option value="Fresh Picked">Fresh Picked</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="block font-body text-xs font-bold text-ink">WhatsApp Contact Number *</label>
-                <input
-                  type="text"
-                  required
-                  value={whatsappContact}
-                  onChange={e => setWhatsappContact(e.target.value)}
-                  placeholder="+256700000000"
-                  className="mh-input py-2.5 font-mono text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="block font-body text-xs font-bold text-ink">Description *</label>
-              <textarea
-                required
-                rows={3}
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                placeholder="Describe product density, drying methods, sorting standards, or delivery routes..."
-                className="mh-input resize-none"
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+            {categories.map(cat => (
               <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className="btn-ghost"
+                key={cat.name}
+                onClick={() => setActiveCategory(cat.name)}
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border flex items-center gap-2 ${
+                  activeCategory === cat.name ? 'bg-forest text-white border-forest' : 'bg-white text-ink-muted border-border-soft'
+                }`}
               >
-                Cancel
+                <cat.Icon size={14} />
+                {cat.name}
               </button>
-              <button
-                type="submit"
-                disabled={formLoading}
-                className="btn-primary"
-              >
-                {formLoading ? 'Publishing...' : 'Publish Listing'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+            ))}
+          </div>
 
-      {/* Listings Grid mirroring AgriRoot Premium Layout perfectly */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch pt-2">
-        {filteredListings.map(item => {
-          const isTransit = item.statusBadge.toLowerCase().includes('transit')
-          const badgeBg = isTransit ? 'bg-[#FADBD8]' : 'bg-[#F5CBA7]/40'
-          const badgeText = isTransit ? 'text-[#78281F]' : 'text-[#7E5109]'
-
-          return (
-            <div
-              key={item.id}
-              className="mh-card flex flex-col overflow-hidden bg-white group"
-            >
-              {/* Product Image Hero Container */}
-              <div className="relative h-64 w-full overflow-hidden bg-bone-low">
-                <img
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
-
-                {/* Overlapping Price / Stock Glass Blocks matching layout precisely */}
-                <div className="absolute bottom-3 left-3 right-3 flex gap-2">
-                  {/* Price Block */}
-                  <div className="flex-1 bg-white/85 backdrop-blur-md rounded-xl p-3 border border-white/40 shadow-sm flex flex-col justify-center">
-                    <span className="font-body text-[10px] font-extrabold text-ink-muted uppercase tracking-wider">
-                      Price / {item.unit}
-                    </span>
-                    <span className="font-display font-bold text-ink text-lg leading-tight mt-0.5 truncate">
-                      {item.priceUgx.toLocaleString()} UGX
-                    </span>
-                  </div>
-
-                  {/* Stock Block */}
-                  <div className="flex-1 bg-forest/90 backdrop-blur-md rounded-xl p-3 border border-forest-light/20 shadow-sm flex flex-col justify-center text-white">
-                    <span className="font-body text-[10px] font-extrabold text-forest-light uppercase tracking-wider">
-                      Stock
-                    </span>
-                    <span className="font-display font-bold text-white text-lg leading-tight mt-0.5 truncate">
-                      {item.stockAmount} {item.stockUnit}
-                    </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredListings.map(item => (
+              <div key={item.id} className="mh-card flex flex-col overflow-hidden bg-white group">
+                <div className="relative h-48 w-full overflow-hidden bg-bone-low">
+                  <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  <div className="absolute bottom-2 left-2 right-2 flex gap-2">
+                    <div className="flex-1 bg-white/90 backdrop-blur-sm rounded-lg p-2 border border-white/40 text-center">
+                      <p className="text-[8px] font-bold text-ink-muted uppercase">Price</p>
+                      <p className="text-xs font-bold text-ink">{item.priceUgx.toLocaleString()} UGX</p>
+                    </div>
+                    <div className="flex-1 bg-forest/90 backdrop-blur-sm rounded-lg p-2 text-center text-white">
+                      <p className="text-[8px] font-bold text-forest-light uppercase">Stock</p>
+                      <p className="text-xs font-bold">{item.stockAmount} {item.stockUnit}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Card Body Details */}
-              <div className="p-6 flex flex-col flex-1 justify-between gap-5">
-                <div className="space-y-3">
-                  {/* Title row with badge */}
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-display font-bold text-2xl text-ink leading-tight">
-                      {item.title}
-                    </h3>
-                    <span className={`font-body text-[10px] font-bold px-3 py-1 rounded-full shrink-0 ${badgeBg} ${badgeText}`}>
-                      {item.statusBadge}
-                    </span>
+                <div className="p-4 space-y-3 flex flex-col flex-1">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-display font-bold text-lg text-ink leading-tight">{item.title}</h3>
+                    <span className="text-[8px] font-bold px-2 py-0.5 rounded-full bg-bone-low text-ink-muted uppercase">{item.statusBadge}</span>
                   </div>
-
-                  {/* Subtitle row with sienna dot */}
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-sienna shrink-0" />
-                    <span className="font-body text-xs font-bold text-ink-muted tracking-wide">
-                      {item.gradeOrType}
-                    </span>
-                  </div>
-
-                  {/* Description paragraph */}
-                  <p className="font-body text-xs text-ink-muted leading-relaxed line-clamp-3">
-                    {item.description}
-                  </p>
-                </div>
-
-                {/* Action button matching reference precisely */}
-                <div className="pt-2 border-t border-bone-dim/40 mt-auto space-y-3">
-                  {item.farmerName && item.farmerName !== 'Verified Farmer' && (
-                    <div className="flex items-center justify-between text-[11px] font-body text-ink-faint px-1">
-                      <span>Listed by:</span>
-                      <span className="font-bold text-ink-muted">{item.farmerName}</span>
-                    </div>
-                  )}
-
+                  <p className="text-xs text-ink-muted line-clamp-2 flex-1">{item.description}</p>
                   <a
                     href={buildWhatsappUrl(item.whatsappContact, item.title, item.priceUgx, item.unit)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-3 px-4 rounded-xl font-body font-bold text-xs text-white bg-[#0d8268] hover:bg-[#0a6b55] active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-sm"
+                    target="_blank" rel="noopener noreferrer"
+                    className="w-full py-2.5 rounded-lg bg-[#0d8268] text-white text-[10px] font-bold uppercase flex items-center justify-center gap-2"
                   >
-                    <MessageSquare size={16} fill="currentColor" />
-                    <span>Contact via WhatsApp</span>
+                    <MessageSquare size={14} fill="currentColor" />
+                    Contact Seller
                   </a>
                 </div>
               </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {filteredListings.length === 0 && (
-        <div className="text-center py-16 bg-bone-low rounded-2xl border border-border-soft space-y-3">
-          <p className="font-display font-bold text-xl text-ink">No produce listings found</p>
-          <p className="font-body text-xs text-ink-muted">Try adjusting your region or search keywords.</p>
+            ))}
+          </div>
         </div>
-      )}
+
+        <div className="w-full lg:w-96 space-y-6">
+          <div className="mh-card p-6 bg-forest text-white space-y-4">
+             <div className="flex items-center gap-3">
+                <Compass className="text-wheat" size={24} />
+                <h3 className="font-display font-bold text-xl uppercase tracking-tight">Proximity Intel</h3>
+             </div>
+             <p className="text-xs text-white/70 leading-relaxed">Find verified eco-buyers and market hubs nearest to your current location.</p>
+             <button 
+                onClick={handleFindNearest}
+                disabled={isNavigating}
+                className="w-full py-4 rounded-xl bg-white text-forest font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all disabled:opacity-50"
+              >
+                {isNavigating ? <RefreshCcw className="animate-spin" size={18} /> : <MapPin size={18} />}
+                {isNavigating ? 'LOCATING...' : 'FIND NEAREST HUB'}
+             </button>
+          </div>
+
+          <div className="h-[400px] rounded-2xl overflow-hidden relative border border-border-soft shadow-sm bg-bone-low">
+            <MapComponent 
+              currentPosition={currentPosition} 
+              routeCoordinates={routeInfo?.polyline || []}
+              destination={nearestBuyer ? [nearestBuyer.lat, nearestBuyer.lng] : null}
+              marketMarkers={MOCK_MARKETS.map(m => ({
+                position: { lat: m.lat, lng: m.lng },
+                color: '#2D665F',
+                label: m.name,
+                data: m,
+                type: 'market'
+              }))}
+            />
+            {nearestBuyer && routeInfo && (
+              <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-4 rounded-xl border border-border-soft shadow-xl animate-in slide-in-from-bottom-2">
+                <p className="text-[8px] font-bold text-ink-muted uppercase mb-1">Recommended Hub</p>
+                <h4 className="font-bold text-ink text-sm mb-2">{nearestBuyer.name}</h4>
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-forest font-bold">{routeInfo.distance} KM</span>
+                  <span className="text-ink-muted font-bold">~{routeInfo.duration} MIN</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

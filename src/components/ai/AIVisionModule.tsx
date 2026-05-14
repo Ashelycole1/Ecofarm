@@ -12,6 +12,12 @@ export default function AIVisionModule() {
   const [analysisResult, setAnalysisResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const [isCameraMode, setIsCameraMode] = useState(false)
+  const [cameraLoading, setCameraLoading] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -20,6 +26,57 @@ export default function AIVisionModule() {
       setPreviewUrl(URL.createObjectURL(file))
       setAnalysisResult(null)
       setError(null)
+      setIsCameraMode(false)
+    }
+  }
+
+  const startCamera = async () => {
+    setError(null)
+    setCameraLoading(true)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' },
+        audio: false 
+      })
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        streamRef.current = stream
+        setIsCameraMode(true)
+      }
+    } catch (err) {
+      setError('Camera access denied or not available.')
+      console.error(err)
+    } finally {
+      setCameraLoading(false)
+    }
+  }
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    setIsCameraMode(false)
+  }
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current
+      const canvas = canvasRef.current
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], "capture.jpg", { type: "image/jpeg" })
+            setSelectedImage(file)
+            setPreviewUrl(URL.createObjectURL(file))
+            stopCamera()
+          }
+        }, 'image/jpeg', 0.95)
+      }
     }
   }
 
@@ -69,7 +126,37 @@ export default function AIVisionModule() {
       <div className="p-6 space-y-6">
         {!analysisResult ? (
           <div className="space-y-4">
-            {previewUrl ? (
+            {isCameraMode ? (
+              <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl border border-border-soft">
+                <video 
+                  ref={videoRef} 
+                  autoPlay 
+                  playsInline 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 border-[20px] border-black/20 pointer-events-none flex items-center justify-center">
+                   <div className="w-48 h-48 border-2 border-white/20 rounded-full opacity-20" />
+                </div>
+                <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-6 px-6">
+                   <button 
+                    onClick={stopCamera}
+                    className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20"
+                  >
+                    <X size={18} />
+                  </button>
+                  <button 
+                    onClick={capturePhoto}
+                    className="w-14 h-14 rounded-full bg-white border-4 border-ochre flex items-center justify-center shadow-2xl active:scale-90 transition-transform"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-ochre/10 flex items-center justify-center">
+                      <Camera className="text-ochre" size={20} />
+                    </div>
+                  </button>
+                  <div className="w-10 h-10" /> {/* Spacer */}
+                </div>
+                <canvas ref={canvasRef} className="hidden" />
+              </div>
+            ) : previewUrl ? (
               <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-border-soft group shadow-inner bg-bone-low">
                 <Image src={previewUrl} alt="Preview" fill className="object-cover" />
                 <button 
@@ -81,14 +168,27 @@ export default function AIVisionModule() {
                 </button>
               </div>
             ) : (
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="aspect-video w-full rounded-2xl border-2 border-dashed border-border-strong bg-bone-low flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white transition-all shadow-inner"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-ochre border border-border-soft shadow-sm">
-                  <Upload size={24} />
-                </div>
-                <p className="font-body text-[11px] text-ink-muted font-bold uppercase tracking-[0.15em]">Tap to upload plant photo</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button 
+                  onClick={startCamera}
+                  disabled={cameraLoading}
+                  className="aspect-square sm:aspect-video w-full rounded-2xl border-2 border-dashed border-border-strong bg-bone-low flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white transition-all shadow-inner group"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-ochre border border-border-soft shadow-sm group-hover:scale-110 transition-transform">
+                    {cameraLoading ? <Loader2 className="animate-spin" size={24} /> : <Camera size={24} />}
+                  </div>
+                  <p className="font-body text-[11px] text-ink-muted font-bold uppercase tracking-[0.15em]">Take Plant Photo</p>
+                </button>
+
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="aspect-square sm:aspect-video w-full rounded-2xl border-2 border-dashed border-border-strong bg-bone-low flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white transition-all shadow-inner group"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-ochre border border-border-soft shadow-sm group-hover:scale-110 transition-transform">
+                    <Upload size={24} />
+                  </div>
+                  <p className="font-body text-[11px] text-ink-muted font-bold uppercase tracking-[0.15em]">Upload from Gallery</p>
+                </button>
               </div>
             )}
 
@@ -107,19 +207,22 @@ export default function AIVisionModule() {
               </div>
             )}
 
-            <button
-              onClick={handleAnalyze}
-              disabled={!selectedImage || isGeneratingAI}
-              className="btn-primary w-full py-4 text-xs font-bold uppercase tracking-widest justify-center shadow-md disabled:opacity-40 transition-all active:scale-[0.98]"
-            >
-              {isGeneratingAI ? <Loader2 className="animate-spin" size={18} /> : (
-                <>
-                  <Camera size={16} />
-                  <span>Analyze Plant Health</span>
-                </>
-              )}
-            </button>
+            {!isCameraMode && (
+              <button
+                onClick={handleAnalyze}
+                disabled={!selectedImage || isGeneratingAI}
+                className="btn-primary w-full py-4 text-xs font-bold uppercase tracking-widest justify-center shadow-md disabled:opacity-40 transition-all active:scale-[0.98]"
+              >
+                {isGeneratingAI ? <Loader2 className="animate-spin" size={18} /> : (
+                  <>
+                    <Play size={16} fill="currentColor" />
+                    <span>Analyze Plant Health</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
+
         ) : (
           <div className="space-y-6 animate-fade-in">
             {/* Status & Audio */}
