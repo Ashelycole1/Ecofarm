@@ -89,10 +89,9 @@ const config: Config = {
       },
 
       fontFamily: {
-        'sans':    ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        'display': ['Newsreader', 'Georgia', 'serif'],
-        // Legacy compat
-        'body':    ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        'sans':    ['var(--font-plus-jakarta)', 'system-ui', 'sans-serif'],
+        'display': ['var(--font-newsreader)', 'Georgia', 'serif'],
+        'body':    ['var(--font-plus-jakarta)', 'system-ui', 'sans-serif'],
       },
 
       fontSize: {

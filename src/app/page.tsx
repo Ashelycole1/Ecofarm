@@ -1,490 +1,698 @@
 'use client'
 
-import { useState } from 'react'
-import StatusTree from '@/components/dashboard/StatusTree'
-import WeatherWidget from '@/components/dashboard/WeatherWidget'
-import PlantingCalendar from '@/components/dashboard/PlantingCalendar'
-import PestAlertForm from '@/components/dashboard/PestAlertForm'
-import PestAlertsPanel from '@/components/dashboard/PestAlertsPanel'
-import VillageElderChat from '@/components/ai/VillageElderChat'
-import AIVisionModule from '@/components/ai/AIVisionModule'
-import AuthModal from '@/components/auth/AuthModal'
+import { useRouter } from 'next/navigation'
+import {
+  Leaf, ArrowRight, Mic, Activity,
+  TrendingUp, Truck, ShoppingBasket, Star, ChevronDown, CheckCircle,
+  Menu, X, LogOut, User
+} from 'lucide-react'
 import { useApp } from '@/context/AppContext'
-import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation, Menu, X, Users, ClipboardList, MapPin } from 'lucide-react'
-import MarketDashboard from '@/components/dashboard/MarketDashboard'
-import EcoTrack from '@/components/dashboard/EcoTrack'
-import LogisticsViewer from '@/components/dashboard/LogisticsViewer'
-import LogisticTrackingView from '@/components/dashboard/LogisticTrackingView'
-import CommunityFeed from '@/components/dashboard/CommunityFeed'
-import { SupportedLanguage } from '@/lib/translations'
+import AuthModal from '@/components/auth/AuthModal'
+import { useState, useEffect } from 'react'
 
-// ─── Sidebar nav items ────────────────────────────────────────────────────────
-const navTabs = [
-  { id: 'home',      label: 'Home',      Icon: Home },
-  { id: 'market',    label: 'Market',    Icon: TrendingUp },
-  { id: 'calendar',  label: 'Planting',  Icon: Leaf },
-  { id: 'community', label: 'Community', Icon: Users },
-  { id: 'chat',      label: 'Chat',      Icon: MessageCircle },
-  { id: 'alerts',    label: 'Alerts',    Icon: Bell },
-  { id: 'track',     label: 'Track',     Icon: Navigation },
+// Dashboard tab IDs that match what the dashboard page expects
+const FEATURE_ROUTES: Record<string, string> = {
+  'AI Crop Diagnosis':  '/dashboard?tab=ai',
+  'Direct Market':      '/dashboard?tab=market',
+  'Pest Hub':           '/dashboard?tab=community',
+  'Logistics':          '/dashboard?tab=logistics',
+}
+
+const NAV_ITEMS = [
+  { label: 'Home',         href: '#home' },
+  { label: 'Features',     href: '#features' },
+  { label: 'How it works', href: '#how-it-works' },
+  { label: 'Partners',     href: '#partners' },
 ]
 
-const tabTitles: Record<string, string> = {
-  home:      'EcoFarm',
-  market:    'Market',
-  calendar:  'Planting',
-  community: 'Farmer Community',
-  chat:      'Village Elder',
-  alerts:    'Pest Alerts',
-  track:     'Eco-Track',
-}
+export default function LandingPage() {
+  const router = useRouter()
+  const {
+    user, showAuthModal, setShowAuthModal,
+    language, setLanguage, logout,
+    systemStats,
+  } = useApp()
 
-// ─── Top app bar ──────────────────────────────────────────────────────────────
-function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSidebar: () => void }) {
-  const { isConnected, user, logout, language, setLanguage, t } = useApp()
+  const [openFaq, setOpenFaq]     = useState<number | null>(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled]   = useState(false)
 
-  const languages: SupportedLanguage[] = ['English', 'Luganda', 'Runyankole', 'Lusoga', 'Acholi', 'Swahili']
+  // Sticky nav shadow on scroll
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
-  const tabTitleKeys: Record<string, string> = {
-    home:      'header.title',
-    market:    'header.intel',
-    calendar:  'header.planting',
-    community: 'header.community',
-    chat:      'header.elder',
-    alerts:    'header.alerts',
-    track:     'header.track',
+  // Close mobile menu on resize
+  useEffect(() => {
+    const onResize = () => { if (window.innerWidth >= 768) setMobileOpen(false) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  /* ─── Helpers ─────────────────────────────── */
+
+  const goToDashboard = () => router.push('/dashboard')
+
+  /** Auth gate: if logged in go straight to dashboard, else show modal */
+  const handleGetStarted = () => {
+    if (user) goToDashboard()
+    else setShowAuthModal(true)
   }
 
-  return (
-    <header
-      className="fixed top-0 left-0 right-0 z-50 md:left-56 lg:left-64 bg-bone/90 backdrop-blur-md border-b border-border-soft"
-    >
-      <div className="flex items-center justify-between w-full px-4 py-3 md:px-8">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onToggleSidebar}
-            className="md:hidden p-2 -ml-1 text-ink-muted hover:text-ink transition-colors rounded-lg"
-          >
-            <Menu size={20} />
-          </button>
-          <span className="md:hidden font-display font-semibold text-lg text-ink tracking-tight">
-            {t('header.title')}
-          </span>
-        </div>
-
-        <span className="md:hidden font-body text-[10px] font-bold text-ink-muted uppercase tracking-widest truncate max-w-[120px]">
-          {t(tabTitleKeys[activeTab]) || t('header.title')}
-        </span>
-
-        <div className="hidden md:block" />
-
-        <div className="flex items-center gap-3">
-          {/* Language Switcher */}
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
-            className="bg-bone-dim/20 border border-border-soft rounded-lg px-2 py-1 font-body text-[10px] font-bold text-ink outline-none focus:border-forest-tint transition-all"
-          >
-            {languages.map(lang => (
-              <option key={lang} value={lang}>{lang}</option>
-            ))}
-          </select>
-
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-bone-card border border-border-soft`}>
-            {isConnected
-              ? <Wifi className="text-safe" size={14} />
-              : <WifiOff className="text-alert" size={14} />}
-          </div>
-          {user && (
-            <button
-              onClick={() => logout()}
-              className="w-8 h-8 rounded-full flex items-center justify-center bg-bone-card border border-border-soft text-ink-muted hover:text-sienna hover:border-sienna/30 transition-all"
-              title="Logout"
-            >
-              <LogOut size={14} />
-            </button>
-          )}
-        </div>
-      </div>
-    </header>
-  )
-}
-
-// ─── Desktop & Mobile Sidebar ──────────────────────────────────────────────────────────
-function Sidebar({ 
-  activeTab, 
-  onTabChange, 
-  isOpen, 
-  onClose 
-}: { 
-  activeTab: string; 
-  onTabChange: (tab: string) => void; 
-  isOpen: boolean; 
-  onClose: () => void 
-}) {
-  const { user, setShowAuthModal, t } = useApp()
-
-  const navItemKeys: Record<string, string> = {
-    home:      'nav.home',
-    market:    'nav.market',
-    calendar:  'nav.planting',
-    community: 'nav.community',
-    chat:      'nav.chat',
-    alerts:    'nav.alerts',
-    track:     'nav.track',
+  /** Auth gate for a specific dashboard tab */
+  const handleFeatureClick = (label: string) => {
+    if (user) router.push(FEATURE_ROUTES[label] ?? '/dashboard')
+    else setShowAuthModal(true)
   }
 
-  return (
-    <>
-      {/* Mobile Overlay */}
-      <div
-        className={`fixed inset-0 bg-ink/30 backdrop-blur-sm z-[60] transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={onClose}
-      />
-
-      <aside
-        className={`
-          mh-sidebar fixed left-0 top-0 bottom-0 z-[70] py-8 px-4 transition-transform duration-500 ease-in-out
-          w-72 md:w-56 lg:w-64
-          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        `}
-      >
-        {/* Brand */}
-        <div className="flex items-center justify-between mb-10 px-2">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-sienna flex items-center justify-center shadow-btn">
-              <Leaf size={16} className="text-white" />
-            </div>
-            <span className="font-display font-semibold text-lg text-forest-light tracking-tight">EcoFarm</span>
-          </div>
-          <button onClick={onClose} className="md:hidden text-forest-light/50 hover:text-forest-light transition-colors">
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Bogolan divider */}
-        <div className="bogolan-divider mb-6 mx-2" />
-
-        <nav className="flex flex-col gap-1">
-          {navTabs.map(({ id, label, Icon }) => {
-            const isActive = activeTab === id
-            return (
-              <button
-                key={id}
-                onClick={() => { onTabChange(id); onClose() }}
-                id={`sidebar-tab-${id}`}
-                className={`mh-sidebar-item ${isActive ? 'active' : ''}`}
-              >
-                <Icon size={17} strokeWidth={isActive ? 2.5 : 1.75} />
-                <span className="text-[12px] font-semibold tracking-wide">{t(navItemKeys[id]) || label}</span>
-              </button>
-            )
-          })}
-        </nav>
-
-        <div className="mt-auto pt-8">
-          <div className="bogolan-divider mb-6 mx-2" />
-          {!user ? (
-            <button
-              onClick={() => { setShowAuthModal(true); onClose() }}
-              className="w-full py-3 rounded-lg bg-sienna text-white text-xs font-semibold tracking-wide shadow-btn hover:bg-sienna-dark transition-all"
-            >
-              Sign In to EcoFarm
-            </button>
-          ) : (
-            <div className="flex items-center gap-3 px-2">
-              <div className="w-8 h-8 rounded-full bg-forest-medium flex items-center justify-center">
-                <span className="text-forest-light text-xs font-bold">{(user.displayName || 'F')[0].toUpperCase()}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-forest-light text-xs font-semibold truncate">{user.displayName || 'Farmer'}</p>
-                <p className="text-forest-light/40 text-[10px] uppercase tracking-wider">Registered</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </aside>
-    </>
-  )
-}
-
-// ─── Home tab ─────────────────────────────────────────────────────────────────
-function HomeTab() {
-  const { weather, user, systemStats, t } = useApp()
-
-  return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Hero greeting card */}
-      <div
-        className="mh-card bogolan-border relative overflow-hidden p-10 md:p-14 min-h-[220px] flex flex-col justify-center"
-        style={{ background: 'linear-gradient(135deg, #f4f4ee 0%, #eeeee9 100%)' }}
-      >
-        {/* Bogolanfini watermark */}
-        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%232d4b37' stroke-width='1'%3E%3Crect x='6' y='6' width='36' height='36'/%3E%3Crect x='12' y='12' width='24' height='24'/%3E%3Cline x1='6' y1='6' x2='42' y2='42'/%3E%3Cline x1='42' y1='6' x2='6' y2='42'/%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '48px 48px'
-          }}
-        />
-        <div className="relative z-10">
-          <p className="font-body text-[11px] text-ink-muted uppercase tracking-[0.25em] font-semibold mb-3">
-            {t('home.welcome').split(',')[0]}
-          </p>
-          <h1 className="font-display font-semibold text-ink text-4xl md:text-5xl leading-tight">
-            {user ? (user.displayName || 'Farmer') : t('auth.signin')}
-          </h1>
-          <div className="flex items-center gap-2 mt-4">
-            <MapPin size={14} className="text-sienna" />
-            <p className="font-body text-sm text-ink-muted font-medium">
-              {weather ? `${weather.location} · ${weather.temperature}°C` : 'Connecting to farm...'}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Two-column grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <StatusTree compact={false} />
-        <WeatherWidget />
-      </div>
-
-      {/* Community Stats */}
-      <div className="mh-card p-8 bogolan-border">
-        <p className="font-body text-[10px] text-ink-muted uppercase tracking-[0.2em] font-bold mb-8">{t('home.activity')}</p>
-        <div className="grid grid-cols-3 gap-6 text-center">
-          <CommunityStat value={String(systemStats?.farmersCount || 0)} label={t('home.farmers')} Icon={Users} color="text-forest-medium" />
-          <CommunityStat value={String(systemStats?.reportsCount || 0)} label={t('home.reports')} Icon={ClipboardList} color="text-sienna" />
-          <CommunityStat value={String(systemStats?.districtsCount || 0)} label={t('home.districts')} Icon={MapPin} color="text-ochre-light" />
-        </div>
-      </div>
-
-      <div>
-        <AIVisionModule />
-      </div>
-    </div>
-  )
-}
-
-function CommunityStat({ value, label, Icon, color }: { value: string; label: string; Icon: any; color: string }) {
-  return (
-    <div className="flex flex-col items-center group">
-      <div className={`w-11 h-11 rounded-xl bg-bone-low border border-border-soft flex items-center justify-center mb-3 transition-transform group-hover:scale-110 shadow-card-sm ${color}`}>
-        <Icon size={20} />
-      </div>
-      <div className="font-display font-semibold text-ink text-2xl leading-tight">{value}</div>
-      <div className="font-body text-[10px] text-ink-muted uppercase tracking-widest font-semibold mt-1">{label}</div>
-    </div>
-  )
-}
-
-// ─── Tab content router ───────────────────────────────────────────────────────
-function TabContent({ tab }: { tab: string }) {
-  const { user } = useApp()
-
-  if (tab === 'home') return <HomeTab />
-  if (tab === 'market') return <MarketDashboard />
-  if (tab === 'track') return <TrackTab />
-  // Community is publicly viewable; posting requires auth (handled inside component)
-  if (tab === 'community') return <CommunityFeed />
-
-  if (!user) return <AuthGate tabName={tab} />
-
-  switch (tab) {
-    case 'calendar': return <PlantingCalendar />
-    case 'chat': return <VillageElderChat />
-    case 'alerts': return (
-      <div className="space-y-8 animate-fade-in">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          <PestAlertsPanel />
-          <div className="border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-8">
-            <PestAlertForm />
-          </div>
-        </div>
-      </div>
-    )
-    default: return <HomeTab />
-  }
-}
-
-// ─── Sub-tabs for tracking ───────────────────────────────────────────────────
-function TrackTab() {
-  const [view, setView] = useState<'request' | 'driver' | 'buyer'>('request')
-  const [trackId, setTrackId] = useState('')
-  const [activeId, setActiveId] = useState('')
-
-  return (
-    <div className="space-y-6 animate-fade-in pb-20">
-      <div className="flex p-1.5 bg-bone-low rounded-2xl border border-border-soft max-w-md mx-auto shadow-inner">
-        <button
-          onClick={() => setView('request')}
-          className={`flex-1 py-3 rounded-xl font-body text-[10px] font-bold uppercase tracking-widest transition-all ${
-            view === 'request' ? 'bg-white text-ink shadow-sm' : 'text-ink-faint hover:text-ink'
-          }`}
-        >
-          Book Truck
-        </button>
-        <button
-          onClick={() => setView('buyer')}
-          className={`flex-1 py-3 rounded-xl font-body text-[10px] font-bold uppercase tracking-widest transition-all ${
-            view === 'buyer' ? 'bg-white text-ink shadow-sm' : 'text-ink-faint hover:text-ink'
-          }`}
-        >
-          Track Load
-        </button>
-        <button
-          onClick={() => setView('driver')}
-          className={`flex-1 py-3 rounded-xl font-body text-[10px] font-bold uppercase tracking-widest transition-all ${
-            view === 'driver' ? 'bg-white text-ink shadow-sm' : 'text-ink-faint hover:text-ink'
-          }`}
-        >
-          Driver Mode
-        </button>
-      </div>
-
-      {view === 'request' ? (
-        <LogisticTrackingView />
-      ) : view === 'driver' ? (
-        <EcoTrack />
-      ) : (
-        <div className="space-y-4">
-          {!activeId ? (
-            <div className="p-10 md:p-12 text-center space-y-6 mh-card bg-white">
-              <div className="w-20 h-20 bg-bone-low rounded-3xl flex items-center justify-center mx-auto mb-2 border border-border-soft shadow-inner">
-                <Navigation className="text-ochre-light animate-pulse" size={40} />
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-display font-bold text-ink text-2xl tracking-tight leading-tight">Enter Delivery ID</h3>
-                <p className="font-body text-ink-muted text-xs font-medium">Track your agricultural logistics in real-time.</p>
-              </div>
-              <input
-                type="text"
-                placeholder="TRK-XXXX-XXXX"
-                className="w-full bg-bone-low border border-border-soft rounded-xl px-6 py-4 text-ink text-center focus:border-forest outline-none font-body text-sm font-semibold tracking-widest shadow-inner transition-colors"
-                value={trackId}
-                onChange={(e) => setTrackId(e.target.value)}
-              />
-              <button
-                onClick={() => setActiveId(trackId)}
-                className="btn-primary w-full py-4 text-xs font-bold uppercase tracking-widest justify-center shadow-md transition-all active:scale-95 disabled:opacity-40"
-                disabled={!trackId}
-              >
-                Track Live Movement
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <LogisticsViewer tripId={activeId} />
-              <button
-                onClick={() => setActiveId('')}
-                className="w-full py-2 font-body text-ink-faint text-[10px] font-bold uppercase tracking-widest hover:text-ink transition-colors"
-              >
-                ← Change Trip ID
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function AuthGate({ tabName }: { tabName: string }) {
-  const { setShowAuthModal, t } = useApp()
-  return (
-    <div className="p-10 md:p-12 text-center animate-fade-in mt-10 mh-card bg-white">
-      <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 bg-bone-low border border-border-soft shadow-inner">
-        <Lock className="text-ochre-light" size={32} />
-      </div>
-      <h3 className="font-display font-bold text-ink text-3xl mb-2 tracking-tight leading-tight">{t('common.protected')}</h3>
-      <p className="font-body text-xs text-ink-muted mb-8 leading-relaxed max-w-[260px] mx-auto font-medium">
-        {t('common.protected_desc')}
-      </p>
-      <button
-        onClick={() => setShowAuthModal(true)}
-        className="btn-primary w-full py-3.5 text-xs font-bold uppercase tracking-widest justify-center shadow-md hover:scale-[1.02] transition-all active:scale-95"
-      >
-        {t('common.signin_to_continue')}
-      </button>
-    </div>
-  )
-}
-
-// ─── Bottom Navigation (Mobile Only) ──────────────────────────────────────────
-function BottomNav({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
-  const { t } = useApp()
-
-  const navItemKeys: Record<string, string> = {
-    home:      'nav.home',
-    market:    'nav.market',
-    community: 'nav.community',
-    chat:      'nav.chat',
-    alerts:    'nav.alerts',
+  /** Smooth-scroll anchor helper */
+  const scrollTo = (href: string) => {
+    setMobileOpen(false)
+    if (href.startsWith('#')) {
+      const el = document.querySelector(href)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      router.push(href)
+    }
   }
 
-  const mobileNavItems = [
-    { id: 'home',      label: 'Home',      Icon: Home },
-    { id: 'market',    label: 'Market',    Icon: TrendingUp },
-    { id: 'community', label: 'Community', Icon: Users },
-    { id: 'chat',      label: 'Chat',      Icon: MessageCircle },
-    { id: 'alerts',    label: 'Alerts',    Icon: Bell },
+  const handleSignOut = async () => {
+    await logout()
+    router.push('/')
+  }
+
+  /* ─── Feature card data ───────────────────── */
+  const FEATURES = [
+    { icon: Mic,          label: 'AI Crop Diagnosis', sub: 'Voice & photo leaf scan',  topBg: '#1a3c20', iconCol: '#7ec87a' },
+    { icon: ShoppingBasket, label: 'Direct Market',   sub: 'Buyer-to-farmer trade',    topBg: '#7a4214', iconCol: '#f5c49a' },
+    { icon: Activity,     label: 'Pest Hub',          sub: 'GPS outbreak alerts',       topBg: '#1a3c20', iconCol: '#7ec87a' },
+    { icon: Truck,        label: 'Logistics',         sub: 'Book & track trucks',       topBg: '#7a4214', iconCol: '#f5c49a' },
   ]
 
-  return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/90 backdrop-blur-lg border-t border-border-soft flex items-center justify-around px-2 py-3 pb-safe shadow-modal">
-      {mobileNavItems.map(({ id, label, Icon }) => {
-        const isActive = activeTab === id
-        return (
-          <button
-            key={id}
-            onClick={() => onTabChange(id)}
-            className={`flex flex-col items-center gap-1 transition-all ${
-              isActive ? 'text-sienna' : 'text-ink-muted'
-            }`}
-          >
-            <div className={`p-1 rounded-lg transition-colors ${isActive ? 'bg-sienna-pale' : ''}`}>
-              <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-            </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider">{t(navItemKeys[id]) || label}</span>
-          </button>
-        )
-      })}
-    </nav>
-  )
-}
+  const STEPS = [
+    { step: '01', title: 'Careful Field Preparation',  desc: 'Farmers get hyper-local planting schedules, soil tips, and climate alerts in their own voice.',  topBg: '#1a3c20', accent: '#7ec87a' },
+    { step: '02', title: 'Fresh Crop Monitoring',      desc: 'Community pest alerts and AI-guided advice catch problems before they spread.',                   topBg: '#2d5e34', accent: '#a8cc8c' },
+    { step: '03', title: 'Reliable Market Delivery',   desc: 'Match harvest to buyers and book verified trucks — transparently, in one tap.',                   topBg: '#7a4214', accent: '#f5c49a' },
+  ]
 
-// ─── Main page ────────────────────────────────────────────────────────────────
-export default function HomePage() {
-  const [activeTab, setActiveTab] = useState('home')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { authLoading, showAuthModal, setShowAuthModal, t } = useApp()
+  const TESTIMONIALS = [
+    { name: 'Sarah K.', role: 'Smallholder Farmer, Iganga',   quote: 'The pest alert saved my maize crop. I heard about the armyworm before it reached my farm.',         initials: 'SK', color: '#1a3c20' },
+    { name: 'Moses T.', role: 'Produce Buyer, Kampala',        quote: 'I source directly from verified farmers now. No middlemen, better prices, fresher produce every week.', initials: 'MT', color: '#c9773a' },
+    { name: 'Grace N.', role: 'Transport Driver, Jinja',       quote: 'Finding delivery jobs used to take days. With EcoFarm I find a job every single morning.',           initials: 'GN', color: '#1a3c20' },
+  ]
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-bone">
-        <div className="w-12 h-12 rounded-full border-2 border-forest-light/30 border-t-sienna animate-spin" />
-        <p className="font-body text-ink-muted text-[11px] font-semibold uppercase tracking-[0.3em]">{t('common.loading')}</p>
-      </div>
-    )
+  const FAQS = [
+    { q: 'Do farmers accept organic farming techniques?',     a: 'Yes. EcoFarm actively promotes organic practices through our AI Crop Advisor. Farmers get voice-guided advice on natural pest control tailored to their region and dialect.' },
+    { q: 'How do platform features and supply services work?', a: 'Farmers list their harvest, buyers browse verified produce, and drivers find pickup jobs — all without middlemen. The platform handles payments securely.' },
+    { q: 'How does recommended quality work?',                a: 'Farmers photograph their produce and our AI grades it for quality. Buyers see verified quality ratings before any purchase offer, ensuring fair pricing.' },
+    { q: 'Do you offer delivery services?',                   a: 'Yes. Verified truck drivers register, browse available jobs, optimise routes, and receive guaranteed payments after delivery confirmation.' },
+  ]
+
+  const LANGUAGES: { name: string; code: string }[] = [
+    { name: 'English',    code: 'EN' },
+    { name: 'Luganda',    code: 'LG' },
+    { name: 'Runyankole', code: 'NY' },
+    { name: 'Lusoga',     code: 'SG' },
+    { name: 'Acholi',     code: 'AC' },
+    { name: 'Swahili',    code: 'SW' },
+  ]
+
+  // Map language code → SupportedLanguage value expected by AppContext
+  const LANG_MAP: Record<string, string> = {
+    EN: 'English', LG: 'Luganda', NY: 'Runyankole', SG: 'Lusoga', AC: 'Acholi', SW: 'Swahili',
   }
 
+  const currentLangCode = Object.entries(LANG_MAP).find(([, v]) => v === language)?.[0] ?? 'EN'
+
+  /* ─── Render ──────────────────────────────── */
   return (
-    <div className="min-h-screen min-h-dvh flex flex-col bg-bone">
-      <AppBar activeTab={activeTab} onToggleSidebar={() => setSidebarOpen(true)} />
+    <div
+      className="min-h-screen bg-white text-[#111] overflow-x-hidden"
+      style={{ fontFamily: 'var(--font-plus-jakarta), system-ui, sans-serif' }}
+    >
 
-      <Sidebar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      {/* ── NAV ───────────────────────────────── */}
+      <header
+        className={`fixed top-0 inset-x-0 z-50 bg-white transition-shadow ${scrolled ? 'shadow-sm' : 'border-b border-[#eee]'}`}
+      >
+        <div className="max-w-6xl mx-auto px-6 h-[60px] flex items-center justify-between">
 
-      <main className="flex-1 overflow-y-auto pb-28 md:pb-10 pt-14 md:ml-56 lg:ml-64">
-        <div className="w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8">
-          <TabContent tab={activeTab} />
+          {/* Logo */}
+          <button
+            onClick={() => scrollTo('#home')}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <div className="w-7 h-7 rounded-full bg-[#1a3c20] flex items-center justify-center">
+              <Leaf size={13} className="text-white" />
+            </div>
+            <span className="text-[15px] font-bold text-[#111]">EcoFarm</span>
+          </button>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-8">
+            {NAV_ITEMS.map(item => (
+              <button
+                key={item.label}
+                onClick={() => scrollTo(item.href)}
+                className="text-[13.5px] text-[#555] hover:text-[#1a3c20] font-medium transition-colors"
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* Desktop auth */}
+          <div className="hidden md:flex items-center gap-3">
+            {user ? (
+              <>
+                <button
+                  onClick={goToDashboard}
+                  className="flex items-center gap-1.5 text-[13.5px] font-semibold text-[#1a3c20] hover:underline"
+                >
+                  <User size={14} /> Dashboard
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-1.5 text-[13px] text-[#888] hover:text-red-500 transition-colors"
+                >
+                  <LogOut size={13} /> Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="text-[13.5px] font-semibold text-[#111] hover:text-[#1a3c20] transition-colors"
+                >
+                  Sign in
+                </button>
+                <button
+                  onClick={handleGetStarted}
+                  className="px-5 py-2 rounded-full bg-[#1a3c20] text-white text-[13px] font-bold hover:bg-[#122a17] transition-colors"
+                >
+                  Get Started
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
+
+        {/* Mobile drawer */}
+        {mobileOpen && (
+          <div className="md:hidden bg-white border-t border-[#eee] px-6 py-4 space-y-3 shadow-lg">
+            {NAV_ITEMS.map(item => (
+              <button
+                key={item.label}
+                onClick={() => scrollTo(item.href)}
+                className="block w-full text-left text-[14px] font-medium text-[#555] hover:text-[#1a3c20] py-1.5 transition-colors"
+              >
+                {item.label}
+              </button>
+            ))}
+            <div className="pt-3 border-t border-[#eee] flex flex-col gap-2">
+              {user ? (
+                <>
+                  <button onClick={() => { setMobileOpen(false); goToDashboard() }}
+                    className="w-full py-2.5 rounded-full bg-[#1a3c20] text-white text-[13px] font-bold">
+                    Go to Dashboard
+                  </button>
+                  <button onClick={() => { setMobileOpen(false); handleSignOut() }}
+                    className="w-full py-2.5 rounded-full border border-red-200 text-red-500 text-[13px] font-semibold">
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => { setMobileOpen(false); setShowAuthModal(true) }}
+                    className="w-full py-2.5 rounded-full border border-[#1a3c20] text-[#1a3c20] text-[13px] font-semibold">
+                    Sign in
+                  </button>
+                  <button onClick={() => { setMobileOpen(false); handleGetStarted() }}
+                    className="w-full py-2.5 rounded-full bg-[#1a3c20] text-white text-[13px] font-bold">
+                    Get Started
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </header>
+
+      <main className="pt-[60px]">
+
+        {/* ── HERO ──────────────────────────────── */}
+        <section id="home" className="bg-[#1a3c20]">
+          <div className="max-w-6xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[520px]">
+
+            <div>
+              <div className="inline-flex items-center gap-2 border border-white/20 rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-white/90 mb-7">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#c9773a]"></span>
+                Uganda's #1 AgriTech Platform
+              </div>
+
+              <h1
+                className="text-[2.5rem] md:text-[3.2rem] font-bold text-white leading-[1.08] mb-5 tracking-[-0.02em]"
+                style={{ fontFamily: 'var(--font-newsreader)' }}
+              >
+                Organic Fresh<br />Produce Grown<br />With Care
+              </h1>
+
+              <p className="text-[14px] text-white/65 leading-relaxed max-w-sm mb-8">
+                EcoFarm helps farmers, buyers and logistics partners grow smarter — with voice-guided AI, real-time market prices, and community pest alerts. No reading required.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3 mb-10">
+                <button
+                  onClick={handleGetStarted}
+                  className="flex items-center gap-2 px-6 py-3 rounded-full bg-[#c9773a] text-white text-[13.5px] font-bold hover:bg-[#a85e28] transition-colors shadow-[0_4px_16px_rgba(201,119,58,0.35)]"
+                >
+                  {user ? 'Go to Dashboard' : 'Start for Free'} <ArrowRight size={15} />
+                </button>
+                <button
+                  onClick={() => scrollTo('#how-it-works')}
+                  className="flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 text-white text-[13.5px] font-semibold hover:bg-white/10 transition-colors"
+                >
+                  How it works
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-6">
+                {['MAAIF Aligned', 'WFP Supported', 'UN Program'].map(b => (
+                  <div key={b} className="flex items-center gap-1.5 text-[12px] font-medium text-white/55">
+                    <CheckCircle size={13} className="text-[#7ec87a]" /> {b}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Floating card panel */}
+            <div className="relative flex justify-center lg:justify-end">
+              <div className="relative w-[320px] lg:w-[340px]">
+                <div className="bg-[#f5f5f2] rounded-2xl p-5 shadow-xl relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[11px] font-bold text-[#888] uppercase tracking-widest">Live Network</span>
+                    <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#1a3c20]">
+                      <span className="w-2 h-2 rounded-full bg-[#4CAF50] animate-pulse"></span>Connected
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    {[
+                      { val: `${systemStats.farmersCount > 0 ? systemStats.farmersCount.toLocaleString() : '11k+'}`, lab: 'Farmers' },
+                      { val: `${systemStats.reportsCount > 0 ? systemStats.reportsCount : '3'}`, lab: 'Alerts' },
+                      { val: '6', lab: 'Dialects' },
+                    ].map(s => (
+                      <div key={s.lab} className="bg-white rounded-xl p-3 text-center shadow-sm">
+                        <div className="text-lg font-bold text-[#1a3c20]" style={{ fontFamily: 'var(--font-newsreader)' }}>{s.val}</div>
+                        <div className="text-[11px] text-[#888] mt-0.5">{s.lab}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={handleGetStarted}
+                    className="w-full bg-white rounded-xl p-4 border border-[#f0ebe4] text-left hover:border-[#c9773a]/30 hover:bg-[#fffbf8] transition-colors group"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-full bg-[#fdf0e6] flex items-center justify-center">
+                        <Activity size={14} className="text-[#c9773a]" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-bold text-[#c9773a] uppercase tracking-wider">Pest Alert</span>
+                        <span className="block text-[13px] font-bold text-[#111]">Fall armyworm — 2 farms away</span>
+                      </div>
+                    </div>
+                    <p className="text-[12px] text-[#888]">14 neighbors notified · <span className="text-[#c9773a] font-semibold group-hover:underline">View on map →</span></p>
+                  </button>
+                </div>
+
+                <div className="absolute -left-12 top-8 bg-white rounded-2xl p-4 shadow-xl border border-gray-100 w-[140px]">
+                  <div className="text-[10px] font-bold text-[#888] uppercase tracking-wider mb-1">Farmers Active</div>
+                  <div className="text-2xl font-bold text-[#1a3c20]" style={{ fontFamily: 'var(--font-newsreader)' }}>200K+</div>
+                  <div className="text-[11px] text-[#aaa]">Across Uganda</div>
+                </div>
+
+                <div className="absolute -right-6 bottom-16 bg-white rounded-2xl p-4 shadow-xl border border-gray-100 w-[140px]">
+                  <div className="text-[10px] font-bold text-[#888] uppercase tracking-wider mb-1">Revenue Up</div>
+                  <div className="text-2xl font-bold text-[#c9773a]" style={{ fontFamily: 'var(--font-newsreader)' }}>300K+</div>
+                  <div className="text-[11px] text-[#aaa]">This season</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── TAGLINE ───────────────────────────── */}
+        <section className="py-14 px-6 border-b border-[#eee]">
+          <div className="max-w-6xl mx-auto">
+            <h2
+              className="text-[1.8rem] md:text-[2.2rem] font-bold leading-[1.2] text-[#111] max-w-3xl"
+              style={{ fontFamily: 'var(--font-newsreader)' }}
+            >
+              Fresh harvests. Sustainable farming.{' '}
+              EcoFarm delivers{' '}
+              <span className="text-[#c9773a]">naturally grown produce</span>{' '}
+              with quality, care, and everyday freshness.
+            </h2>
+          </div>
+        </section>
+
+        {/* ── SPLIT PANEL ───────────────────────── */}
+        <section className="grid grid-cols-1 lg:grid-cols-2" style={{ minHeight: '380px' }}>
+          <div className="bg-[#1a3c20] relative overflow-hidden" style={{ minHeight: '280px' }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#2a5630] to-[#1a3c20]"></div>
+            <div className="absolute top-8 right-8 w-32 h-32 rounded-full bg-white/5 border border-white/10"></div>
+            <div className="absolute bottom-10 left-12 w-20 h-20 rounded-full bg-white/5"></div>
+            <div className="absolute bottom-8 left-8 text-white z-10">
+              <span className="block text-[11px] font-bold uppercase tracking-widest text-[#7ec87a] mb-1">Voice-guided AI</span>
+              <span className="block text-2xl font-bold" style={{ fontFamily: 'var(--font-newsreader)' }}>Farming for Everyone</span>
+            </div>
+          </div>
+          <div className="bg-[#f5f5f2] p-10 lg:p-14 flex items-center">
+            <div>
+              <h3
+                className="text-[1.4rem] font-bold leading-snug text-[#111] mb-4"
+                style={{ fontFamily: 'var(--font-newsreader)' }}
+              >
+                We cultivate modern agricultural innovation with local wisdom and accessible tools.
+              </h3>
+              <p className="text-[14px] text-[#666] leading-relaxed mb-6">
+                From the smallholder in Iganga to the wholesale buyer in Kampala, EcoFarm creates a transparent, voice-first agricultural ecosystem that works even without internet or literacy.
+              </p>
+              <button
+                onClick={handleGetStarted}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1a3c20] text-white text-[13px] font-bold hover:bg-[#122a17] transition-colors"
+              >
+                Join EcoFarm <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ── STATS ─────────────────────────────── */}
+        <section className="py-12 border-b border-[#eee]">
+          <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {[
+              { num: '25', unit: '.', sub: 'Regions Covered' },
+              { num: '50',  unit: 'K+', sub: 'Active Farmers' },
+              { num: '1',   unit: 'M+', sub: 'Transactions Completed' },
+              { num: '−40', unit: '%',  sub: 'Crop Loss Reduced' },
+            ].map(s => (
+              <div key={s.sub}>
+                <div className="flex items-baseline justify-center gap-0.5">
+                  <span className="text-[2.4rem] font-bold text-[#111]" style={{ fontFamily: 'var(--font-newsreader)' }}>{s.num}</span>
+                  <span className="text-[1.2rem] font-bold text-[#c9773a]" style={{ fontFamily: 'var(--font-newsreader)' }}>{s.unit}</span>
+                </div>
+                <p className="text-[12px] text-[#888] mt-1 font-medium">{s.sub}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── FEATURES ──────────────────────────── */}
+        <section id="features" className="py-16 bg-[#f5f5f2]">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-10">
+              <h2 className="text-[1.4rem] font-bold text-[#111] mb-2" style={{ fontFamily: 'var(--font-newsreader)' }}>
+                Our Platform Features
+              </h2>
+              <p className="text-[13px] text-[#888]">
+                Everything a <span className="text-[#1a3c20] font-semibold">farmer</span>,{' '}
+                <span className="text-[#c9773a] font-semibold">buyer</span>, or{' '}
+                <span className="text-[#1a3c20] font-semibold">driver</span> needs — in one icon-driven app.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+              {FEATURES.map((item, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleFeatureClick(item.label)}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer text-left group"
+                >
+                  <div className="h-[130px] flex items-center justify-center relative" style={{ backgroundColor: item.topBg }}>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+                      <item.icon size={22} style={{ color: item.iconCol }} />
+                    </div>
+                    <div className="absolute bottom-3 right-3 w-12 h-12 rounded-full opacity-10" style={{ backgroundColor: item.iconCol }}></div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-[13.5px] font-bold text-[#111] mb-1" style={{ fontFamily: 'var(--font-newsreader)' }}>{item.label}</h3>
+                    <p className="text-[12px] text-[#888]">{item.sub}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── HOW IT WORKS ──────────────────────── */}
+        <section id="how-it-works" className="py-16">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-10">
+              <h2 className="text-[1.4rem] font-bold text-[#111] mb-2" style={{ fontFamily: 'var(--font-newsreader)' }}>
+                How We Deliver Freshness
+              </h2>
+              <p className="text-[13px] text-[#888]">Three simple steps from field to market.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {STEPS.map((step, i) => (
+                <button
+                  key={i}
+                  onClick={handleGetStarted}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all border border-[#eee] text-left group"
+                >
+                  <div className="h-[160px] relative overflow-hidden" style={{ backgroundColor: step.topBg }}>
+                    <div className="absolute top-4 left-4 w-7 h-7 rounded-full bg-white flex items-center justify-center">
+                      <span className="text-[11px] font-black" style={{ color: step.topBg }}>{step.step}</span>
+                    </div>
+                    <div className="absolute bottom-0 right-0 w-36 h-36 rounded-full opacity-10 group-hover:opacity-20 transition-opacity" style={{ backgroundColor: step.accent, transform: 'translate(30%, 30%)' }}></div>
+                    <div className="absolute bottom-4 left-4 text-white">
+                      <span className="text-[11px] font-bold opacity-60">Step {step.step}</span>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="text-[14px] font-bold text-[#111] mb-2" style={{ fontFamily: 'var(--font-newsreader)' }}>{step.title}</h3>
+                    <p className="text-[12.5px] text-[#888] leading-relaxed">{step.desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── TESTIMONIALS ──────────────────────── */}
+        <section id="partners" className="py-16 bg-[#f5f5f2]">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-10">
+              <h2 className="text-[1.4rem] font-bold text-[#111]" style={{ fontFamily: 'var(--font-newsreader)' }}>
+                What Our Partners Say
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {TESTIMONIALS.map((t, i) => (
+                <div key={i} className="bg-white rounded-2xl p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm text-white" style={{ backgroundColor: t.color }}>
+                      {t.initials}
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-bold text-[#111]">{t.name}</div>
+                      <div className="text-[11px] text-[#888]">{t.role}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-0.5 mb-3">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <Star key={j} size={12} fill="#c9773a" className="text-[#c9773a]" />
+                    ))}
+                  </div>
+                  <p className="text-[13px] text-[#555] leading-relaxed" style={{ fontFamily: 'var(--font-newsreader)' }}>
+                    "{t.quote}"
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── LANGUAGE SWITCHER ─────────────────── */}
+        <section className="py-14 border-t border-b border-[#eee]">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-8">
+              <h2 className="text-[1.4rem] font-bold text-[#111] mb-2" style={{ fontFamily: 'var(--font-newsreader)' }}>
+                Zero-reading interface
+              </h2>
+              <p className="text-[13px] text-[#888] max-w-md mx-auto">
+                Switch dialect and the entire app re-speaks — from onboarding to pest alerts.
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-3">
+              {LANGUAGES.map(lang => {
+                const active = lang.code === currentLangCode
+                return (
+                  <button
+                    key={lang.code}
+                    onClick={() => setLanguage(LANG_MAP[lang.code] as any)}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full border text-[13px] font-semibold transition-all ${
+                      active
+                        ? 'bg-[#1a3c20] border-[#1a3c20] text-white shadow-md'
+                        : 'bg-white border-[#ddd] text-[#555] hover:border-[#1a3c20] hover:text-[#1a3c20]'
+                    }`}
+                  >
+                    {lang.name}
+                    <span className={`font-mono text-[10px] ${active ? 'text-white/60' : 'text-[#bbb]'}`}>{lang.code}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ ───────────────────────────────── */}
+        <section className="py-16">
+          <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-14 items-start">
+            <div className="lg:sticky lg:top-24">
+              <h2 className="text-[1.4rem] font-bold text-[#111] mb-3" style={{ fontFamily: 'var(--font-newsreader)' }}>
+                Questions About EcoFarm
+              </h2>
+              <p className="text-[13px] text-[#888] leading-relaxed mb-6">
+                EcoFarm is Uganda's leading agricultural intelligence platform, built by the Student Software Engineering Collective at Cavendish University Uganda.
+              </p>
+              <button
+                onClick={handleGetStarted}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1a3c20] text-white text-[13px] font-bold hover:bg-[#122a17] transition-colors"
+              >
+                Get Started <ArrowRight size={14} />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {FAQS.map((faq, i) => (
+                <div key={i} className="border border-[#e8e8e8] rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#fafafa] transition-colors"
+                  >
+                    <span className="text-[13.5px] font-semibold text-[#111]">{faq.q}</span>
+                    <ChevronDown size={15} className={`text-[#aaa] shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openFaq === i && (
+                    <div className="px-5 pb-5 pt-3 text-[13px] text-[#666] leading-relaxed border-t border-[#eee]">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── CTA BANNER ────────────────────────── */}
+        <section className="bg-[#1a3c20] py-14 px-6">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8 text-white">
+            <div>
+              <h2 className="text-[1.6rem] font-bold mb-2" style={{ fontFamily: 'var(--font-newsreader)' }}>
+                Built by farmers' neighbors,<br />for farmers' fields.
+              </h2>
+              <p className="text-[13px] text-white/55">Join 50,000+ farmers, buyers, and drivers on EcoFarm.</p>
+            </div>
+            <button
+              onClick={handleGetStarted}
+              className="px-7 py-3 rounded-full bg-[#c9773a] text-white text-[13.5px] font-bold hover:bg-[#a85e28] whitespace-nowrap shadow-lg flex items-center gap-2 transition-colors"
+            >
+              {user ? 'Go to Dashboard' : 'Get Started Free'} <ArrowRight size={14} />
+            </button>
+          </div>
+        </section>
       </main>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* ── FOOTER ────────────────────────────── */}
+      <footer className="bg-[#0d1a0e] text-white pt-14 pb-4 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+            <div className="col-span-2 md:col-span-1">
+              <button onClick={() => scrollTo('#home')} className="flex items-center gap-2 mb-3 hover:opacity-80 transition-opacity">
+                <div className="w-6 h-6 rounded-full bg-[#1a3c20] flex items-center justify-center">
+                  <Leaf size={11} className="text-white" />
+                </div>
+                <span className="text-[14px] font-bold">EcoFarm</span>
+              </button>
+              <p className="text-[12px] text-white/35 leading-relaxed">Fresh, natural produce. Uganda's #1 agricultural intelligence platform.</p>
+            </div>
+
+            {[
+              {
+                title: 'Services',
+                items: [
+                  { label: 'AI Diagnosis',  action: () => handleFeatureClick('AI Crop Diagnosis') },
+                  { label: 'Market Prices', action: () => handleFeatureClick('Direct Market') },
+                  { label: 'Pest Alerts',   action: () => handleFeatureClick('Pest Hub') },
+                  { label: 'Logistics',     action: () => handleFeatureClick('Logistics') },
+                ],
+              },
+              {
+                title: 'Resources',
+                items: [
+                  { label: 'For Farmers',  action: handleGetStarted },
+                  { label: 'For Buyers',   action: handleGetStarted },
+                  { label: 'For Drivers',  action: handleGetStarted },
+                  { label: 'Languages',    action: () => scrollTo('#home') },
+                ],
+              },
+              {
+                title: 'Office',
+                items: [
+                  { label: 'Cavendish Univ.',  action: () => {} },
+                  { label: 'Kampala, Uganda',  action: () => {} },
+                  { label: 'Privacy Policy',   action: () => {} },
+                  { label: 'Terms of Service', action: () => {} },
+                ],
+              },
+            ].map(col => (
+              <div key={col.title}>
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-white/35 mb-4">{col.title}</h4>
+                <ul className="space-y-2.5">
+                  {col.items.map(item => (
+                    <li key={item.label}>
+                      <button
+                        onClick={item.action}
+                        className="text-[13px] text-white/55 hover:text-white transition-colors text-left"
+                      >
+                        {item.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-white/8 pt-4">
+            <div className="text-center leading-none select-none overflow-hidden">
+              <span
+                className="font-bold text-[6rem] md:text-[10rem] text-white/5 tracking-tight"
+                style={{ fontFamily: 'var(--font-newsreader)' }}
+              >
+                ECOFARM
+              </span>
+            </div>
+            <div className="text-center text-[11px] text-white/25 mt-2 pb-2">
+              © 2026 EcoFarm Uganda. All rights reserved.
+            </div>
+          </div>
+        </div>
+      </footer>
 
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>

@@ -1,20 +1,23 @@
 // Deployment Heartbeat: 2026-05-09 17:40
 import type { Metadata, Viewport } from 'next'
-import { Inter, Outfit } from 'next/font/google'
+import { Newsreader, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
 import { AppProvider } from '@/context/AppContext'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
-const inter = Inter({ 
+const newsreader = Newsreader({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-newsreader',
+  style: ['normal', 'italic'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
 })
 
-const outfit = Outfit({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  variable: '--font-outfit',
+  variable: '--font-plus-jakarta',
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
 })
 
@@ -41,7 +44,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
+      <html lang="en" className={`${newsreader.variable} ${plusJakarta.variable}`}>
         <head>
           <link rel="manifest" href="/manifest.json" />
           <meta name="theme-color" content="#06260a" />
