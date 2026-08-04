@@ -258,7 +258,7 @@ export default function LandingPage() {
             <div>
               <div className="inline-flex items-center gap-2 border border-white/20 rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-white/90 mb-7">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#c9773a]"></span>
-                Uganda's #1 AgriTech Platform
+                Uganda&apos;s #1 AgriTech Platform
               </div>
 
               <h1
@@ -519,7 +519,7 @@ export default function LandingPage() {
                     ))}
                   </div>
                   <p className="text-[13px] text-[#555] leading-relaxed" style={{ fontFamily: 'var(--font-newsreader)' }}>
-                    "{t.quote}"
+                    &quot;{t.quote}&quot;
                   </p>
                 </div>
               ))}
@@ -568,7 +568,7 @@ export default function LandingPage() {
                 Questions About EcoFarm
               </h2>
               <p className="text-[13px] text-[#888] leading-relaxed mb-6">
-                EcoFarm is Uganda's leading agricultural intelligence platform, built by the Student Software Engineering Collective at Cavendish University Uganda.
+                EcoFarm is Uganda&apos;s leading agricultural intelligence platform, built by the Student Software Engineering Collective at Cavendish University Uganda.
               </p>
               <button
                 onClick={handleGetStarted}
@@ -603,7 +603,7 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8 text-white">
             <div>
               <h2 className="text-[1.6rem] font-bold mb-2" style={{ fontFamily: 'var(--font-newsreader)' }}>
-                Built by farmers' neighbors,<br />for farmers' fields.
+                Built by farmers&apos; neighbors,<br />for farmers&apos; fields.
               </h2>
               <p className="text-[13px] text-white/55">Join 50,000+ farmers, buyers, and drivers on EcoFarm.</p>
             </div>
@@ -628,7 +628,7 @@ export default function LandingPage() {
                 </div>
                 <span className="text-[14px] font-bold">EcoFarm</span>
               </button>
-              <p className="text-[12px] text-white/35 leading-relaxed">Fresh, natural produce. Uganda's #1 agricultural intelligence platform.</p>
+              <p className="text-[12px] text-white/35 leading-relaxed">Fresh, natural produce. Uganda&apos;s #1 agricultural intelligence platform.</p>
             </div>
 
             {[
