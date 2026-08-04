@@ -145,9 +145,7 @@ function Sidebar({
         {/* Brand */}
         <div className="flex items-center justify-between mb-8 px-1">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-[#c9773a] flex items-center justify-center shadow-md">
-              <Leaf size={14} className="text-white" />
-            </div>
+            <img src="/favicon.svg" alt="EcoFarm Logo" className="w-7 h-7" />
             <span className="font-bold text-[15px] text-white" style={{ fontFamily: 'var(--font-newsreader)' }}>EcoFarm</span>
           </div>
           <button onClick={onClose} className="md:hidden text-white/40 hover:text-white/80 transition-colors p-1">

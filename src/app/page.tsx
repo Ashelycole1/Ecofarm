@@ -142,9 +142,7 @@ export default function LandingPage() {
             onClick={() => scrollTo('#home')}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <div className="w-7 h-7 rounded-full bg-[#1a3c20] flex items-center justify-center">
-              <Leaf size={13} className="text-white" />
-            </div>
+            <img src="/favicon.svg" alt="EcoFarm Logo" className="w-7 h-7" />
             <span className="text-[15px] font-bold text-[#111]">EcoFarm</span>
           </button>
 
@@ -621,9 +619,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
             <div className="col-span-2 md:col-span-1">
               <button onClick={() => scrollTo('#home')} className="flex items-center gap-2 mb-3 hover:opacity-80 transition-opacity">
-                <div className="w-6 h-6 rounded-full bg-[#1a3c20] flex items-center justify-center">
-                  <Leaf size={11} className="text-white" />
-                </div>
+                <img src="/favicon.svg" alt="EcoFarm Logo" className="w-6 h-6" />
                 <span className="text-[14px] font-bold">EcoFarm</span>
               </button>
               <p className="text-[12px] text-white/35 leading-relaxed">Fresh, natural produce. Uganda&apos;s #1 agricultural intelligence platform.</p>
