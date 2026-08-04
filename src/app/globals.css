@@ -7,50 +7,50 @@
 
 /* ─── CSS Design Tokens ─────────────────────────────────────────────────── */
 :root {
-  /* Surfaces */
-  --bone:              #fafaf4;
-  --bone-dim:          #dadad5;
-  --bone-low:          #f4f4ee;
-  --bone-card:         #eeeee9;
-  --bone-high:         #e8e8e3;
+  /* Surfaces — white-forward to match landing page */
+  --bone:              #ffffff;
+  --bone-dim:          #e5e5e5;
+  --bone-low:          #f5f5f2;
+  --bone-card:         #f5f5f2;
+  --bone-high:         #ebebeb;
   --white-card:        #ffffff;
 
   /* Text */
-  --ink:               #1a1c19;
-  --ink-muted:         #424843;
-  --ink-faint:         #727972;
-  --ink-inverse:       #f1f1ec;
-  --border-soft:       #c2c8c0;
-  --border-strong:     #727972;
+  --ink:               #111111;
+  --ink-muted:         #555555;
+  --ink-faint:         #888888;
+  --ink-inverse:       #f5f5f2;
+  --border-soft:       #e5e5e5;
+  --border-strong:     #aaaaaa;
 
-  /* Primary – Deep Forest Green */
-  --forest:            #163422;
-  --forest-medium:     #2d4b37;
-  --forest-light:      #adcfb4;
-  --forest-tint:       #466550;
-  --forest-pale:       #c8ebd0;
+  /* Primary – Deep Forest Green (landing page exact) */
+  --forest:            #1a3c20;
+  --forest-medium:     #2a5630;
+  --forest-light:      #7ec87a;
+  --forest-tint:       #2a5630;
+  --forest-pale:       #e8f5e9;
 
-  /* Secondary – Burnt Sienna (primary CTA) */
-  --sienna:            #994624;
-  --sienna-light:      #ff956d;
-  --sienna-dark:       #762c0c;
-  --sienna-pale:       #ffdbcf;
+  /* Secondary – Warm Sienna / CTA orange (landing page exact) */
+  --sienna:            #c9773a;
+  --sienna-light:      #f5c49a;
+  --sienna-dark:       #a85e28;
+  --sienna-pale:       #fdf0e6;
 
   /* Tertiary – Golden Ochre */
-  --ochre:             #5d3f00;
-  --ochre-light:       #e4a73b;
-  --ochre-gold:        #fbbb4d;
+  --ochre:             #7a4214;
+  --ochre-light:       #c9773a;
+  --ochre-gold:        #f5c49a;
 
   /* Semantic */
-  --safe:              #5DBD8A;
+  --safe:              #4CAF50;
   --alert:             #ba1a1a;
   --warn:              #ffa726;
 
-  /* Shadows — warm terracotta-tinted */
-  --shadow-card:       0 12px 32px -4px rgba(179, 89, 54, 0.08);
-  --shadow-card-hover: 0 20px 48px -4px rgba(179, 89, 54, 0.14);
-  --shadow-btn:        0 4px 16px rgba(153, 70, 36, 0.25);
-  --shadow-modal:      0 32px 80px -8px rgba(22, 52, 34, 0.18);
+  /* Shadows — landing-page-consistent warm tones */
+  --shadow-card:       0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.10);
+  --shadow-btn:        0 4px 16px rgba(201, 119, 58, 0.30);
+  --shadow-modal:      0 32px 80px -8px rgba(0, 0, 0, 0.18);
 }
 
 /* ─── Base Reset ──────────────────────────────────────────────────────────── */
@@ -68,8 +68,7 @@ html {
 body {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   background-color: var(--bone);
-  background-image:
-    radial-gradient(ellipse 70% 40% at 50% -5%, rgba(70, 101, 80, 0.07) 0%, transparent 60%);
+  background-image: none;
   color: var(--ink);
   min-height: 100vh;
   min-height: 100dvh;
@@ -87,7 +86,12 @@ body {
 h1, h2, h3 {
   font-family: 'Newsreader', Georgia, serif;
   color: var(--ink);
-  line-height: 1.2;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+p, span, label, button, input, select, textarea {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 /* Utility: display headline serif */
@@ -96,24 +100,24 @@ h1, h2, h3 {
 
 /* ─── Card System ─────────────────────────────────────────────────────────── */
 
-/* Primary card — white, warm ambient shadow, 24px radius */
+/* Primary card — pure white, thin border, matches landing page cards */
 .mh-card {
   background: #ffffff;
-  border-radius: 1.5rem; /* 24px */
-  box-shadow: var(--shadow-card);
-  border: 1px solid var(--border-soft);
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  border-radius: 1rem; /* 16px — matches landing page rounded-2xl */
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  border: 1px solid #eeeeee;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 .mh-card:hover {
-  box-shadow: var(--shadow-card-hover);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.08);
 }
 
-/* Tinted card — bone-level surface */
+/* Tinted card — f5f5f2 surface, matches landing section backgrounds */
 .mh-card-tinted {
-  background: var(--bone-low);
-  border-radius: 1.5rem;
-  border: 1px solid var(--border-soft);
-  box-shadow: var(--shadow-card);
+  background: #f5f5f2;
+  border-radius: 1rem;
+  border: 1px solid #eeeeee;
+  box-shadow: none;
 }
 
 /* Sidebar / dark surface card */
@@ -179,27 +183,27 @@ h1, h2, h3 {
 
 /* ─── Button System ───────────────────────────────────────────────────────── */
 
-/* Primary CTA — Burnt Sienna */
+/* Primary CTA — Landing page orange #c9773a */
 .btn-primary {
-  background: var(--sienna);
+  background: #c9773a;
   color: #ffffff;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 0.875rem;
   letter-spacing: 0.01em;
-  padding: 12px 28px;
-  border-radius: 0.5rem; /* 8px — precision per spec */
+  padding: 11px 24px;
+  border-radius: 9999px; /* pill — matches landing page CTAs */
   border: none;
   cursor: pointer;
-  box-shadow: var(--shadow-btn);
+  box-shadow: 0 4px 16px rgba(201, 119, 58, 0.30);
   transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 .btn-primary:hover {
-  background: var(--sienna-dark);
-  box-shadow: 0 8px 24px rgba(153, 70, 36, 0.35);
+  background: #a85e28;
+  box-shadow: 0 8px 24px rgba(201, 119, 58, 0.40);
   transform: translateY(-1px);
 }
 .btn-primary:active { transform: translateY(0) scale(0.98); }
@@ -318,33 +322,34 @@ h1, h2, h3 {
   border: 1px solid rgba(186, 26, 26, 0.20);
 }
 
-/* ─── Sidebar ─────────────────────────────────────────────────────────────── */
+/* ─── Sidebar — matches landing page hero dark green #1a3c20 ───────────────── */
 .mh-sidebar {
-  background: var(--forest);
-  border-right: 1px solid rgba(173, 207, 180, 0.12);
+  background: #1a3c20;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .mh-sidebar-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 16px;
-  border-radius: 0.75rem;
+  padding: 10px 14px;
+  border-radius: 0.625rem;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: rgba(200, 235, 208, 0.65);
+  color: rgba(255, 255, 255, 0.55);
   transition: background 0.18s ease, color 0.18s ease;
   cursor: pointer;
+  letter-spacing: 0.01em;
 }
 .mh-sidebar-item:hover {
-  background: rgba(255,255,255, 0.07);
-  color: var(--forest-light);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.90);
 }
 .mh-sidebar-item.active {
-  background: rgba(255,255,255, 0.12);
-  color: var(--ochre-light);
-  box-shadow: inset 0 0 0 1px rgba(228,167,59,0.25);
+  background: rgba(201, 119, 58, 0.18);
+  color: #f5c49a;
+  box-shadow: inset 0 0 0 1px rgba(201, 119, 58, 0.30);
 }
 
 /* Legacy sidebar item compat */
@@ -352,16 +357,16 @@ h1, h2, h3 {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 16px;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
+  padding: 10px 14px;
+  border-radius: 0.625rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: rgba(200, 235, 208, 0.65);
+  color: rgba(255, 255, 255, 0.55);
   transition: all 0.18s ease;
 }
 .modern-sidebar-item.active {
-  background: rgba(255,255,255, 0.12);
-  color: var(--ochre-light);
+  background: rgba(201, 119, 58, 0.18);
+  color: #f5c49a;
 }
 
 /* ─── Status Dot ──────────────────────────────────────────────────────────── */

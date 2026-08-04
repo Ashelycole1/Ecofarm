@@ -57,48 +57,48 @@ function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSid
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 md:left-56 lg:left-64 bg-bone/90 backdrop-blur-md border-b border-border-soft"
+      className="fixed top-0 left-0 right-0 z-50 md:left-56 lg:left-64 bg-white border-b border-[#eeeeee]"
     >
-      <div className="flex items-center justify-between w-full px-4 py-3 md:px-8">
+      <div className="flex items-center justify-between w-full px-4 py-3 md:px-8" style={{ minHeight: 60 }}>
         <div className="flex items-center gap-3">
           <button
             onClick={onToggleSidebar}
-            className="md:hidden p-2 -ml-1 text-ink-muted hover:text-ink transition-colors rounded-lg"
+            className="md:hidden p-2 -ml-1 text-[#555] hover:text-[#111] transition-colors rounded-lg hover:bg-gray-100"
           >
             <Menu size={20} />
           </button>
-          <span className="md:hidden font-display font-semibold text-lg text-ink tracking-tight">
+          <span className="md:hidden font-bold text-[15px] text-[#111]" style={{ fontFamily: 'var(--font-newsreader)' }}>
             {t('header.title')}
           </span>
         </div>
 
-        <span className="md:hidden font-body text-[10px] font-bold text-ink-muted uppercase tracking-widest truncate max-w-[120px]">
+        <span className="md:hidden text-[10px] font-bold text-[#888] uppercase tracking-widest truncate max-w-[120px]">
           {t(tabTitleKeys[activeTab]) || t('header.title')}
         </span>
 
         <div className="hidden md:block" />
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {/* Language Switcher */}
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
-            className="bg-bone-dim/20 border border-border-soft rounded-lg px-2 py-1 font-body text-[10px] font-bold text-ink outline-none focus:border-forest-tint transition-all"
+            className="bg-[#f5f5f2] border border-[#eeeeee] rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-[#555] outline-none focus:border-[#1a3c20] transition-all"
           >
             {languages.map(lang => (
               <option key={lang} value={lang}>{lang}</option>
             ))}
           </select>
 
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-bone-card border border-border-soft`}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#f5f5f2] border border-[#eeeeee]">
             {isConnected
-              ? <Wifi className="text-safe" size={14} />
-              : <WifiOff className="text-alert" size={14} />}
+              ? <Wifi className="text-[#4CAF50]" size={14} />
+              : <WifiOff className="text-[#ba1a1a]" size={14} />}
           </div>
           {user && (
             <button
               onClick={() => logout()}
-              className="w-8 h-8 rounded-full flex items-center justify-center bg-bone-card border border-border-soft text-ink-muted hover:text-sienna hover:border-sienna/30 transition-all"
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-[#f5f5f2] border border-[#eeeeee] text-[#888] hover:text-[#ba1a1a] hover:border-red-200 transition-all"
               title="Logout"
             >
               <LogOut size={14} />
@@ -150,20 +150,20 @@ function Sidebar({
         `}
       >
         {/* Brand */}
-        <div className="flex items-center justify-between mb-10 px-2">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-sienna flex items-center justify-center shadow-btn">
-              <Leaf size={16} className="text-white" />
+        <div className="flex items-center justify-between mb-8 px-1">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-[#c9773a] flex items-center justify-center shadow-md">
+              <Leaf size={14} className="text-white" />
             </div>
-            <span className="font-display font-semibold text-lg text-forest-light tracking-tight">EcoFarm</span>
+            <span className="font-bold text-[15px] text-white" style={{ fontFamily: 'var(--font-newsreader)' }}>EcoFarm</span>
           </div>
-          <button onClick={onClose} className="md:hidden text-forest-light/50 hover:text-forest-light transition-colors">
+          <button onClick={onClose} className="md:hidden text-white/40 hover:text-white/80 transition-colors p-1">
             <X size={18} />
           </button>
         </div>
 
         {/* Bogolan divider */}
-        <div className="bogolan-divider mb-6 mx-2" />
+        <div className="h-px bg-white/10 mb-5 mx-1" />
 
         <nav className="flex flex-col gap-1">
           {navTabs.map(({ id, label, Icon }) => {
@@ -182,23 +182,23 @@ function Sidebar({
           })}
         </nav>
 
-        <div className="mt-auto pt-8">
-          <div className="bogolan-divider mb-6 mx-2" />
+        <div className="mt-auto pt-6">
+          <div className="h-px bg-white/10 mb-5 mx-1" />
           {!user ? (
             <button
               onClick={() => { setShowAuthModal(true); onClose() }}
-              className="w-full py-3 rounded-lg bg-sienna text-white text-xs font-semibold tracking-wide shadow-btn hover:bg-sienna-dark transition-all"
+              className="w-full py-2.5 rounded-full bg-[#c9773a] text-white text-[12px] font-bold tracking-wide hover:bg-[#a85e28] transition-colors shadow-md"
             >
               Sign In to EcoFarm
             </button>
           ) : (
-            <div className="flex items-center gap-3 px-2">
-              <div className="w-8 h-8 rounded-full bg-forest-medium flex items-center justify-center">
-                <span className="text-forest-light text-xs font-bold">{(user.displayName || 'F')[0].toUpperCase()}</span>
+            <div className="flex items-center gap-3 px-1">
+              <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+                <span className="text-white text-xs font-bold">{(user.displayName || 'F')[0].toUpperCase()}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-forest-light text-xs font-semibold truncate">{user.displayName || 'Farmer'}</p>
-                <p className="text-forest-light/40 text-[10px] uppercase tracking-wider">Registered</p>
+                <p className="text-white text-[13px] font-semibold truncate">{user.displayName || 'Farmer'}</p>
+                <p className="text-white/40 text-[10px] uppercase tracking-wider">Registered</p>
               </div>
             </div>
           )}
@@ -430,21 +430,21 @@ function BottomNav({ activeTab, onTabChange }: { activeTab: string; onTabChange:
   ]
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/90 backdrop-blur-lg border-t border-border-soft flex items-center justify-around px-2 py-3 pb-safe shadow-modal">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-[#eeeeee] flex items-center justify-around px-2 py-2 pb-safe shadow-sm">
       {mobileNavItems.map(({ id, label, Icon }) => {
         const isActive = activeTab === id
         return (
           <button
             key={id}
             onClick={() => onTabChange(id)}
-            className={`flex flex-col items-center gap-1 transition-all ${
-              isActive ? 'text-sienna' : 'text-ink-muted'
+            className={`flex flex-col items-center gap-1 transition-all px-2 py-1 rounded-xl ${
+              isActive ? 'text-[#c9773a]' : 'text-[#888]'
             }`}
           >
-            <div className={`p-1 rounded-lg transition-colors ${isActive ? 'bg-sienna-pale' : ''}`}>
-              <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+            <div className={`p-1.5 rounded-xl transition-colors ${isActive ? 'bg-[#fdf0e6]' : ''}`}>
+              <Icon size={19} strokeWidth={isActive ? 2.5 : 2} />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider">{t(navItemKeys[id]) || label}</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider">{t(navItemKeys[id]) || label}</span>
           </button>
         )
       })}
