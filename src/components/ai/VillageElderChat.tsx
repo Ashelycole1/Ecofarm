@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useApp } from '@/context/AppContext'
-import { Send, TreePine, Mic, MicOff, Volume2, Globe, Sparkles } from 'lucide-react'
+import { Mic, MicOff, Plus, ChevronDown, ArrowUp, Sparkles, User } from 'lucide-react'
 
 const LANGUAGES = [
   { id: 'English', label: 'English' },
@@ -97,119 +97,108 @@ export default function VillageElderChat() {
     setInputText('')
   }
 
-  return (
-    <div className="flex flex-col h-full max-h-[700px] pb-12">
-      {/* Outer Title */}
-      <div className="flex items-center gap-2 mb-3 px-1 border-b border-border-soft pb-4">
-        <Sparkles size={20} className="text-forest animate-pulse" />
-        <h2 className="font-display font-bold text-4xl text-ink tracking-tight">Agricultural Expert</h2>
+  const renderInputForm = () => (
+    <form onSubmit={handleSend} className="w-full max-w-3xl bg-white rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-gray-100 p-2 flex items-center gap-1 md:gap-2 relative z-10">
+      <button type="button" className="p-2 md:p-3 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-50 flex-shrink-0">
+        <Plus size={20} />
+      </button>
+      
+      <input
+        type="text"
+        value={inputText}
+        onChange={(e) => setInputText(e.target.value)}
+        placeholder={isListening ? "Listening..." : "Ask the Agricultural Expert..."}
+        className="flex-1 bg-transparent border-none focus:ring-0 text-sm md:text-base text-[#1f1f1f] placeholder-gray-400 outline-none min-w-0 px-2"
+      />
+      
+      <div className="relative group/lang flex items-center gap-1.5 px-2 md:px-3 py-1.5 hover:bg-gray-50 rounded-full cursor-pointer transition-colors text-xs font-medium text-gray-600 flex-shrink-0">
+        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+        <span className="hidden md:inline">{language}</span>
+        <ChevronDown size={14} className="opacity-50" />
+        
+        <div className="absolute bottom-full right-0 mb-2 w-48 bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-xl opacity-0 invisible group-hover/lang:opacity-100 group-hover/lang:visible transition-all z-50">
+          {LANGUAGES.map(lang => (
+            <button
+              key={lang.id}
+              type="button"
+              onClick={() => setLanguage(lang.id as any)}
+              className={`w-full text-left px-4 py-3 text-sm transition-colors ${
+                language === lang.id ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {lang.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Main Container */}
-      <div className="flex-1 flex flex-col bg-white rounded-2xl border border-border-soft overflow-hidden shadow-card-sm relative mt-2">
-        
-        {/* Inner Header */}
-        <div className="p-4 flex items-center justify-between border-b border-border-soft bg-bone-low">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-forest/10 flex items-center justify-center border border-forest/20 text-forest shadow-inner">
-              <TreePine size={20} />
-            </div>
-            <div>
-              <h3 className="font-display font-bold text-base text-ink leading-tight">{t('chat.expert')}</h3>
-              <p className="font-body text-[10px] text-forest font-bold flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-safe animate-pulse" />
-                <span>Online · Professional Advice</span>
-              </p>
-            </div>
-          </div>
+      <button
+        type="button"
+        onClick={toggleListening}
+        className={`p-2 md:p-3 rounded-full transition-colors flex-shrink-0 ${
+          isListening ? 'bg-red-50 text-red-500 animate-pulse' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+        }`}
+      >
+        {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+      </button>
+      
+      <button
+        type="submit"
+        disabled={!inputText.trim() || isGeneratingAI}
+        className={`p-2 md:p-2.5 rounded-full transition-all flex items-center justify-center flex-shrink-0 ${
+          inputText.trim() ? 'bg-[#d3e3fd] text-[#0b57d0] hover:bg-[#c2d7fa]' : 'bg-gray-100 text-gray-400'
+        }`}
+      >
+        <ArrowUp size={20} />
+      </button>
+    </form>
+  )
 
-          <div className="flex items-center gap-2">
-            <div className="relative group/lang">
-              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full border border-border-soft text-ink-muted text-[10px] font-bold hover:text-ink shadow-sm transition-all">
-                <Globe size={12} />
-                <span>{language}</span>
-              </button>
-              <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-border-soft rounded-xl overflow-hidden shadow-lg opacity-0 invisible group-hover/lang:opacity-100 group-hover/lang:visible transition-all z-50">
-                {LANGUAGES.map(lang => (
-                  <button
-                    key={lang.id}
-                    onClick={() => setLanguage(lang.id as any)}
-                    className={`w-full text-left px-4 py-2.5 font-body text-xs font-bold transition-colors ${
-                      language === lang.id ? 'bg-forest text-white' : 'text-ink-muted hover:bg-bone-low hover:text-ink'
-                    }`}
-                  >
-                    {lang.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+  return (
+    <div className="flex flex-col h-full absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#eef4fc] via-white to-white overflow-hidden">
+      {messages.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-4">
+          <h2 className="text-3xl md:text-[40px] text-[#1f1f1f] mb-8 font-light tracking-tight" style={{ fontFamily: 'var(--font-plus-jakarta)' }}>
+            Ready when you are
+          </h2>
+          {renderInputForm()}
         </div>
-
-        {/* Chat Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide bg-bone-low/30">
-          {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
-              <TreePine size={48} className="text-forest mb-3" />
-              <p className="font-body text-xs text-ink-muted font-bold max-w-[200px]">How can I assist your farming today?</p>
-            </div>
-          ) : (
-            messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] ${msg.sender === 'user' ? 'bg-forest text-white' : 'bg-bone-low text-ink'} p-4 rounded-2xl border border-border-soft shadow-sm`}>
-                  <p className="font-body text-xs leading-relaxed">{msg.text}</p>
-                  <div className="flex items-center justify-between mt-2 gap-4">
-                    <span className="font-body text-[9px] font-bold opacity-60 uppercase tracking-widest">{msg.metadata?.dialect || ''}</span>
-                    <p className="font-body text-[9px] font-bold opacity-40">{msg.timestamp}</p>
+      ) : (
+        <>
+          <div className="flex-1 overflow-y-auto px-4 md:px-20 lg:px-40 pb-8 pt-8 scrollbar-hide space-y-8">
+            <div className="max-w-4xl mx-auto space-y-8">
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start gap-4'}`}>
+                  {msg.sender === 'elder' && (
+                    <div className="w-8 h-8 rounded-full bg-[#f0f4f9] flex items-center justify-center text-blue-500 shrink-0 mt-1 border border-gray-100">
+                      <Sparkles size={16} />
+                    </div>
+                  )}
+                  <div className={`max-w-[85%] ${msg.sender === 'user' ? 'bg-[#f0f4f9] text-[#1f1f1f] px-5 py-3.5 rounded-3xl rounded-tr-sm' : 'text-[#1f1f1f] pt-2'}`}>
+                    <p className="font-body text-[15px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
-          {isGeneratingAI && (
-            <div className="flex justify-start">
-              <div className="bg-bone-low p-3 rounded-2xl border border-border-soft flex gap-1.5 items-center">
-                <div className="w-1.5 h-1.5 bg-forest rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="w-1.5 h-1.5 bg-forest rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-1.5 h-1.5 bg-forest rounded-full animate-bounce"></div>
-              </div>
+              ))}
+              {isGeneratingAI && (
+                <div className="flex justify-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-[#f0f4f9] flex items-center justify-center text-blue-500 shrink-0 mt-1 border border-gray-100">
+                    <Sparkles size={16} className="animate-spin" />
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-3 pt-2">
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
             </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Bar */}
-        <div className="p-4 bg-white border-t border-border-soft">
-          <form onSubmit={handleSend} className="flex gap-2 items-center max-w-4xl mx-auto">
-            <div className="relative flex-1 group">
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder={isListening ? "Listening..." : t('chat.ask_elder')}
-                className="w-full bg-bone-low border border-border-soft rounded-xl pl-4 pr-10 py-3 font-body text-xs text-ink focus:outline-none focus:border-forest shadow-inner transition-all placeholder:text-ink-faint"
-              />
-              <button
-                type="button"
-                onClick={toggleListening}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                  isListening ? 'bg-alert text-white animate-pulse' : 'text-ink-muted hover:text-ink'
-                }`}
-              >
-                {isListening ? <MicOff size={14} /> : <Mic size={14} />}
-              </button>
-            </div>
-            
-            <button
-              type="submit"
-              disabled={!inputText.trim() || isGeneratingAI}
-              className="btn-primary py-3 px-4 text-xs shrink-0 flex items-center justify-center"
-            >
-              <Send size={14} />
-            </button>
-          </form>
-        </div>
-      </div>
+          </div>
+          <div className="p-4 md:pb-8 flex justify-center bg-gradient-to-t from-white via-white to-transparent">
+            {renderInputForm()}
+          </div>
+        </>
+      )}
     </div>
   )
 }
