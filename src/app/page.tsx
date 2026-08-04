@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import {
   Leaf, ArrowRight, Mic, Activity,
-  TrendingUp, Truck, ShoppingBasket, Star, ChevronDown, CheckCircle,
+  TrendingUp, ShoppingBasket, Star, ChevronDown, CheckCircle,
   Menu, X, LogOut, User
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
@@ -15,7 +15,6 @@ const FEATURE_ROUTES: Record<string, string> = {
   'AI Crop Diagnosis':  '/dashboard?tab=ai',
   'Direct Market':      '/dashboard?tab=market',
   'Pest Hub':           '/dashboard?tab=community',
-  'Logistics':          '/dashboard?tab=logistics',
 }
 
 const NAV_ITEMS = [
@@ -87,14 +86,13 @@ export default function LandingPage() {
   const FEATURES = [
     { icon: Mic,          label: 'AI Crop Diagnosis', sub: 'Voice & photo leaf scan',  topBg: '#1a3c20', iconCol: '#7ec87a' },
     { icon: ShoppingBasket, label: 'Direct Market',   sub: 'Buyer-to-farmer trade',    topBg: '#7a4214', iconCol: '#f5c49a' },
-    { icon: Activity,     label: 'Pest Hub',          sub: 'GPS outbreak alerts',       topBg: '#1a3c20', iconCol: '#7ec87a' },
-    { icon: Truck,        label: 'Logistics',         sub: 'Book & track trucks',       topBg: '#7a4214', iconCol: '#f5c49a' },
+    { icon: Leaf,         label: 'Soil Health',       sub: 'Crop rotation guide',   topBg: '#1a3c20', iconCol: '#7ec87a' },
   ]
 
   const STEPS = [
     { step: '01', title: 'Careful Field Preparation',  desc: 'Farmers get hyper-local planting schedules, soil tips, and climate alerts in their own voice.',  topBg: '#1a3c20', accent: '#7ec87a' },
     { step: '02', title: 'Fresh Crop Monitoring',      desc: 'Community pest alerts and AI-guided advice catch problems before they spread.',                   topBg: '#2d5e34', accent: '#a8cc8c' },
-    { step: '03', title: 'Reliable Market Delivery',   desc: 'Match harvest to buyers and book verified trucks — transparently, in one tap.',                   topBg: '#7a4214', accent: '#f5c49a' },
+    { step: '03', title: 'Reliable Direct Market',   desc: 'Match your harvest directly to verified local buyers — transparently, in one tap.',                   topBg: '#7a4214', accent: '#f5c49a' },
   ]
 
   const TESTIMONIALS = [
@@ -107,7 +105,7 @@ export default function LandingPage() {
     { q: 'Do farmers accept organic farming techniques?',     a: 'Yes. EcoFarm actively promotes organic practices through our AI Crop Advisor. Farmers get voice-guided advice on natural pest control tailored to their region and dialect.' },
     { q: 'How do platform features and supply services work?', a: 'Farmers list their harvest, buyers browse verified produce, and drivers find pickup jobs — all without middlemen. The platform handles payments securely.' },
     { q: 'How does recommended quality work?',                a: 'Farmers photograph their produce and our AI grades it for quality. Buyers see verified quality ratings before any purchase offer, ensuring fair pricing.' },
-    { q: 'Do you offer delivery services?',                   a: 'Yes. Verified truck drivers register, browse available jobs, optimise routes, and receive guaranteed payments after delivery confirmation.' },
+    { q: 'Can I sell my harvest directly?',                   a: 'Yes. EcoFarm connects you with verified local buyers for direct trade and transparent pricing.' },
   ]
 
   const LANGUAGES: { name: string; code: string }[] = [
@@ -269,7 +267,7 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-[14px] text-white/65 leading-relaxed max-w-sm mb-8">
-                EcoFarm helps farmers, buyers and logistics partners grow smarter — with voice-guided AI, real-time market prices, and community pest alerts. No reading required.
+                EcoFarm helps farmers and buyers grow smarter — with voice-guided AI, real-time market prices, and community pest alerts. No reading required.
               </p>
 
               <div className="flex flex-wrap items-center gap-3 mb-10">
@@ -637,8 +635,7 @@ export default function LandingPage() {
                 items: [
                   { label: 'AI Diagnosis',  action: () => handleFeatureClick('AI Crop Diagnosis') },
                   { label: 'Market Prices', action: () => handleFeatureClick('Direct Market') },
-                  { label: 'Pest Alerts',   action: () => handleFeatureClick('Pest Hub') },
-                  { label: 'Logistics',     action: () => handleFeatureClick('Logistics') },
+                  { label: 'Community',     action: () => handleFeatureClick('Pest Hub') },
                 ],
               },
               {

@@ -10,11 +10,8 @@ import VillageElderChat from '@/components/ai/VillageElderChat'
 import AIVisionModule from '@/components/ai/AIVisionModule'
 import AuthModal from '@/components/auth/AuthModal'
 import { useApp } from '@/context/AppContext'
-import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Navigation, Menu, X, Users, ClipboardList, MapPin } from 'lucide-react'
+import { Wifi, WifiOff, Sparkles, LogOut, Lock, Home, TrendingUp, Leaf, MessageCircle, Bell, Menu, X, Users, ClipboardList, MapPin } from 'lucide-react'
 import MarketDashboard from '@/components/dashboard/MarketDashboard'
-import EcoTrack from '@/components/dashboard/EcoTrack'
-import LogisticsViewer from '@/components/dashboard/LogisticsViewer'
-import LogisticTrackingView from '@/components/dashboard/LogisticTrackingView'
 import CommunityFeed from '@/components/dashboard/CommunityFeed'
 import { SupportedLanguage } from '@/lib/translations'
 
@@ -26,7 +23,6 @@ const navTabs = [
   { id: 'community', label: 'Community', Icon: Users },
   { id: 'chat',      label: 'Chat',      Icon: MessageCircle },
   { id: 'alerts',    label: 'Alerts',    Icon: Bell },
-  { id: 'track',     label: 'Track',     Icon: Navigation },
 ]
 
 const tabTitles: Record<string, string> = {
@@ -36,7 +32,6 @@ const tabTitles: Record<string, string> = {
   community: 'Farmer Community',
   chat:      'Village Elder',
   alerts:    'Pest Alerts',
-  track:     'Eco-Track',
 }
 
 // ─── Top app bar ──────────────────────────────────────────────────────────────
@@ -52,7 +47,6 @@ function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSid
     community: 'header.community',
     chat:      'header.elder',
     alerts:    'header.alerts',
-    track:     'header.track',
   }
 
   return (
@@ -131,7 +125,6 @@ function Sidebar({
     community: 'nav.community',
     chat:      'nav.chat',
     alerts:    'nav.alerts',
-    track:     'nav.track',
   }
 
   return (
@@ -283,7 +276,6 @@ function TabContent({ tab }: { tab: string }) {
 
   if (tab === 'home') return <HomeTab />
   if (tab === 'market') return <MarketDashboard />
-  if (tab === 'track') return <TrackTab />
   // Community is publicly viewable; posting requires auth (handled inside component)
   if (tab === 'community') return <CommunityFeed />
 
@@ -306,87 +298,6 @@ function TabContent({ tab }: { tab: string }) {
   }
 }
 
-// ─── Sub-tabs for tracking ───────────────────────────────────────────────────
-function TrackTab() {
-  const [view, setView] = useState<'request' | 'driver' | 'buyer'>('request')
-  const [trackId, setTrackId] = useState('')
-  const [activeId, setActiveId] = useState('')
-
-  return (
-    <div className="space-y-6 animate-fade-in pb-20">
-      <div className="flex p-1.5 bg-bone-low rounded-2xl border border-border-soft max-w-md mx-auto shadow-inner">
-        <button
-          onClick={() => setView('request')}
-          className={`flex-1 py-3 rounded-xl font-body text-[10px] font-bold uppercase tracking-widest transition-all ${
-            view === 'request' ? 'bg-white text-ink shadow-sm' : 'text-ink-faint hover:text-ink'
-          }`}
-        >
-          Book Truck
-        </button>
-        <button
-          onClick={() => setView('buyer')}
-          className={`flex-1 py-3 rounded-xl font-body text-[10px] font-bold uppercase tracking-widest transition-all ${
-            view === 'buyer' ? 'bg-white text-ink shadow-sm' : 'text-ink-faint hover:text-ink'
-          }`}
-        >
-          Track Load
-        </button>
-        <button
-          onClick={() => setView('driver')}
-          className={`flex-1 py-3 rounded-xl font-body text-[10px] font-bold uppercase tracking-widest transition-all ${
-            view === 'driver' ? 'bg-white text-ink shadow-sm' : 'text-ink-faint hover:text-ink'
-          }`}
-        >
-          Driver Mode
-        </button>
-      </div>
-
-      {view === 'request' ? (
-        <LogisticTrackingView />
-      ) : view === 'driver' ? (
-        <EcoTrack />
-      ) : (
-        <div className="space-y-4">
-          {!activeId ? (
-            <div className="p-10 md:p-12 text-center space-y-6 mh-card bg-white">
-              <div className="w-20 h-20 bg-bone-low rounded-3xl flex items-center justify-center mx-auto mb-2 border border-border-soft shadow-inner">
-                <Navigation className="text-ochre-light animate-pulse" size={40} />
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-display font-bold text-ink text-2xl tracking-tight leading-tight">Enter Delivery ID</h3>
-                <p className="font-body text-ink-muted text-xs font-medium">Track your agricultural logistics in real-time.</p>
-              </div>
-              <input
-                type="text"
-                placeholder="TRK-XXXX-XXXX"
-                className="w-full bg-bone-low border border-border-soft rounded-xl px-6 py-4 text-ink text-center focus:border-forest outline-none font-body text-sm font-semibold tracking-widest shadow-inner transition-colors"
-                value={trackId}
-                onChange={(e) => setTrackId(e.target.value)}
-              />
-              <button
-                onClick={() => setActiveId(trackId)}
-                className="btn-primary w-full py-4 text-xs font-bold uppercase tracking-widest justify-center shadow-md transition-all active:scale-95 disabled:opacity-40"
-                disabled={!trackId}
-              >
-                Track Live Movement
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <LogisticsViewer tripId={activeId} />
-              <button
-                onClick={() => setActiveId('')}
-                className="w-full py-2 font-body text-ink-faint text-[10px] font-bold uppercase tracking-widest hover:text-ink transition-colors"
-              >
-                ← Change Trip ID
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
 
 function AuthGate({ tabName }: { tabName: string }) {
   const { setShowAuthModal, t } = useApp()
