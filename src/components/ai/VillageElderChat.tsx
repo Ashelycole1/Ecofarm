@@ -155,7 +155,7 @@ export default function VillageElderChat() {
   )
 
   return (
-    <div className="flex flex-col h-full absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#eef4fc] via-white to-white overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-140px)] min-h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#eef4fc] via-white to-white overflow-hidden rounded-3xl shadow-sm border border-gray-100">
       {messages.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <h2 className="text-3xl md:text-[40px] text-[#1f1f1f] mb-8 font-light tracking-tight" style={{ fontFamily: 'var(--font-plus-jakarta)' }}>
