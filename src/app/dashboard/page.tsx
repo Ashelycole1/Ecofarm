@@ -35,8 +35,8 @@ const tabTitles: Record<string, string> = {
 }
 
 // ─── Top app bar ──────────────────────────────────────────────────────────────
-function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSidebar: () => void }) {
-  const { isConnected, user, logout, language, setLanguage, t } = useApp()
+function AppBar({ activeTab, onToggleSidebar, desktopSidebarOpen }: { activeTab: string; onToggleSidebar: () => void; desktopSidebarOpen: boolean }) {
+  const { isConnected, language, setLanguage, t } = useApp()
 
   const languages: SupportedLanguage[] = ['English', 'Luganda', 'Runyankole', 'Lusoga', 'Acholi', 'Swahili']
 
@@ -51,13 +51,13 @@ function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSid
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 md:left-56 lg:left-64 bg-white border-b border-[#eeeeee]"
+      className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-[#eeeeee] transition-all duration-500 ease-in-out ${desktopSidebarOpen ? 'md:left-56 lg:left-64' : 'md:left-0'}`}
     >
       <div className="flex items-center justify-between w-full px-4 py-3 md:px-8" style={{ minHeight: 60 }}>
         <div className="flex items-center gap-3">
           <button
             onClick={onToggleSidebar}
-            className="md:hidden p-2 -ml-1 text-[#555] hover:text-[#111] transition-colors rounded-lg hover:bg-gray-100"
+            className="p-2 -ml-1 text-[#555] hover:text-[#111] transition-colors rounded-lg hover:bg-gray-100"
           >
             <Menu size={20} />
           </button>
@@ -65,10 +65,6 @@ function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSid
             {t('header.title')}
           </span>
         </div>
-
-        <span className="md:hidden text-[10px] font-bold text-[#888] uppercase tracking-widest truncate max-w-[120px]">
-          {t(tabTitleKeys[activeTab]) || t('header.title')}
-        </span>
 
         <div className="hidden md:block" />
 
@@ -89,15 +85,6 @@ function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSid
               ? <Wifi className="text-[#4CAF50]" size={14} />
               : <WifiOff className="text-[#ba1a1a]" size={14} />}
           </div>
-          {user && (
-            <button
-              onClick={() => logout()}
-              className="w-8 h-8 rounded-full flex items-center justify-center bg-[#f5f5f2] border border-[#eeeeee] text-[#888] hover:text-[#ba1a1a] hover:border-red-200 transition-all"
-              title="Logout"
-            >
-              <LogOut size={14} />
-            </button>
-          )}
         </div>
       </div>
     </header>
@@ -108,15 +95,17 @@ function AppBar({ activeTab, onToggleSidebar }: { activeTab: string; onToggleSid
 function Sidebar({ 
   activeTab, 
   onTabChange, 
-  isOpen, 
-  onClose 
+  mobileSidebarOpen,
+  desktopSidebarOpen, 
+  onCloseMobile 
 }: { 
   activeTab: string; 
   onTabChange: (tab: string) => void; 
-  isOpen: boolean; 
-  onClose: () => void 
+  mobileSidebarOpen: boolean; 
+  desktopSidebarOpen: boolean;
+  onCloseMobile: () => void 
 }) {
-  const { user, setShowAuthModal, t } = useApp()
+  const { user, setShowAuthModal, t, logout } = useApp()
 
   const navItemKeys: Record<string, string> = {
     home:      'nav.home',
@@ -131,15 +120,16 @@ function Sidebar({
     <>
       {/* Mobile Overlay */}
       <div
-        className={`fixed inset-0 bg-ink/30 backdrop-blur-sm z-[60] transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={onClose}
+        className={`fixed inset-0 bg-ink/30 backdrop-blur-sm z-[60] transition-opacity duration-300 md:hidden ${mobileSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={onCloseMobile}
       />
 
       <aside
         className={`
           mh-sidebar fixed left-0 top-0 bottom-0 z-[70] py-8 px-4 transition-transform duration-500 ease-in-out
           w-72 md:w-56 lg:w-64
-          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${desktopSidebarOpen ? 'md:translate-x-0' : 'md:-translate-x-full'}
         `}
       >
         {/* Brand */}
@@ -148,7 +138,7 @@ function Sidebar({
             <img src="/favicon.svg" alt="EcoFarm Logo" className="w-7 h-7" />
             <span className="font-bold text-[15px] text-white" style={{ fontFamily: 'var(--font-newsreader)' }}>EcoFarm</span>
           </div>
-          <button onClick={onClose} className="md:hidden text-white/40 hover:text-white/80 transition-colors p-1">
+          <button onClick={onCloseMobile} className="md:hidden text-white/40 hover:text-white/80 transition-colors p-1">
             <X size={18} />
           </button>
         </div>
@@ -162,7 +152,7 @@ function Sidebar({
             return (
               <button
                 key={id}
-                onClick={() => { onTabChange(id); onClose() }}
+                onClick={() => { onTabChange(id); onCloseMobile() }}
                 id={`sidebar-tab-${id}`}
                 className={`mh-sidebar-item ${isActive ? 'active' : ''}`}
               >
@@ -177,20 +167,29 @@ function Sidebar({
           <div className="h-px bg-white/10 mb-5 mx-1" />
           {!user ? (
             <button
-              onClick={() => { setShowAuthModal(true); onClose() }}
+              onClick={() => { setShowAuthModal(true); onCloseMobile() }}
               className="w-full py-2.5 rounded-full bg-[#c9773a] text-white text-[12px] font-bold tracking-wide hover:bg-[#a85e28] transition-colors shadow-md"
             >
               Sign In to EcoFarm
             </button>
           ) : (
-            <div className="flex items-center gap-3 px-1">
-              <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-                <span className="text-white text-xs font-bold">{(user.displayName || 'F')[0].toUpperCase()}</span>
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+                  <span className="text-white text-xs font-bold">{(user.displayName || 'F')[0].toUpperCase()}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-[13px] font-semibold truncate">{user.displayName || 'Farmer'}</p>
+                  <p className="text-white/40 text-[10px] uppercase tracking-wider">Registered</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white text-[13px] font-semibold truncate">{user.displayName || 'Farmer'}</p>
-                <p className="text-white/40 text-[10px] uppercase tracking-wider">Registered</p>
-              </div>
+              <button
+                onClick={() => logout()}
+                className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors shrink-0"
+                title="Logout"
+              >
+                <LogOut size={16} />
+              </button>
             </div>
           )}
         </div>
@@ -207,26 +206,22 @@ function HomeTab() {
     <div className="space-y-8 animate-fade-in">
       {/* Hero greeting card */}
       <div
-        className="mh-card bogolan-border relative overflow-hidden p-10 md:p-14 min-h-[220px] flex flex-col justify-center"
-        style={{ background: 'linear-gradient(135deg, #f4f4ee 0%, #eeeee9 100%)' }}
+        className="relative overflow-hidden p-10 md:p-14 min-h-[220px] flex flex-col justify-center rounded-2xl shadow-sm"
+        style={{ backgroundColor: '#1a3c20' }}
       >
-        {/* Bogolanfini watermark */}
-        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%232d4b37' stroke-width='1'%3E%3Crect x='6' y='6' width='36' height='36'/%3E%3Crect x='12' y='12' width='24' height='24'/%3E%3Cline x1='6' y1='6' x2='42' y2='42'/%3E%3Cline x1='42' y1='6' x2='6' y2='42'/%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '48px 48px'
-          }}
-        />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#c9773a]/10 rounded-full translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
+        
         <div className="relative z-10">
-          <p className="font-body text-[11px] text-ink-muted uppercase tracking-[0.25em] font-semibold mb-3">
+          <p className="text-[11px] text-[#7ec87a] uppercase tracking-[0.25em] font-bold mb-3 font-body">
             {t('home.welcome').split(',')[0]}
           </p>
-          <h1 className="font-display font-semibold text-ink text-4xl md:text-5xl leading-tight">
+          <h1 className="text-white text-4xl md:text-5xl leading-tight font-bold tracking-tight" style={{ fontFamily: 'var(--font-newsreader)' }}>
             {user ? (user.displayName || 'Farmer') : t('auth.signin')}
           </h1>
           <div className="flex items-center gap-2 mt-4">
-            <MapPin size={14} className="text-sienna" />
-            <p className="font-body text-sm text-ink-muted font-medium">
+            <MapPin size={14} className="text-[#c9773a]" />
+            <p className="text-[13px] text-white/80 font-medium font-body">
               {weather ? `${weather.location} · ${weather.temperature}°C` : 'Connecting to farm...'}
             </p>
           </div>
@@ -364,8 +359,17 @@ function BottomNav({ activeTab, onTabChange }: { activeTab: string; onTabChange:
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('home')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true)
   const { authLoading, showAuthModal, setShowAuthModal, t } = useApp()
+
+  const toggleSidebar = () => {
+    if (window.innerWidth >= 768) {
+      setDesktopSidebarOpen(prev => !prev)
+    } else {
+      setMobileSidebarOpen(prev => !prev)
+    }
+  }
 
   if (authLoading) {
     return (
@@ -377,17 +381,18 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen min-h-dvh flex flex-col bg-bone">
-      <AppBar activeTab={activeTab} onToggleSidebar={() => setSidebarOpen(true)} />
+    <div className="min-h-screen min-h-dvh flex flex-col bg-bone overflow-x-hidden">
+      <AppBar activeTab={activeTab} onToggleSidebar={toggleSidebar} desktopSidebarOpen={desktopSidebarOpen} />
 
       <Sidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        mobileSidebarOpen={mobileSidebarOpen}
+        desktopSidebarOpen={desktopSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
       />
 
-      <main className="flex-1 overflow-y-auto pb-28 md:pb-10 pt-14 md:ml-56 lg:ml-64">
+      <main className={`flex-1 overflow-y-auto pb-28 md:pb-10 pt-14 transition-all duration-500 ease-in-out ${desktopSidebarOpen ? 'md:ml-56 lg:ml-64' : 'md:ml-0'}`}>
         <div className="w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8">
           <TabContent tab={activeTab} />
         </div>

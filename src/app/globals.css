@@ -66,7 +66,7 @@ html {
 
 /* ─── Body — Warm Bone Base ───────────────────────────────────────────────── */
 body {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
   background-color: var(--bone);
   background-image: none;
   color: var(--ink);
@@ -84,19 +84,19 @@ body {
 
 /* ─── Typography System ───────────────────────────────────────────────────── */
 h1, h2, h3 {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-newsreader), Georgia, serif;
   color: var(--ink);
   line-height: 1.15;
   letter-spacing: -0.02em;
 }
 
 p, span, label, button, input, select, textarea {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
 }
 
 /* Utility: display headline serif */
-.font-display { font-family: 'Newsreader', Georgia, serif !important; }
-.font-body     { font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important; }
+.font-display { font-family: var(--font-newsreader), Georgia, serif !important; }
+.font-body     { font-family: var(--font-plus-jakarta), system-ui, sans-serif !important; }
 
 /* ─── Card System ─────────────────────────────────────────────────────────── */
 
@@ -187,7 +187,7 @@ p, span, label, button, input, select, textarea {
 .btn-primary {
   background: #c9773a;
   color: #ffffff;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-plus-jakarta), sans-serif;
   font-weight: 700;
   font-size: 0.875rem;
   letter-spacing: 0.01em;
@@ -218,7 +218,7 @@ p, span, label, button, input, select, textarea {
 .btn-secondary {
   background: transparent;
   color: var(--forest);
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-plus-jakarta), sans-serif;
   font-weight: 600;
   font-size: 0.9rem;
   padding: 11px 28px;
@@ -236,7 +236,7 @@ p, span, label, button, input, select, textarea {
 .btn-ghost {
   background: transparent;
   color: var(--ink-muted);
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-plus-jakarta), sans-serif;
   font-weight: 600;
   font-size: 0.875rem;
   padding: 10px 20px;
@@ -257,7 +257,7 @@ p, span, label, button, input, select, textarea {
   border-radius: 0.5rem; /* 8px */
   color: var(--ink);
   padding: 12px 16px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-plus-jakarta), sans-serif;
   font-size: 0.9rem;
   outline: none;
   width: 100%;
@@ -291,7 +291,7 @@ p, span, label, button, input, select, textarea {
   align-items: center;
   padding: 3px 10px;
   border-radius: 9999px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-plus-jakarta), sans-serif;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -334,7 +334,7 @@ p, span, label, button, input, select, textarea {
   gap: 12px;
   padding: 10px 14px;
   border-radius: 0.625rem;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-plus-jakarta), sans-serif;
   font-size: 0.8125rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.55);

@@ -336,17 +336,12 @@ export default function MarketDashboard() {
 
   return (
     <div className="space-y-10 animate-fade-in pb-16">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border-soft pb-8">
-        <div className="space-y-2 max-w-xl">
-          <p className="font-body text-xs font-extrabold text-sienna tracking-[0.2em] uppercase">Premium Marketplace</p>
-          <h1 className="font-display font-bold text-ink text-4xl md:text-5xl tracking-tight">{t('header.intel')}</h1>
-          <p className="font-body text-base text-ink-muted leading-relaxed pt-1">
-            Real-time agricultural data and direct connections to verified regional eco-buyers.
-          </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border-soft pb-6">
+        <div>
+          <h1 className="font-display font-bold text-ink text-3xl md:text-4xl tracking-tight">{t('header.intel')}</h1>
         </div>
 
-        <div className="w-full md:w-80 space-y-2 shrink-0">
-          <label className="block font-body text-xs font-bold text-ink">Search Listings</label>
+        <div className="w-full md:w-80 shrink-0">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" size={18} />
             <input
@@ -360,8 +355,8 @@ export default function MarketDashboard() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1 space-y-6">
+      <div className="space-y-12">
+        <div className="space-y-6">
           <div className="flex justify-between items-center bg-bone-low p-4 rounded-xl border border-border-soft">
             <div className="flex items-center gap-2">
               <Store size={18} className="text-forest" />
@@ -416,7 +411,7 @@ export default function MarketDashboard() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredListings.map(item => (
               <div key={item.id} className="mh-card flex flex-col overflow-hidden bg-white group">
                 <div className="relative h-48 w-full overflow-hidden bg-bone-low">
@@ -452,8 +447,8 @@ export default function MarketDashboard() {
           </div>
         </div>
 
-        <div className="w-full lg:w-96 space-y-6">
-          <div className="mh-card p-6 bg-forest text-white space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-border-soft">
+          <div className="md:col-span-1 mh-card p-6 bg-forest text-white space-y-4 h-full flex flex-col justify-center">
              <div className="flex items-center gap-3">
                 <Compass className="text-wheat" size={24} />
                 <h3 className="font-display font-bold text-xl uppercase tracking-tight">Proximity Intel</h3>
@@ -469,7 +464,7 @@ export default function MarketDashboard() {
              </button>
           </div>
 
-          <div className="h-[400px] rounded-2xl overflow-hidden relative border border-border-soft shadow-sm bg-bone-low">
+          <div className="md:col-span-2 h-[400px] rounded-2xl overflow-hidden relative border border-border-soft shadow-sm bg-bone-low">
             <MapComponent 
               currentPosition={currentPosition} 
               routeCoordinates={routeInfo?.polyline || []}
